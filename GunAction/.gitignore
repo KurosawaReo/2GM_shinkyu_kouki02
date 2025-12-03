@@ -75,3 +75,6 @@ DerivedDataCache/*
 
 # Temp Files
 Config/DefaultEditorPerProjectUserSettings.ini
+
+# 外部アセットは共有しない
+Content/Assets/
