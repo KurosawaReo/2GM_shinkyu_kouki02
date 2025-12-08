@@ -1,9 +1,12 @@
 /*
-   【注意】
-   古いプレイヤークラス.
-   現在はCharacterBaseへと移行済み.
+   - CharacterBase -
+   作成: 怜旺.
+
+   プレイヤーと敵の基底クラス.
+   元はなおと作のPlyerCharacterだったもの.
 */
-#include "PlyerCharacter.h"
+#include "CharacterBase.h"
+
 #include "CrosshairWidget.h" 
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
@@ -20,11 +23,11 @@
 
 #pragma region "コンストラクタ"
 /// <summary>
-/// コンストラクタ - APlyerCharacter
+/// コンストラクタ - ACharacterBase
 /// プレイヤーキャラクターの初期設定を行う.
 /// カプセルコライダー、カメラ、スプリングアームなどの設定を初期化する.
 /// </summary>
-APlyerCharacter::APlyerCharacter()
+ACharacterBase::ACharacterBase()
 {
 	PrimaryActorTick.bCanEverTick = true;
 
@@ -68,7 +71,7 @@ APlyerCharacter::APlyerCharacter()
 /// BeginPlay - ゲーム開始時またはアクタースポーン時に呼ばれる.
 /// UI（クロスヘア）の初期化を行う.
 /// </summary>
-void APlyerCharacter::BeginPlay()
+void ACharacterBase::BeginPlay()
 {
 	Super::BeginPlay();
 
@@ -78,7 +81,7 @@ void APlyerCharacter::BeginPlay()
 	InitializeUI();
 
 	//アニメーション状態の初期化.
-	CurrentAnimationState = EAnimationStateTmp::Idle;
+	CurrentAnimationState = EAnimationState::Idle;
 
 	//銃を装備.
 	EquipGun();
@@ -119,7 +122,7 @@ void APlyerCharacter::BeginPlay()
 /// アニメーション状態を更新する.
 /// </summary>
 /// <param name="DeltaTime">前フレームからの経過時間（秒）</param>
-void APlyerCharacter::Tick(float DeltaTime)
+void ACharacterBase::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
@@ -137,7 +140,7 @@ void APlyerCharacter::Tick(float DeltaTime)
 /// キーボード、マウスなどの入力を各アクションにバインドする.
 /// </summary>
 /// <param name="PlayerInputComponent">プレイヤー入力コンポーネント</param>
-void APlyerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
+void ACharacterBase::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	Input(PlayerInputComponent);
 }
@@ -146,33 +149,33 @@ void APlyerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComp
 /// キャラクターの移動、カメラ操作、ジャンプ、スプリント、射撃などの入力をセットアップする.
 /// </summary>
 /// <param name="PlayerInputComponent">プレイヤー入力コンポーネント</param>
-void APlyerCharacter::Input(UInputComponent* PlayerInputComponent)
+void ACharacterBase::Input(UInputComponent* PlayerInputComponent)
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 
 	//移動入力.
-	PlayerInputComponent->BindAxis("MoveForward", this, &APlyerCharacter::MoveForward);
-	PlayerInputComponent->BindAxis("MoveRight", this, &APlyerCharacter::MoveRight);
+	PlayerInputComponent->BindAxis("MoveForward", this, &ACharacterBase::MoveForward);
+	PlayerInputComponent->BindAxis("MoveRight", this, &ACharacterBase::MoveRight);
 
 	//カメラ入力.
 	PlayerInputComponent->BindAxis("Turn", this, &APawn::AddControllerYawInput);
 	PlayerInputComponent->BindAxis("LookUp", this, &APawn::AddControllerPitchInput);
-	PlayerInputComponent->BindAxis("TurnRate", this, &APlyerCharacter::TurnAtRate);
-	PlayerInputComponent->BindAxis("LookUpRate", this, &APlyerCharacter::LookUpAtRate);
+	PlayerInputComponent->BindAxis("TurnRate", this, &ACharacterBase::TurnAtRate);
+	PlayerInputComponent->BindAxis("LookUpRate", this, &ACharacterBase::LookUpAtRate);
 
 	//ジャンプ入力.
 	PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &ACharacter::Jump);
 	PlayerInputComponent->BindAction("Jump", IE_Released, this, &ACharacter::StopJumping);
 
 	//スプリント入力.
-	PlayerInputComponent->BindAction("Sprint", IE_Pressed, this, &APlyerCharacter::StartSprint);
-	PlayerInputComponent->BindAction("Sprint", IE_Released, this, &APlyerCharacter::StopSprint);
+	PlayerInputComponent->BindAction("Sprint", IE_Pressed, this, &ACharacterBase::StartSprint);
+	PlayerInputComponent->BindAction("Sprint", IE_Released, this, &ACharacterBase::StopSprint);
 
 	//弾発射入力.
-	PlayerInputComponent->BindAction("Fire", IE_Pressed, this, &APlyerCharacter::ShotBullet);
+	PlayerInputComponent->BindAction("Fire", IE_Pressed, this, &ACharacterBase::ShotBullet);
 
 	//リロード入力.
-	PlayerInputComponent->BindAction("Reload", IE_Pressed, this, &APlyerCharacter::StartReload);
+	PlayerInputComponent->BindAction("Reload", IE_Pressed, this, &ACharacterBase::StartReload);
 }
 #pragma endregion
 
@@ -183,7 +186,7 @@ void APlyerCharacter::Input(UInputComponent* PlayerInputComponent)
 /// </summary>
 /// <param name="dir">"Forward", "Right", "up" のどれか</param>
 /// <returns>ベクトル</returns>
-FVector APlyerCharacter::GetCameraVector(FString dir) const
+FVector ACharacterBase::GetCameraVector(FString dir) const
 {
 	//カメラがない時はZeroVectorを返す.
 	if (FollowCamera == nullptr) {
@@ -213,7 +216,7 @@ FVector APlyerCharacter::GetCameraVector(FString dir) const
 /// 弾の発射位置などの計算に使用される.
 /// </summary>
 /// <returns>カメラのワールド座標。カメラがない場合はZeroVector</returns>
-FVector APlyerCharacter::GetCameraLocation() const
+FVector ACharacterBase::GetCameraLocation() const
 {
 	if (FollowCamera == nullptr)
 	{
@@ -225,7 +228,7 @@ FVector APlyerCharacter::GetCameraLocation() const
 /// GetCameraRotation - カメラの回転を取得.
 /// </summary>
 /// <returns>カメラの回転。カメラがない場合はZeroRotator</returns>
-FRotator APlyerCharacter::GetCameraRotation() const
+FRotator ACharacterBase::GetCameraRotation() const
 {
 	if (FollowCamera == nullptr)
 	{
@@ -241,7 +244,7 @@ FRotator APlyerCharacter::GetCameraRotation() const
 /// コントローラーの入力に応じてキャラクターを前後に移動させる.
 /// </summary>
 /// <param name="Value">入力値（-1.0 ～ 1.0）</param>
-void APlyerCharacter::MoveForward(float Value)
+void ACharacterBase::MoveForward(float Value)
 {
 	if ((Controller != nullptr) && (Value != 0.0f))
 	{
@@ -257,7 +260,7 @@ void APlyerCharacter::MoveForward(float Value)
 /// コントローラーの入力に応じてキャラクターを左右に移動させる.
 /// </summary>
 /// <param name="Value">入力値（-1.0 ～ 1.0）</param>
-void APlyerCharacter::MoveRight(float Value)
+void ACharacterBase::MoveRight(float Value)
 {
 	if ((Controller != nullptr) && (Value != 0.0f))
 	{
@@ -273,7 +276,7 @@ void APlyerCharacter::MoveRight(float Value)
 /// マウスの水平移動またはコントローラーのスティック入力でカメラを左右に回転させる.
 /// </summary>
 /// <param name="Rate">回転速度（入力値）</param>
-void APlyerCharacter::TurnAtRate(float Rate)
+void ACharacterBase::TurnAtRate(float Rate)
 {
 	AddControllerYawInput(Rate * BaseLookUpRate * GetWorld()->GetDeltaSeconds());
 }
@@ -282,7 +285,7 @@ void APlyerCharacter::TurnAtRate(float Rate)
 /// マウスの垂直移動またはコントローラーのスティック入力でカメラを上下に回転させる.
 /// </summary>
 /// <param name="Rate">回転速度（入力値）</param>
-void APlyerCharacter::LookUpAtRate(float Rate)
+void ACharacterBase::LookUpAtRate(float Rate)
 {
 	AddControllerPitchInput(Rate * BaseLookUpRate * GetWorld()->GetDeltaSeconds());
 }
@@ -290,7 +293,7 @@ void APlyerCharacter::LookUpAtRate(float Rate)
 /// StartSprint - スプリント開始処理.
 /// キャラクターの移動速度をWalkSpeedからRunSpeedに変更する.
 /// </summary>
-void APlyerCharacter::StartSprint()
+void ACharacterBase::StartSprint()
 {
 	bIsSprinting = true;
 	GetCharacterMovement()->MaxWalkSpeed = RunSpeed;
@@ -299,7 +302,7 @@ void APlyerCharacter::StartSprint()
 /// StopSprint - スプリント終了処理.
 /// キャラクターの移動速度をRunSpeedからWalkSpeedに戻す.
 /// </summary>
-void APlyerCharacter::StopSprint()
+void ACharacterBase::StopSprint()
 {
 	bIsSprinting = false;
 	GetCharacterMovement()->MaxWalkSpeed = WalkSpeed;
@@ -309,7 +312,7 @@ void APlyerCharacter::StopSprint()
 /// アニメーション状態を更新する関数.
 /// キャラクターの移動状態に応じてIdleまたはMoveアニメーションを再生.
 /// </summary>
-void APlyerCharacter::UpdateAnimationState()
+void ACharacterBase::UpdateAnimationState()
 {
 	//現在の速度を取得.
 	CurrentSpeed = GetCharacterMovement()->Velocity.Length();
@@ -317,7 +320,7 @@ void APlyerCharacter::UpdateAnimationState()
 	//ジャンプ状態の判定.
 	bool bIsAirborne = !GetCharacterMovement()->IsMovingOnGround() && GetCharacterMovement()->Velocity.Z != 0.0f;
 
-	EAnimationStateTmp NewAnimationState = CurrentAnimationState;
+	EAnimationState NewAnimationState = CurrentAnimationState;
 	if (bIsAirborne)
 	{
 		//空中にいる場合,垂直速度でジャンプ状態を判定.
@@ -326,17 +329,17 @@ void APlyerCharacter::UpdateAnimationState()
 		if (VerticalVelocity > 100.0f)
 		{
 			//ジャンプアップ状態.
-			NewAnimationState = EAnimationStateTmp::JumpUp;
+			NewAnimationState = EAnimationState::JumpUp;
 		}
 		else if (VerticalVelocity < -100.0f)
 		{
 			//ジャンプダウン状態.
-			NewAnimationState = EAnimationStateTmp::JumpDown;
+			NewAnimationState = EAnimationState::JumpDown;
 		}
 		else
 		{
 			//ジャンプ中状態.
-			NewAnimationState = EAnimationStateTmp::JumpMid;
+			NewAnimationState = EAnimationState::JumpMid;
 		}
 		bIsJumping = true;
 	}
@@ -352,17 +355,17 @@ void APlyerCharacter::UpdateAnimationState()
 			//スプリント中か判定.
 			if (bIsSprinting)
 			{
-				NewAnimationState = EAnimationStateTmp::Run;
+				NewAnimationState = EAnimationState::Run;
 			}
 			else
 			{
-				NewAnimationState = EAnimationStateTmp::Move;
+				NewAnimationState = EAnimationState::Move;
 			}
 		}
 		else
 		{
 			bIsMoving = false;
-			NewAnimationState = EAnimationStateTmp::Idle;
+			NewAnimationState = EAnimationState::Idle;
 		}
 	}
 
@@ -373,28 +376,28 @@ void APlyerCharacter::UpdateAnimationState()
 		PlayAnimationMontage(NewAnimationState);
 	}
 }
-void APlyerCharacter::PlayAnimationMontage(EAnimationStateTmp AnimState)
+void ACharacterBase::PlayAnimationMontage(EAnimationState AnimState)
 {
 	UAnimMontage* MontageToPlay = nullptr;
 
 	switch (AnimState)
 	{
-	case EAnimationStateTmp::Idle:
+	case EAnimationState::Idle:
 		MontageToPlay = IdleAnimMontage;
 		break;
-	case EAnimationStateTmp::Move:
+	case EAnimationState::Move:
 		MontageToPlay = MoveAnimMontage;
 		break;
-	case EAnimationStateTmp::Run:
+	case EAnimationState::Run:
 		MontageToPlay = SprintAnimMontage;
 		break;
-	case EAnimationStateTmp::JumpUp:
+	case EAnimationState::JumpUp:
 		MontageToPlay = JumpUpAnimMontage;
 		break;
-	case EAnimationStateTmp::JumpMid:
+	case EAnimationState::JumpMid:
 		MontageToPlay = JumpMidAnimMontage;
 		break;
-	case EAnimationStateTmp::JumpDown:
+	case EAnimationState::JumpDown:
 		MontageToPlay = JumpDownAnimMontage;
 		break;
 	default:
@@ -429,7 +432,7 @@ void APlyerCharacter::PlayAnimationMontage(EAnimationStateTmp AnimState)
 /// EquipGun - 銃を装備する処理.
 /// RevolverGunClassから銃をスポーンしてプレイヤーに装備させる.
 /// </summary>
-void APlyerCharacter::EquipGun()
+void ACharacterBase::EquipGun()
 {
 	if (RevolverGunClass == nullptr)
 	{
@@ -475,7 +478,7 @@ void APlyerCharacter::EquipGun()
 /// カメラの位置と方向から弾をスポーンし、銃のマズルから発射する.
 /// 弾薬が0の場合はリロードする.
 /// </summary>
-void APlyerCharacter::CalculateAndShot()
+void ACharacterBase::CalculateAndShot()
 {
 	// リロード中は射撃不可
 	if (bIsReloading)
@@ -511,7 +514,7 @@ void APlyerCharacter::CalculateAndShot()
 	FVector CrosshairWorldLocation = FVector::ZeroVector;
 	FVector CrosshairWorldDirection = FVector::ZeroVector;
 
-	
+
 	APlayerController* PlayerController = Cast<APlayerController>(Controller);
 	if (PlayerController)
 	{
@@ -559,7 +562,7 @@ void APlyerCharacter::CalculateAndShot()
 	NewRotation.Pitch = TargetRotation.Pitch;
 	SetActorRotation(NewRotation);
 
-	
+
 
 	//弾のスポーンパラメーター設定.
 	FActorSpawnParameters SpawnParams;
@@ -569,7 +572,7 @@ void APlyerCharacter::CalculateAndShot()
 	//弾クラスを生成.
 	ABulletBase* Bullet = GetWorld()->SpawnActor<ABulletBase>(BulletClass, SpawnLocation, BulletRotation, SpawnParams);
 
-	
+
 
 	if (Bullet != nullptr)
 	{
@@ -610,7 +613,7 @@ void APlyerCharacter::CalculateAndShot()
 	//プレイヤーアニメーション追加.
 	PlayPlayerFireAnimMontage();
 }
-void APlyerCharacter::PlayPlayerFireAnimMontage()
+void ACharacterBase::PlayPlayerFireAnimMontage()
 {
 	if (PlayerFireAnimMontage == nullptr)
 	{
@@ -641,7 +644,7 @@ void APlyerCharacter::PlayPlayerFireAnimMontage()
 /// CalculateAndShot関数を呼び出して弾を発射する.
 /// 入力イベントから直接呼ばれる.
 /// </summary>
-void APlyerCharacter::ShotBullet()
+void ACharacterBase::ShotBullet()
 {
 	CalculateAndShot();
 }
@@ -650,7 +653,7 @@ void APlyerCharacter::ShotBullet()
 /// StartReload - リロード開始処理.
 /// リロード時間をセットして、弾薬を満タンに戻す.
 /// </summary>
-void APlyerCharacter::StartReload()
+void ACharacterBase::StartReload()
 {
 	if (bIsReloading)
 	{
@@ -685,7 +688,7 @@ void APlyerCharacter::StartReload()
 /// リロード時間が経過したら弾薬を復旧し、リロード状態を解除する.
 /// </summary>
 /// <param name="DeltaTime">フレームの経過時間</param>
-void APlyerCharacter::UpdateReloadTimer(float DeltaTime)
+void ACharacterBase::UpdateReloadTimer(float DeltaTime)
 {
 	if (!bIsReloading)
 	{
@@ -718,7 +721,7 @@ void APlyerCharacter::UpdateReloadTimer(float DeltaTime)
 /// カメラの位置から前方向へ指定距離だけ離れた地点を計算する.
 /// 弾の発射目標地点を決定するために使用される.
 /// </summary>
-FVector APlyerCharacter::CalculateTargetPosition(float Distance) const
+FVector ACharacterBase::CalculateTargetPosition(float Distance) const
 {
 	if (FollowCamera == nullptr)
 	{
@@ -738,7 +741,7 @@ FVector APlyerCharacter::CalculateTargetPosition(float Distance) const
 /// <summary>
 /// ボーンインデックスを初期化する関数
 /// </summary>
-void APlyerCharacter::InitializeBoneIndices()
+void ACharacterBase::InitializeBoneIndices()
 {
 	if (!GetMesh())
 	{
@@ -776,7 +779,7 @@ void APlyerCharacter::InitializeBoneIndices()
 /// <summary>
 /// 腕のボーンを回転させる関数
 /// </summary>
-void APlyerCharacter::RotateArmBones(const FRotator& TargetRotation)
+void ACharacterBase::RotateArmBones(const FRotator& TargetRotation)
 {
 	// キャラクター全体の回転で対応
 	// 腕のボーン操作はアニメーションBP側で自動的に追従します
@@ -791,7 +794,7 @@ void APlyerCharacter::RotateArmBones(const FRotator& TargetRotation)
 /// クロスヘアウィジェットをビューポートに追加して表示する.
 /// BeginPlay時に呼ばれる.
 /// </summary>
-void APlyerCharacter::InitializeUI()
+void ACharacterBase::InitializeUI()
 {
 	if (CrosshairWidgetClass == nullptr)
 	{

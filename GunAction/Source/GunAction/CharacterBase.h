@@ -1,14 +1,15 @@
 /*
-   【注意】
-   古いプレイヤークラス.
-   現在はCharacterBaseへと移行済み.
+   - CharacterBase -
+   作成: 怜旺.
+
+   プレイヤーと敵の基底クラス.
+   元はなおと作のPlyerCharacterだったもの.
 */
 #pragma once
-
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "Animation/AnimMontage.h"
-#include "PlyerCharacter.generated.h"
+#include "CharacterBase.generated.h"
 
 class UCrosshairWidget;
 class USpringArmComponent;
@@ -18,7 +19,7 @@ class ASteam_Revolver;
 
 // アニメーション状態の列挙型
 UENUM(BlueprintType)
-enum class EAnimationStateTmp : uint8
+enum class EAnimationState : uint8
 {
 	Idle     UMETA(DisplayName = "Idle"),
 	Move     UMETA(DisplayName = "Move"),
@@ -29,7 +30,7 @@ enum class EAnimationStateTmp : uint8
 };
 
 UCLASS()
-class GUNACTION_API APlyerCharacter : public ACharacter
+class GUNACTION_API ACharacterBase : public ACharacter
 {
 	GENERATED_BODY()
 
@@ -140,12 +141,12 @@ public:
 
 	//現在のアニメーション状態.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Animation)
-	EAnimationStateTmp CurrentAnimationState;
+	EAnimationState CurrentAnimationState;
 
 	//▼関数.
 public:
 #pragma region "コンストラクタ"
-	APlyerCharacter();
+	ACharacterBase();
 #pragma endregion
 
 protected:
@@ -186,7 +187,7 @@ protected:
 	//プレイヤー攻撃アニメーション.
 	void PlayPlayerFireAnimMontage();
 	//アニメーションモンタージュを再生.
-	void PlayAnimationMontage(EAnimationStateTmp AnimState);
+	void PlayAnimationMontage(EAnimationState AnimState);
 #pragma endregion
 
 #pragma region "UI"
