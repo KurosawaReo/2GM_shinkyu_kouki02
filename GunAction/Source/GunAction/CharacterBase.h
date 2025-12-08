@@ -1,24 +1,33 @@
 /*
-   【注意】
-   古いプレイヤークラス.
-   現在はCharacterBaseへと移行済み.
+   - CharacterBase -
+   作成: 怜旺.
+
+   プレイヤーと敵の基底クラス.
+   元はなおと作のPlyerCharacterだったもの.
 */
 #pragma once
-
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "Animation/AnimMontage.h"
-#include "PlyerCharacter.generated.h"
+#include "Steam_Revolver.h"
+#include "CharacterBase.generated.h"
 
+/*
+   [TODO] 2025/12/08
+   CharacterBaseには、プレイヤーと敵の共通処理を入れたい.
+   そのため、プレイヤーにしか必要のないカメラやUIなどは、ここではなくPlayerManagerに移動する.
+*/
+
+//前方宣言.
 class UCrosshairWidget;
+class ABulletBase;
 class USpringArmComponent;
 class UCameraComponent;
-class ABulletBase;
 class ASteam_Revolver;
 
 // アニメーション状態の列挙型
 UENUM(BlueprintType)
-enum class EAnimationStateTmp : uint8
+enum class EAnimationState : uint8
 {
 	Idle     UMETA(DisplayName = "Idle"),
 	Move     UMETA(DisplayName = "Move"),
@@ -29,25 +38,27 @@ enum class EAnimationStateTmp : uint8
 };
 
 UCLASS()
-class GUNACTION_API APlyerCharacter : public ACharacter
+class GUNACTION_API ACharacterBase : public ACharacter
 {
 	GENERATED_BODY()
 
-	//▼変数.
+//▼ ===== 変数 ===== ▼.
 public:
-	//クロスヘア.
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "UI")
-	TSubclassOf<UCrosshairWidget> CrosshairWidgetClass;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "UI")
-	UCrosshairWidget* CrosshairWidget;
-
-	//カメラコンポーネント.
+	//カメラコンポーネント
+	//TODO: そのうちPlayerManagerに移動したい(設計的に).
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera)
 	class USpringArmComponent* CameraBoom;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera)
 	class UCameraComponent* FollowCamera;
+
+	//クロスヘア.
+	//TODO: そのうちPlayerManagerに移動したい(設計的に).
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "UI")
+	TSubclassOf<UCrosshairWidget> CrosshairWidgetClass;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "UI")
+	UCrosshairWidget* CrosshairWidget;
 
 	// 銃クラスの参照
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Gun")
@@ -89,7 +100,6 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation|Shooting")
 	class UAnimMontage* PlayerFireAnimMontage;
 
-
 	//移動パラメーター.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Movement)
 	float BaseTurnRate = 45.0f;
@@ -123,18 +133,6 @@ public:
 	UPROPERTY(BlueprintReadOnly, Category = "Ammunition")
 	float ReloadTimerElapsed = 0.0f;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category ="IK")
-	FVector RightHandIKLocation = FVector::ZeroVector;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "IK")
-	float RightHandIKAlpha = 1.0f;
-
-	//アイムオフセット用の回転値.
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Aiming")
-	float AimPitch = 0.0f;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Aiming")
-	float AimYaw = 0.0f;
-
 	//インスペクターに表示する方法.
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Movement)
 	bool bIsSprinting;
@@ -153,12 +151,12 @@ public:
 
 	//現在のアニメーション状態.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Animation)
-	EAnimationStateTmp CurrentAnimationState;
+	EAnimationState CurrentAnimationState;
 
-	//▼関数.
+//▼ ===== 関数 ===== ▼.
 public:
 #pragma region "コンストラクタ"
-	APlyerCharacter();
+	ACharacterBase();
 #pragma endregion
 
 protected:
@@ -169,13 +167,9 @@ protected:
 	virtual void Tick(float DeltaTime) override;
 #pragma endregion
 
-#pragma region "入力処理"
-	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
-	void Input(UInputComponent* PlayerInputComponent);
-#pragma endregion
-
 #pragma region "カメラ"
 	// カメラの向きを取得する関数.
+	//TODO: そのうちPlayerManagerに移動したい(設計的に).
 	UFUNCTION(BlueprintCallable, Category = "Camera")
 	FVector GetCameraVector(FString dir) const;
 
@@ -187,23 +181,12 @@ protected:
 #pragma endregion
 
 #pragma region "移動"
-	void MoveForward(float Value);
-	void MoveRight(float Value);
-	void TurnAtRate(float Rate);
-	void LookUpAtRate(float Rate);
-	void StartSprint();
-	void StopSprint();
 	//アニメーションを更新.
 	void UpdateAnimationState();
-
-	//プレイヤー攻撃アニメーション.
+	//攻撃アニメーション.
 	void PlayFireAnimMontage();
 	//アニメーションモンタージュを再生.
-	void PlayAnimationMontage(EAnimationStateTmp AnimState);
-#pragma endregion
-
-#pragma region "UI"
-	void InitializeUI();
+	void PlayAnimationMontage(EAnimationState AnimState);
 #pragma endregion
 
 #pragma region "射撃"
