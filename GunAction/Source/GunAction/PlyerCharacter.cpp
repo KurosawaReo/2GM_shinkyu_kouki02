@@ -124,6 +124,35 @@ void APlyerCharacter::Tick(float DeltaTime)
 
 	//リロード時間の更新.
 	UpdateReloadTimer(DeltaTime);
+
+	if (FollowCamera && RevolverGun && RevolverGun->Muzzle)
+	{
+		// クロスヘアの中央座標を画面座標で計算
+		FVector2D ViewportSize = FVector2D(GEngine->GameViewport->Viewport->GetSizeXY());
+		FVector2D CrosshairScreenLocation = ViewportSize / 2.0f;
+
+		// スクリーン座標をワールド座標に変換
+		FVector CrosshairWorldLocation = FVector::ZeroVector;
+		FVector CrosshairWorldDirection = FVector::ZeroVector;
+
+		APlayerController* PlayerController = Cast<APlayerController>(Controller);
+		if (PlayerController)
+		{
+			PlayerController->DeprojectScreenPositionToWorld(
+				CrosshairScreenLocation.X,
+				CrosshairScreenLocation.Y,
+				CrosshairWorldLocation,
+				CrosshairWorldDirection
+			);
+		}
+
+		// IK ターゲット位置を設定
+		RightHandIKLocation = CrosshairWorldLocation + (CrosshairWorldDirection * 500.0f);
+		RightHandIKAlpha = 1.0f;
+
+	        UE_LOG(LogTemp, Warning, TEXT("IK Location: X=%.2f, Y=%.2f, Z=%.2f"),
+			RightHandIKLocation.X, RightHandIKLocation.Y, RightHandIKLocation.Z);
+	}
 }
 #pragma endregion
 
@@ -774,7 +803,9 @@ void APlyerCharacter::InitializeBoneIndices()
 /// </summary>
 void APlyerCharacter::RotateArmBones(const FRotator& TargetRotation)
 {
-	// キャラクター全体の回転で対応
+	
+	AimPitch = TargetRotation.Pitch;
+	AimYaw = TargetRotation.Yaw;
 	// 腕のボーン操作はアニメーションBP側で自動的に追従します
 	UE_LOG(LogTemp, Warning, TEXT("Character rotation - Pitch: %f, Yaw: %f"), TargetRotation.Pitch, TargetRotation.Yaw);
 }
