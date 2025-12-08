@@ -1,5 +1,7 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
+/*
+   こっちはおそらく仮で用意してた敵。
+   本格的にはEnemyManagerを使う。
+*/
 #pragma once
 
 #include "CoreMinimal.h"

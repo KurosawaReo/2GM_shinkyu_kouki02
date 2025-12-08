@@ -1,4 +1,7 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+/*
+   こっちはおそらく仮で用意してた敵。
+   本格的にはEnemyManagerを使う。
+*/
 
 // 死亡後の消滅時間
 UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Enemy|Death")

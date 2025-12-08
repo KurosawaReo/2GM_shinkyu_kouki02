@@ -21,6 +21,9 @@ class GUNACTION_API AEnemyManager : public ACharacterBase
 {
 	GENERATED_BODY()
 	
+//▼ ===== 変数 ===== ▼.
+// 
+//▼ ===== 関数 ===== ▼.
 protected:
 #pragma region "ライフサイクル"
 	//召喚した瞬間.
