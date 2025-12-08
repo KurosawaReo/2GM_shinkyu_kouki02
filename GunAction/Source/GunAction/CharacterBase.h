@@ -9,12 +9,20 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "Animation/AnimMontage.h"
+#include "Steam_Revolver.h"
 #include "CharacterBase.generated.h"
 
+/*
+   [TODO] 2025/12/08
+   CharacterBaseには、プレイヤーと敵の共通処理を入れたい.
+   そのため、プレイヤーにしか必要のないカメラやUIなどは、ここではなくPlayerManagerに移動する.
+*/
+
+//前方宣言.
 class UCrosshairWidget;
+class ABulletBase;
 class USpringArmComponent;
 class UCameraComponent;
-class ABulletBase;
 class ASteam_Revolver;
 
 // アニメーション状態の列挙型
@@ -34,21 +42,23 @@ class GUNACTION_API ACharacterBase : public ACharacter
 {
 	GENERATED_BODY()
 
-	//▼変数.
+//▼ ===== 変数 ===== ▼.
 public:
-	//クロスヘア.
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "UI")
-	TSubclassOf<UCrosshairWidget> CrosshairWidgetClass;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "UI")
-	UCrosshairWidget* CrosshairWidget;
-
-	//カメラコンポーネント.
+	//カメラコンポーネント
+	//TODO: そのうちPlayerManagerに移動したい(設計的に).
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera)
 	class USpringArmComponent* CameraBoom;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera)
 	class UCameraComponent* FollowCamera;
+
+	//クロスヘア.
+	//TODO: そのうちPlayerManagerに移動したい(設計的に).
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "UI")
+	TSubclassOf<UCrosshairWidget> CrosshairWidgetClass;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "UI")
+	UCrosshairWidget* CrosshairWidget;
 
 	// 銃クラスの参照
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Gun")
@@ -143,7 +153,7 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Animation)
 	EAnimationState CurrentAnimationState;
 
-	//▼関数.
+//▼ ===== 関数 ===== ▼.
 public:
 #pragma region "コンストラクタ"
 	ACharacterBase();
@@ -157,13 +167,9 @@ protected:
 	virtual void Tick(float DeltaTime) override;
 #pragma endregion
 
-#pragma region "入力処理"
-	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
-	void Input(UInputComponent* PlayerInputComponent);
-#pragma endregion
-
 #pragma region "カメラ"
 	// カメラの向きを取得する関数.
+	//TODO: そのうちPlayerManagerに移動したい(設計的に).
 	UFUNCTION(BlueprintCallable, Category = "Camera")
 	FVector GetCameraVector(FString dir) const;
 
@@ -175,23 +181,12 @@ protected:
 #pragma endregion
 
 #pragma region "移動"
-	void MoveForward(float Value);
-	void MoveRight(float Value);
-	void TurnAtRate(float Rate);
-	void LookUpAtRate(float Rate);
-	void StartSprint();
-	void StopSprint();
 	//アニメーションを更新.
 	void UpdateAnimationState();
-
-	//プレイヤー攻撃アニメーション.
-	void PlayPlayerFireAnimMontage();
+	//攻撃アニメーション.
+	void PlayFireAnimMontage();
 	//アニメーションモンタージュを再生.
 	void PlayAnimationMontage(EAnimationState AnimState);
-#pragma endregion
-
-#pragma region "UI"
-	void InitializeUI();
 #pragma endregion
 
 #pragma region "射撃"

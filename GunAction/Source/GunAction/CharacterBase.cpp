@@ -46,18 +46,6 @@ ACharacterBase::ACharacterBase()
 	GetCharacterMovement()->AirControl = 0.2f;
 	GetCharacterMovement()->MaxWalkSpeed = WalkSpeed;
 
-	//スプリングアーム(カメラブーム)の作成.
-	CameraBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
-	CameraBoom->SetupAttachment(RootComponent);
-	CameraBoom->TargetArmLength = 300.0f;
-	CameraBoom->bUsePawnControlRotation = true;
-	CameraBoom->SocketOffset = FVector(0.0f, 0.0f, 50.0f);
-
-	//カメラの作成.
-	FollowCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FollowCamera"));
-	FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName);
-	FollowCamera->bUsePawnControlRotation = false;
-
 	//初期状態.
 	bIsSprinting = false;
 	CurrentAmmoCount = MaxAmmoPerMagazine;
@@ -76,12 +64,6 @@ void ACharacterBase::BeginPlay()
 	Super::BeginPlay();
 
 	UE_LOG(LogTemp, Warning, TEXT("===== BeginPlay Start ====="));
-
-	//クロスヘアUIを初期化.
-	InitializeUI();
-
-	//アニメーション状態の初期化.
-	CurrentAnimationState = EAnimationState::Idle;
 
 	//銃を装備.
 	EquipGun();
@@ -131,51 +113,6 @@ void ACharacterBase::Tick(float DeltaTime)
 
 	//リロード時間の更新.
 	UpdateReloadTimer(DeltaTime);
-}
-#pragma endregion
-
-#pragma region "入力処理"
-/// <summary>
-/// SetupPlayerInputComponent - プレイヤー入力の設定.
-/// キーボード、マウスなどの入力を各アクションにバインドする.
-/// </summary>
-/// <param name="PlayerInputComponent">プレイヤー入力コンポーネント</param>
-void ACharacterBase::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
-{
-	Input(PlayerInputComponent);
-}
-/// <summary>
-/// Input - 移動処理および入力バインド.
-/// キャラクターの移動、カメラ操作、ジャンプ、スプリント、射撃などの入力をセットアップする.
-/// </summary>
-/// <param name="PlayerInputComponent">プレイヤー入力コンポーネント</param>
-void ACharacterBase::Input(UInputComponent* PlayerInputComponent)
-{
-	Super::SetupPlayerInputComponent(PlayerInputComponent);
-
-	//移動入力.
-	PlayerInputComponent->BindAxis("MoveForward", this, &ACharacterBase::MoveForward);
-	PlayerInputComponent->BindAxis("MoveRight", this, &ACharacterBase::MoveRight);
-
-	//カメラ入力.
-	PlayerInputComponent->BindAxis("Turn", this, &APawn::AddControllerYawInput);
-	PlayerInputComponent->BindAxis("LookUp", this, &APawn::AddControllerPitchInput);
-	PlayerInputComponent->BindAxis("TurnRate", this, &ACharacterBase::TurnAtRate);
-	PlayerInputComponent->BindAxis("LookUpRate", this, &ACharacterBase::LookUpAtRate);
-
-	//ジャンプ入力.
-	PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &ACharacter::Jump);
-	PlayerInputComponent->BindAction("Jump", IE_Released, this, &ACharacter::StopJumping);
-
-	//スプリント入力.
-	PlayerInputComponent->BindAction("Sprint", IE_Pressed, this, &ACharacterBase::StartSprint);
-	PlayerInputComponent->BindAction("Sprint", IE_Released, this, &ACharacterBase::StopSprint);
-
-	//弾発射入力.
-	PlayerInputComponent->BindAction("Fire", IE_Pressed, this, &ACharacterBase::ShotBullet);
-
-	//リロード入力.
-	PlayerInputComponent->BindAction("Reload", IE_Pressed, this, &ACharacterBase::StartReload);
 }
 #pragma endregion
 
@@ -239,74 +176,6 @@ FRotator ACharacterBase::GetCameraRotation() const
 #pragma endregion
 
 #pragma region "移動"
-/// <summary>
-/// MoveForward - 前後方向の移動処理.
-/// コントローラーの入力に応じてキャラクターを前後に移動させる.
-/// </summary>
-/// <param name="Value">入力値（-1.0 ～ 1.0）</param>
-void ACharacterBase::MoveForward(float Value)
-{
-	if ((Controller != nullptr) && (Value != 0.0f))
-	{
-		//カメラの前方向を取得.
-		const FRotator Rotation = Controller->GetControlRotation();
-		const FRotator YawRotation(0, Rotation.Yaw, 0);
-		const FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
-		AddMovementInput(Direction, Value);
-	}
-}
-/// <summary>
-/// MoveRight - 左右方向の移動処理.
-/// コントローラーの入力に応じてキャラクターを左右に移動させる.
-/// </summary>
-/// <param name="Value">入力値（-1.0 ～ 1.0）</param>
-void ACharacterBase::MoveRight(float Value)
-{
-	if ((Controller != nullptr) && (Value != 0.0f))
-	{
-		//カメラの右方向を取得.
-		const FRotator Rotation = Controller->GetControlRotation();
-		const FRotator YawRotation(0, Rotation.Yaw, 0);
-		const FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
-		AddMovementInput(Direction, Value);
-	}
-}
-/// <summary>
-/// TurnAtRate - 視点の水平回転処理（Rate入力）
-/// マウスの水平移動またはコントローラーのスティック入力でカメラを左右に回転させる.
-/// </summary>
-/// <param name="Rate">回転速度（入力値）</param>
-void ACharacterBase::TurnAtRate(float Rate)
-{
-	AddControllerYawInput(Rate * BaseLookUpRate * GetWorld()->GetDeltaSeconds());
-}
-/// <summary>
-/// LookUpAtRate - 視点の垂直回転処理（Rate入力）
-/// マウスの垂直移動またはコントローラーのスティック入力でカメラを上下に回転させる.
-/// </summary>
-/// <param name="Rate">回転速度（入力値）</param>
-void ACharacterBase::LookUpAtRate(float Rate)
-{
-	AddControllerPitchInput(Rate * BaseLookUpRate * GetWorld()->GetDeltaSeconds());
-}
-/// <summary>
-/// StartSprint - スプリント開始処理.
-/// キャラクターの移動速度をWalkSpeedからRunSpeedに変更する.
-/// </summary>
-void ACharacterBase::StartSprint()
-{
-	bIsSprinting = true;
-	GetCharacterMovement()->MaxWalkSpeed = RunSpeed;
-}
-/// <summary>
-/// StopSprint - スプリント終了処理.
-/// キャラクターの移動速度をRunSpeedからWalkSpeedに戻す.
-/// </summary>
-void ACharacterBase::StopSprint()
-{
-	bIsSprinting = false;
-	GetCharacterMovement()->MaxWalkSpeed = WalkSpeed;
-}
 
 /// <summary>
 /// アニメーション状態を更新する関数.
@@ -611,9 +480,9 @@ void ACharacterBase::CalculateAndShot()
 		}
 	}
 	//プレイヤーアニメーション追加.
-	PlayPlayerFireAnimMontage();
+	PlayFireAnimMontage();
 }
-void ACharacterBase::PlayPlayerFireAnimMontage()
+void ACharacterBase::PlayFireAnimMontage()
 {
 	if (PlayerFireAnimMontage == nullptr)
 	{
@@ -786,38 +655,4 @@ void ACharacterBase::RotateArmBones(const FRotator& TargetRotation)
 	UE_LOG(LogTemp, Warning, TEXT("Character rotation - Pitch: %f, Yaw: %f"), TargetRotation.Pitch, TargetRotation.Yaw);
 }
 
-#pragma endregion
-
-#pragma region UI
-/// <summary>
-/// InitializeUI - UI初期化処理.
-/// クロスヘアウィジェットをビューポートに追加して表示する.
-/// BeginPlay時に呼ばれる.
-/// </summary>
-void ACharacterBase::InitializeUI()
-{
-	if (CrosshairWidgetClass == nullptr)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("CrosshairWidgetClass is not set!"));
-		return;
-	}
-
-	APlayerController* PlayerController = Cast<APlayerController>(Controller);
-	if (PlayerController == nullptr)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("PlayerController is not valid!"));
-		return;
-	}
-
-	CrosshairWidget = CreateWidget<UCrosshairWidget>(PlayerController, CrosshairWidgetClass);
-	if (CrosshairWidget != nullptr)
-	{
-		CrosshairWidget->AddToViewport(0);
-		UE_LOG(LogTemp, Warning, TEXT("CrosshairWidget created and added to viewport"));
-	}
-	else
-	{
-		UE_LOG(LogTemp, Error, TEXT("Failed to create CrosshairWidget!"));
-	}
-}
 #pragma endregion

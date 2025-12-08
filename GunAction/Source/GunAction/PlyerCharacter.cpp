@@ -608,9 +608,9 @@ void APlyerCharacter::CalculateAndShot()
 		}
 	}
 	//プレイヤーアニメーション追加.
-	PlayPlayerFireAnimMontage();
+	PlayFireAnimMontage();
 }
-void APlyerCharacter::PlayPlayerFireAnimMontage()
+void APlyerCharacter::PlayFireAnimMontage()
 {
 	if (PlayerFireAnimMontage == nullptr)
 	{

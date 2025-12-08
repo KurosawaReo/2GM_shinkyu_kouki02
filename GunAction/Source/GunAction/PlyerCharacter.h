@@ -184,7 +184,7 @@ protected:
 	void UpdateAnimationState();
 
 	//プレイヤー攻撃アニメーション.
-	void PlayPlayerFireAnimMontage();
+	void PlayFireAnimMontage();
 	//アニメーションモンタージュを再生.
 	void PlayAnimationMontage(EAnimationStateTmp AnimState);
 #pragma endregion
