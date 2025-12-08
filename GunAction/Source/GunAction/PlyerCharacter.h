@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
+#include "Animation/AnimMontage.h"
 #include "PlyerCharacter.generated.h"
 
 class UCrosshairWidget;
