@@ -41,11 +41,16 @@ private:
 
 //▼変数.
 private:
-	FVector vec; //進行方向.
+	FVector vec;     //進行方向.
+	float   counter; //経過時間.
 
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = MyProperty)
-	float   speed = 1; //速度.
+	float   speed      = 1;  //速度.
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = MyProperty)
+	float   gravity    = 1;  //重力.
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = MyProperty)
+	float   deleteTime = 50; //消滅までの時間.
 
 //▼関数.
 public:	

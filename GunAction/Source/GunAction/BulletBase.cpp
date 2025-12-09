@@ -5,7 +5,7 @@
    弾の元となる基底クラス.
 */
 #include "BulletBase.h"
-#include "Enemy.h"
+#include "EnemyManager.h"
 
 /// <summary>
 /// コンストラクタ.
@@ -48,10 +48,10 @@ void ABulletBase::OnOverlapBegin(
     //
     //GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, msg); //表示.
 
-    //敵に当たったなら.(AActor型をAEnemy型にキャスト)
-    if (AEnemy* enm = Cast<AEnemy>(OtherActor)) {
-        //敵の死亡処理.
-        enm->OnBulletHit();
+    //敵に当たったなら.(AActor型をAEnemyManager型にキャスト)
+    if (AEnemyManager* enm = Cast<AEnemyManager>(OtherActor)) {
+        enm->OnBulletHit(); //敵の死亡処理.
+        Destroy();          //弾消滅.
     }
 }
 
@@ -65,8 +65,29 @@ void ABulletBase::Tick(float DeltaTime)
     //FString msg = FString::Printf(TEXT("vec: %f %f %f"), vec.X, vec.Y, vec.Z); //変数組み込み.
     //GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, msg); //表示.
 
-	//前方向に移動.
-	SetActorLocation(GetActorLocation() + vec * speed);
+    const FVector befPos = GetActorLocation();              //移動前の座標.
+    {   
+        vec.Z -= gravity;                                   //だんだん下へ.
+        SetActorLocation(GetActorLocation() + vec * speed); //前方向に移動.
+    }
+    const FVector nowPos = GetActorLocation();              //移動後の座標.
+     
+    //弾の軌道.
+    DrawDebugLine(
+        GetWorld(),
+        befPos,
+        nowPos,
+        FColor(255, 0, 0), // 線の色
+        false,             // 永続かどうか
+        1.0f,              // 表示時間
+        0,
+        1.0f               // 太さ
+    );
+
+    counter += 1; //カウンター.
+    if (counter >= deleteTime) {
+        Destroy();
+    }
 }
 
 /// <summary>
