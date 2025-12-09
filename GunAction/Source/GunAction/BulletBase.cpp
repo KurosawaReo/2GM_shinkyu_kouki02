@@ -5,7 +5,7 @@
    弾の元となる基底クラス.
 */
 #include "BulletBase.h"
-#include "Enemy.h"
+#include "EnemyManager.h"
 
 /// <summary>
 /// コンストラクタ.
@@ -48,8 +48,8 @@ void ABulletBase::OnOverlapBegin(
     //
     //GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, msg); //表示.
 
-    //敵に当たったなら.(AActor型をAEnemy型にキャスト)
-    if (AEnemy* enm = Cast<AEnemy>(OtherActor)) {
+    //敵に当たったなら.(AActor型をAEnemyManager型にキャスト)
+    if (AEnemyManager* enm = Cast<AEnemyManager>(OtherActor)) {
         //敵の死亡処理.
         enm->OnBulletHit();
     }
