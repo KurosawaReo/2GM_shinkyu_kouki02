@@ -52,7 +52,22 @@ void AEnemyManager::Tick(float DeltaTime) {
 
 	ACharacterBase::Tick(DeltaTime); //親クラスのTick()を呼び出す.
 
-	//一旦なし.
+	//プレイヤー取得.
+	ACharacter* player = UGameplayStatics::GetPlayerCharacter(GetWorld(), 0);
+	//座標取得.
+	FVector myPos = GetActorLocation();
+	FVector plyPos = player->GetActorLocation();
+	//座標差の計算.
+	FVector dis = plyPos - myPos;
+
+	//向きを設定.
+	double ang = atan2(dis.Y, dis.X);
+	FRotator rot(0, ang * 180 / PI, 0);
+	SetActorRotation(rot, ETeleportType::None);
+
+	//前方向に進ませる.
+	//FVector forward(cos(ang), sin(ang), 0);
+	//SetActorLocation(GetActorLocation() + forward * SPEED);
 }
 #pragma endregion
 

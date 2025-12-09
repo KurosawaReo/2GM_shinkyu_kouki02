@@ -10,6 +10,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "PlayerManager.h"
 #include "CharacterBase.h" //親クラス.
 #include "EnemyManager.generated.h"
 
@@ -35,15 +36,15 @@ class GUNACTION_API AEnemyManager : public ACharacterBase
 //▼ ===== 変数 ===== ▼.
 public:
 	//敵の今の状態.
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Enemy")
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "MyProperty|Enemy")
 	EEnemyState CurrentState;
 
 	//死亡時のエフェクト.
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Enemy|Death")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Enemy")
 	class UParticleSystem* DeathEffect;
 
 	//死亡時のサウンド.
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Enemy|Death")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Enemy")
 	class USoundBase* DeathSound;
 // 
 //▼ ===== 関数 ===== ▼.

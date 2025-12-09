@@ -46,111 +46,111 @@ class GUNACTION_API ACharacterBase : public ACharacter
 public:
 	//カメラコンポーネント
 	//TODO: そのうちPlayerManagerに移動したい(設計的に).
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera)
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "MyProperty|Base|Camera")
 	class USpringArmComponent* CameraBoom;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera)
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "MyProperty|Base|Camera")
 	class UCameraComponent* FollowCamera;
 
 	//クロスヘア.
 	//TODO: そのうちPlayerManagerに移動したい(設計的に).
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "UI")
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "MyProperty|Base|UI")
 	TSubclassOf<UCrosshairWidget> CrosshairWidgetClass;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "UI")
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "MyProperty|Base|UI")
 	UCrosshairWidget* CrosshairWidget;
 
 	// 銃クラスの参照
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Gun")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Base|Gun")
 	TSubclassOf<ASteam_Revolver> RevolverGunClass;
 
-	UPROPERTY(BlueprintReadOnly, Category = "Gun")
+	UPROPERTY(BlueprintReadOnly, Category = "MyProperty|Base|Gun")
 	ASteam_Revolver* RevolverGun;
 
 	// 弾クラスの参照（Blueprintで設定可能）
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Bullet)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Base|Bullet")
 	TSubclassOf<AActor> BulletClass;
+	// 弾の発射距離（エディタで調整可能）
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Base|Bullet")
+	float BulletTargetDistance = 10000.0f; // 100メートル先
 
 	//腕のボーンインデックスをキャッシュ.
-	UPROPERTY(VisibleAnywhere, Category = "Animation")
+	UPROPERTY(VisibleAnywhere, Category = "MyProperty|Base|Animation")
 	int32 RightArmBoneIndex = INDEX_NONE;
 
-	UPROPERTY(VisibleAnywhere, Category = "Animation")
+	UPROPERTY(VisibleAnywhere, Category = "MyProperty|Base|Animation")
 	int32 RightForearmBoneIndex = INDEX_NONE;
 
 	//アニメーション関連.
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Animation)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Base|Animation")
 	class UAnimMontage* IdleAnimMontage;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Animation)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Base|Animation")
 	class UAnimMontage* MoveAnimMontage;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Animation)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Base|Animation")
 	class UAnimMontage* SprintAnimMontage;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Animation)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Base|Animation")
 	class UAnimMontage* JumpUpAnimMontage;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Animation)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Base|Animation")
 	class UAnimMontage* JumpMidAnimMontage;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Animation)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Base|Animation")
 	class UAnimMontage* JumpDownAnimMontage;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation|Shooting")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Base|Animation|Shooting")
 	class UAnimMontage* PlayerFireAnimMontage;
 
 	//移動パラメーター.
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Movement)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Base|Movement")
 	float BaseTurnRate = 45.0f;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Movement)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Base|Movement")
 	float BaseLookUpRate = 45.0f;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Movement)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Base|Movement")
 	float WalkSpeed = 600.0f;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Movement)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Base|Movement")
 	float RunSpeed = 800.0f;
 
-	// 弾の発射距離（エディタで調整可能）
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Bullet")
-	float BulletTargetDistance = 10000.0f; // 100メートル先
 
 	// 弾薬関連
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ammunition")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Base|Ammunition")
 	int32 MaxAmmoPerMagazine = 6;
 
-	UPROPERTY(BlueprintReadOnly, Category = "Ammunition")
+	UPROPERTY(BlueprintReadOnly, Category = "MyProperty|Base|Ammunition")
 	int32 CurrentAmmoCount = 6;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ammunition")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Base|Ammunition")
 	float ReloadDuration = 2.5f; // リロード時間（秒）
 
-	UPROPERTY(BlueprintReadOnly, Category = "Ammunition")
+	UPROPERTY(BlueprintReadOnly, Category = "MyProperty|Base|Ammunition")
 	bool bIsReloading = false;
 
-	UPROPERTY(BlueprintReadOnly, Category = "Ammunition")
+	UPROPERTY(BlueprintReadOnly, Category = "MyProperty|Base|Ammunition")
 	float ReloadTimerElapsed = 0.0f;
 
 	//インスペクターに表示する方法.
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Movement)
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "MyProperty|Base|Movement")
 	bool bIsSprinting;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Movement)
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "MyProperty|Base|Movement")
 	bool bIsMoving;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Movement)
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "MyProperty|Base|Movement")
 	bool bIsJumping;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Movement)
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "MyProperty|Base|Movement")
 	bool bAWasJumping;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Movement)
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "MyProperty|Base|Movement")
 	double CurrentSpeed;
 
 	//現在のアニメーション状態.
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Animation)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Base|Animation")
 	EAnimationState CurrentAnimationState;
 
 //▼ ===== 関数 ===== ▼.
