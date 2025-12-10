@@ -17,9 +17,9 @@
 #include "Components/BoxComponent.h"
 #include "Particles/ParticleSystemComponent.h"
 
-#include "BulletBase.h"
+//他クラスのinclude.
 #include "Steam_Revolver.h"
-#include "EngineUtils.h"
+#include "EngineUtils.h" //←これは何?
 
 #pragma region "コンストラクタ"
 /// <summary>
@@ -245,6 +245,33 @@ void ACharacterBase::UpdateAnimationState()
 		PlayAnimationMontage(NewAnimationState);
 	}
 }
+
+void ACharacterBase::PlayFireAnimMontage()
+{
+	if (PlayerFireAnimMontage == nullptr)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("PlayerFireAnimMontage is not set!"));
+		return;
+	}
+
+	if (GetMesh() == nullptr)
+	{
+		UE_LOG(LogTemp, Error, TEXT("Mesh is invalid!"));
+		return;
+	}
+
+	// アニメーションインスタンスを取得
+	class UAnimInstance* FireAnimInstance = GetMesh()->GetAnimInstance();
+	if (FireAnimInstance == nullptr)
+	{
+		UE_LOG(LogTemp, Error, TEXT("AnimInstance is null!"));
+		return;
+	}
+
+	UE_LOG(LogTemp, Warning, TEXT("Playing player fire montage: %s"), *PlayerFireAnimMontage->GetName());
+	FireAnimInstance->Montage_Play(PlayerFireAnimMontage, 1.0f);
+}
+
 void ACharacterBase::PlayAnimationMontage(EAnimationState AnimState)
 {
 	UAnimMontage* MontageToPlay = nullptr;
@@ -298,224 +325,41 @@ void ACharacterBase::PlayAnimationMontage(EAnimationState AnimState)
 
 #pragma region "射撃"
 /// <summary>
-/// EquipGun - 銃を装備する処理.
-/// RevolverGunClassから銃をスポーンしてプレイヤーに装備させる.
+/// ボーンインデックスを初期化する関数
 /// </summary>
-void ACharacterBase::EquipGun()
+void ACharacterBase::InitializeBoneIndices()
 {
-	if (RevolverGunClass == nullptr)
+	if (!GetMesh())
 	{
-		UE_LOG(LogTemp, Warning, TEXT("RevolverGunClass is not set! Please set it in Blueprint."));
+		UE_LOG(LogTemp, Error, TEXT("Mesh is NULL!"));
 		return;
 	}
 
-	// 銃をスポーン
-	FActorSpawnParameters SpawnParams;
-	SpawnParams.Owner = this;
-	SpawnParams.Instigator = GetInstigator();
+	// 右腕のボーン名（スケルトンに合わせて変更してください）
+	FName RightArmBoneName = FName(TEXT("arm_r"));      // 上腕
+	FName RightForearmBoneName = FName(TEXT("forearm_r")); // 前腕
 
-	RevolverGun = GetWorld()->SpawnActor<ASteam_Revolver>(RevolverGunClass, FVector::ZeroVector, FRotator::ZeroRotator, SpawnParams);
+	// ボーンインデックスを取得
+	RightArmBoneIndex = GetMesh()->GetBoneIndex(RightArmBoneName);
+	RightForearmBoneIndex = GetMesh()->GetBoneIndex(RightForearmBoneName);
 
-	if (RevolverGun)
+	if (RightArmBoneIndex != INDEX_NONE)
 	{
-		// 銃をメッシュにアタッチ（ソケット: "hand_r" 右手に装備）
-		RevolverGun->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetIncludingScale, TEXT("hand_r"));
-
-		// 銃のコリジョンを無効化（プレイヤーに装備されるため不要）
-		if (RevolverGun->Box)
-		{
-			RevolverGun->Box->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-		}
-
-		// スケルタルメッシュのコリジョンも無効化
-		if (RevolverGun->Steam_Revolver)
-		{
-			RevolverGun->Steam_Revolver->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-		}
-
-		UE_LOG(LogTemp, Warning, TEXT("Gun equipped successfully!"));
-		CurrentAmmoCount = MaxAmmoPerMagazine;
+		UE_LOG(LogTemp, Warning, TEXT("Right Arm Bone found at index: %d"), RightArmBoneIndex);
 	}
 	else
 	{
-		UE_LOG(LogTemp, Error, TEXT("Failed to spawn revolver gun!"));
-	}
-}
-
-/// <summary>
-/// CalculateAndShot - 弾の計算と発射処理.
-/// カメラの位置と方向から弾をスポーンし、銃のマズルから発射する.
-/// 弾薬が0の場合はリロードする.
-/// </summary>
-void ACharacterBase::CalculateAndShot()
-{
-	// リロード中は射撃不可
-	if (bIsReloading)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("Reloading... Cannot shoot!"));
-		return;
+		UE_LOG(LogTemp, Error, TEXT("Right Arm Bone '%s' not found!"), *RightArmBoneName.ToString());
 	}
 
-	// 弾薬がない場合はリロード開始
-	if (CurrentAmmoCount <= 0)
+	if (RightForearmBoneIndex != INDEX_NONE)
 	{
-		StartReload();
-		return;
-	}
-
-	if (FollowCamera == nullptr || GetWorld() == nullptr)
-	{
-		return;
-	}
-
-	// BulletClassが設定されているか確認.
-	if (BulletClass == nullptr)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("BulletClass is not set! Please set it in Blueprint."));
-		return;
-	}
-
-	//クロスヘアの中心座標を画面座標で計算.
-	FVector2D ViewportSize = FVector2D(GEngine->GameViewport->Viewport->GetSizeXY());
-	FVector2D CrosshairScreenLocation = ViewportSize / 2.0f; // 画面中央.
-
-	// スクリーン座標をワールド座標に変換.
-	FVector CrosshairWorldLocation = FVector::ZeroVector;
-	FVector CrosshairWorldDirection = FVector::ZeroVector;
-
-
-	APlayerController* PlayerController = Cast<APlayerController>(Controller);
-	if (PlayerController)
-	{
-		PlayerController->DeprojectScreenPositionToWorld(
-			CrosshairScreenLocation.X,
-			CrosshairScreenLocation.Y,
-			CrosshairWorldLocation,
-			CrosshairWorldDirection
-		);
-	}
-
-	// クロスヘアから遠くの目標地点を計算.
-	FVector TargetPosition = CrosshairWorldLocation + (CrosshairWorldDirection * BulletTargetDistance);
-
-	//カメラの位置を取得.
-	FVector CameraLocation = FollowCamera->GetComponentLocation();
-	FRotator CameraRotation = FollowCamera->GetComponentRotation();
-
-	// 銃のマズルから弾を発射する場合
-	FVector SpawnLocation = CameraLocation;
-
-	if (RevolverGun && RevolverGun->Muzzle)
-	{
-		SpawnLocation = RevolverGun->Muzzle->GetComponentLocation();
+		UE_LOG(LogTemp, Warning, TEXT("Right Forearm Bone found at index: %d"), RightForearmBoneIndex);
 	}
 	else
 	{
-		// マズルがない場合はカメラの少し前方から発射
-		SpawnLocation = CameraLocation + (GetCameraVector("Forward") * 100.0f) - (GetCameraVector("Right") * 20.0f);
+		UE_LOG(LogTemp, Error, TEXT("Right Forearm Bone '%s' not found!"), *RightForearmBoneName.ToString());
 	}
-
-	//マズルから目標への方向を計算
-	FVector BulletDirectionToTarget = TargetPosition - SpawnLocation;
-	BulletDirectionToTarget.Normalize();
-	FRotator BulletRotation = BulletDirectionToTarget.Rotation();
-
-	// プレイヤーの回転をクロスヘア方向に向かせる
-	FVector DirectionToTarget = TargetPosition - GetActorLocation();
-	DirectionToTarget.Normalize();
-	FRotator TargetRotation = DirectionToTarget.Rotation();
-
-	// Y軸（Yaw）のみ回転させる（上下は変わらない）
-	FRotator NewRotation = GetActorRotation();
-	NewRotation.Yaw = TargetRotation.Yaw;
-	NewRotation.Pitch = TargetRotation.Pitch;
-	SetActorRotation(NewRotation);
-
-
-
-	//弾のスポーンパラメーター設定.
-	FActorSpawnParameters SpawnParams;
-	SpawnParams.Owner = this;
-	SpawnParams.Instigator = GetInstigator();
-
-	//弾クラスを生成.
-	ABulletBase* Bullet = GetWorld()->SpawnActor<ABulletBase>(BulletClass, SpawnLocation, BulletRotation, SpawnParams);
-
-
-
-	if (Bullet != nullptr)
-	{
-		//弾クラスのメンバ関数.
-		Bullet->ShotPos(TargetPosition);
-
-		//ショット時にクロスヘアのエフェクトを実行
-		if (CrosshairWidget)
-		{
-			CrosshairWidget->OnShotEffect();
-		}
-
-		// 弾薬を消費
-		CurrentAmmoCount--;
-
-		UE_LOG(LogTemp, Warning, TEXT("Shot! Remaining Ammo: %d"), CurrentAmmoCount);
-
-		// マズルフラッシュエフェクトを再生
-		if (RevolverGun && RevolverGun->PS_Muzzleflash_Revolver)
-		{
-			// 古いパーティクルを確実に終了させてから新規に開始
-			RevolverGun->PS_Muzzleflash_Revolver->Deactivate();
-			RevolverGun->PS_Muzzleflash_Revolver->Activate(true);
-		}
-
-		if (RevolverGun && RevolverGun->S_Revolver_Shot_01_Cue)
-		{
-			RevolverGun->S_Revolver_Shot_01_Cue->Play(0.0f);
-			UE_LOG(LogTemp, Warning, TEXT("Shot Sound Played!"));
-		}
-
-		// 銃の射撃アニメーションを再生
-		if (RevolverGun)
-		{
-			RevolverGun->PlayFireAnimation();
-		}
-	}
-	//プレイヤーアニメーション追加.
-	PlayFireAnimMontage();
-}
-void ACharacterBase::PlayFireAnimMontage()
-{
-	if (PlayerFireAnimMontage == nullptr)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("PlayerFireAnimMontage is not set!"));
-		return;
-	}
-
-	if (GetMesh() == nullptr)
-	{
-		UE_LOG(LogTemp, Error, TEXT("Mesh is invalid!"));
-		return;
-	}
-
-	// アニメーションインスタンスを取得
-	class UAnimInstance* FireAnimInstance = GetMesh()->GetAnimInstance();
-	if (FireAnimInstance == nullptr)
-	{
-		UE_LOG(LogTemp, Error, TEXT("AnimInstance is null!"));
-		return;
-	}
-
-	UE_LOG(LogTemp, Warning, TEXT("Playing player fire montage: %s"), *PlayerFireAnimMontage->GetName());
-	FireAnimInstance->Montage_Play(PlayerFireAnimMontage, 1.0f);
-}
-
-/// <summary>
-/// ShotBullet - 弾発射コマンド.
-/// CalculateAndShot関数を呼び出して弾を発射する.
-/// 入力イベントから直接呼ばれる.
-/// </summary>
-void ACharacterBase::ShotBullet()
-{
-	CalculateAndShot();
 }
 
 /// <summary>
@@ -586,11 +430,66 @@ void ACharacterBase::UpdateReloadTimer(float DeltaTime)
 }
 
 /// <summary>
+/// EquipGun - 銃を装備する処理.
+/// RevolverGunClassから銃をスポーンしてプレイヤーに装備させる.
+/// </summary>
+void ACharacterBase::EquipGun()
+{
+	if (RevolverGunClass == nullptr)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("RevolverGunClass is not set! Please set it in Blueprint."));
+		return;
+	}
+
+	// 銃をスポーン
+	FActorSpawnParameters SpawnParams;
+	SpawnParams.Owner = this;
+	SpawnParams.Instigator = GetInstigator();
+
+	RevolverGun = GetWorld()->SpawnActor<ASteam_Revolver>(RevolverGunClass, FVector::ZeroVector, FRotator::ZeroRotator, SpawnParams);
+
+	if (RevolverGun)
+	{
+		// 銃をメッシュにアタッチ（ソケット: "hand_r" 右手に装備）
+		RevolverGun->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetIncludingScale, TEXT("hand_r"));
+
+		// 銃のコリジョンを無効化（プレイヤーに装備されるため不要）
+		if (RevolverGun->Box)
+		{
+			RevolverGun->Box->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+		}
+
+		// スケルタルメッシュのコリジョンも無効化
+		if (RevolverGun->Steam_Revolver)
+		{
+			RevolverGun->Steam_Revolver->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+		}
+
+		UE_LOG(LogTemp, Warning, TEXT("Gun equipped successfully!"));
+		CurrentAmmoCount = MaxAmmoPerMagazine;
+	}
+	else
+	{
+		UE_LOG(LogTemp, Error, TEXT("Failed to spawn revolver gun!"));
+	}
+}
+
+/// <summary>
+/// 腕のボーンを回転させる関数
+/// </summary>
+void ACharacterBase::RotateArmBones(const FRotator& TargetRotation)
+{
+	// キャラクター全体の回転で対応
+	// 腕のボーン操作はアニメーションBP側で自動的に追従します
+	UE_LOG(LogTemp, Warning, TEXT("Character rotation - Pitch: %f, Yaw: %f"), TargetRotation.Pitch, TargetRotation.Yaw);
+}
+
+/// <summary>
 /// ターゲット位置を計算する関数.
 /// カメラの位置から前方向へ指定距離だけ離れた地点を計算する.
 /// 弾の発射目標地点を決定するために使用される.
 /// </summary>
-FVector ACharacterBase::CalculateTargetPosition(float Distance) const
+FVector ACharacterBase::GetTargetPos(float Distance) const
 {
 	if (FollowCamera == nullptr)
 	{
@@ -606,53 +505,4 @@ FVector ACharacterBase::CalculateTargetPosition(float Distance) const
 
 	return TargetPosition;
 }
-
-/// <summary>
-/// ボーンインデックスを初期化する関数
-/// </summary>
-void ACharacterBase::InitializeBoneIndices()
-{
-	if (!GetMesh())
-	{
-		UE_LOG(LogTemp, Error, TEXT("Mesh is NULL!"));
-		return;
-	}
-
-	// 右腕のボーン名（スケルトンに合わせて変更してください）
-	FName RightArmBoneName = FName(TEXT("arm_r"));      // 上腕
-	FName RightForearmBoneName = FName(TEXT("forearm_r")); // 前腕
-
-	// ボーンインデックスを取得
-	RightArmBoneIndex = GetMesh()->GetBoneIndex(RightArmBoneName);
-	RightForearmBoneIndex = GetMesh()->GetBoneIndex(RightForearmBoneName);
-
-	if (RightArmBoneIndex != INDEX_NONE)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("Right Arm Bone found at index: %d"), RightArmBoneIndex);
-	}
-	else
-	{
-		UE_LOG(LogTemp, Error, TEXT("Right Arm Bone '%s' not found!"), *RightArmBoneName.ToString());
-	}
-
-	if (RightForearmBoneIndex != INDEX_NONE)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("Right Forearm Bone found at index: %d"), RightForearmBoneIndex);
-	}
-	else
-	{
-		UE_LOG(LogTemp, Error, TEXT("Right Forearm Bone '%s' not found!"), *RightForearmBoneName.ToString());
-	}
-}
-
-/// <summary>
-/// 腕のボーンを回転させる関数
-/// </summary>
-void ACharacterBase::RotateArmBones(const FRotator& TargetRotation)
-{
-	// キャラクター全体の回転で対応
-	// 腕のボーン操作はアニメーションBP側で自動的に追従します
-	UE_LOG(LogTemp, Warning, TEXT("Character rotation - Pitch: %f, Yaw: %f"), TargetRotation.Pitch, TargetRotation.Yaw);
-}
-
 #pragma endregion

@@ -217,6 +217,6 @@ protected:
 
 	// カメラ前方の目標地点を計算する関数.
 	UFUNCTION(BlueprintCallable, Category = "Bullet")
-	FVector CalculateTargetPosition(float Distance) const;
+	FVector GetTargetPos(float Distance) const;
 #pragma endregion
 };

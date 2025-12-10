@@ -19,6 +19,9 @@
 #include "Components/BoxComponent.h"
 #include "Particles/ParticleSystemComponent.h"
 
+//他クラスのinclude.
+#include "BulletBase.h"
+
 //コンストラクタ.
 APlayerManager::APlayerManager() {
 
@@ -200,5 +203,146 @@ void APlayerManager::InitializeUI()
 	{
 		UE_LOG(LogTemp, Error, TEXT("Failed to create CrosshairWidget!"));
 	}
+}
+#pragma endregion
+
+#pragma region "射撃"
+/// <summary>
+/// ShotBullet() - 発射操作をした時に実行する.
+/// [プレイヤー専用]
+/// </summary>
+void APlayerManager::ShotBullet()
+{
+	//リロード中は射撃不可.
+	if (bIsReloading)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Reloading... Cannot shoot!"));
+		return;
+	}
+	//弾薬がない場合はリロード開始.
+	if (CurrentAmmoCount <= 0)
+	{
+		StartReload();
+		return;
+	}
+	//BulletClassのnullチェック.
+	if (BulletClass == nullptr)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("BulletClass is not set! Please set it in Blueprint."));
+		return;
+	}
+	//nullチェック.
+	if (FollowCamera == nullptr || GetWorld() == nullptr)
+	{
+		return;
+	}
+
+	//クロスヘアの中心座標を画面座標で計算.
+	const FVector2D ViewportSize = FVector2D(GEngine->GameViewport->Viewport->GetSizeXY());
+	const FVector2D CrosshairScreenLocation = ViewportSize / 2.0f; // 画面中央.
+
+	//スクリーン座標をワールド座標に変換.
+	FVector CrosshairWorldLocation  = FVector::ZeroVector;
+	FVector CrosshairWorldDirection = FVector::ZeroVector;
+	//↑を取得する.
+	APlayerController* PlayerController = Cast<APlayerController>(Controller);
+	if (PlayerController)
+	{
+		PlayerController->DeprojectScreenPositionToWorld(
+			CrosshairScreenLocation.X,
+			CrosshairScreenLocation.Y,
+			CrosshairWorldLocation,
+			CrosshairWorldDirection
+		);
+	}
+
+	// クロスヘアから遠くの目標地点を計算.
+	const FVector TargetPosition = CrosshairWorldLocation + (CrosshairWorldDirection * BulletTargetDistance);
+	//カメラの位置を取得.
+	const FVector  CameraLocation = FollowCamera->GetComponentLocation();
+	const FRotator CameraRotation = FollowCamera->GetComponentRotation();
+
+	//弾の設定 - ①スポーン位置.
+	FVector SpawnLocation;
+	{
+		if (RevolverGun && RevolverGun->Muzzle) {
+			SpawnLocation = RevolverGun->Muzzle->GetComponentLocation();
+		}
+		else{ 
+			//マズルがない場合はカメラの少し前方から発射.
+			SpawnLocation = CameraLocation + (GetCameraVector("Forward") * 100.0f) - (GetCameraVector("Right") * 20.0f);
+		}
+	}
+
+	//弾の設定 - ②発射方向.
+	FRotator BulletRotation;
+	{
+		FVector BulletDirectionToTarget = TargetPosition - SpawnLocation;
+		BulletDirectionToTarget.Normalize();
+		BulletRotation = BulletDirectionToTarget.Rotation();
+	}
+
+	//弾の設定 - ③スポーンパラメーター.
+	FActorSpawnParameters SpawnParams;
+	{
+		SpawnParams.Owner = this;
+		SpawnParams.Instigator = GetInstigator();
+	}
+
+	//弾クラスを生成.
+	ABulletBase* Bullet = GetWorld()->SpawnActor<ABulletBase>(BulletClass, SpawnLocation, BulletRotation, SpawnParams);
+	//生成に成功したら.
+	if (Bullet != nullptr)
+	{
+		//弾の位置をセット.
+		Bullet->ShotPos(TargetPosition);
+
+		//ショット時にクロスヘアのエフェクトを実行
+		if (CrosshairWidget)
+		{
+			CrosshairWidget->OnShotEffect();
+		}
+
+		// 弾薬を消費
+		CurrentAmmoCount--;
+
+		UE_LOG(LogTemp, Warning, TEXT("Shot! Remaining Ammo: %d"), CurrentAmmoCount);
+
+		// マズルフラッシュエフェクトを再生
+		if (RevolverGun && RevolverGun->PS_Muzzleflash_Revolver)
+		{
+			// 古いパーティクルを確実に終了させてから新規に開始
+			RevolverGun->PS_Muzzleflash_Revolver->Deactivate();
+			RevolverGun->PS_Muzzleflash_Revolver->Activate(true);
+		}
+
+		if (RevolverGun && RevolverGun->S_Revolver_Shot_01_Cue)
+		{
+			RevolverGun->S_Revolver_Shot_01_Cue->Play(0.0f);
+			UE_LOG(LogTemp, Warning, TEXT("Shot Sound Played!"));
+		}
+
+		// 銃の射撃アニメーションを再生
+		if (RevolverGun)
+		{
+			RevolverGun->PlayFireAnimation();
+		}
+	}
+
+	// プレイヤーの回転をクロスヘア方向に向かせる
+	{
+		FVector DirectionToTarget = TargetPosition - GetActorLocation();
+		DirectionToTarget.Normalize();
+		FRotator TargetRotation = DirectionToTarget.Rotation();
+
+		// Y軸（Yaw）のみ回転させる（上下は変わらない）
+		FRotator NewRotation = GetActorRotation();
+		NewRotation.Yaw = TargetRotation.Yaw;
+		NewRotation.Pitch = TargetRotation.Pitch;
+		SetActorRotation(NewRotation);
+	}
+
+	//プレイヤーアニメーション.
+	PlayFireAnimMontage();
 }
 #pragma endregion

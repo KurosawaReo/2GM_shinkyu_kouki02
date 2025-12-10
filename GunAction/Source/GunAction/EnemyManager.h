@@ -71,4 +71,8 @@ public:
 
 	void DisableComponents();				//コンポーネント無効化.
 #pragma endregion
+
+#pragma region "射撃"
+	void ShotBullet() override; //override
+#pragma endregion
 };

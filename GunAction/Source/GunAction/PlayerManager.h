@@ -23,6 +23,12 @@ class GUNACTION_API APlayerManager : public ACharacterBase
 
 //Å• ===== ïœêî ===== Å•.
 public:
+	//ÉNÉçÉXÉwÉA.
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "MyProperty|Base|UI")
+	TSubclassOf<UCrosshairWidget> CrosshairWidgetClass;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "MyProperty|Base|UI")
+	UCrosshairWidget* CrosshairWidget;
 
 //Å• ===== ä÷êî ===== Å•.
 protected:
@@ -52,5 +58,9 @@ protected:
 
 #pragma region "UI"
 	void InitializeUI();
+#pragma endregion
+
+#pragma region "éÀåÇ"
+	void ShotBullet() override; //override
 #pragma endregion
 };

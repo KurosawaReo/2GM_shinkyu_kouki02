@@ -16,6 +16,9 @@
 #include "TimerManager.h"
 #include "Engine/World.h"
 
+//‘¼ƒNƒ‰ƒX‚Ìinclude.
+#include "BulletBase.h"
+
 #pragma region "get"
 //€–Só‘Ô‚©‚Ç‚¤‚©.
 bool AEnemyManager::IsDead() const
@@ -141,5 +144,15 @@ void AEnemyManager::DisableComponents()
 
 	// Tick‚ğ’â~
 	SetActorTickEnabled(false);
+}
+#pragma endregion
+
+#pragma region "ËŒ‚"
+/// <summary>
+/// ShotBullet() - ”­Ë‘€ì‚ğ‚µ‚½‚ÉÀs‚·‚é.
+/// [“Gê—p]
+/// </summary>
+void AEnemyManager::ShotBullet()
+{
 }
 #pragma endregion
