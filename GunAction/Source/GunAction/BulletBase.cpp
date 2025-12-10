@@ -62,9 +62,6 @@ void ABulletBase::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-    //FString msg = FString::Printf(TEXT("vec: %f %f %f"), vec.X, vec.Y, vec.Z); //変数組み込み.
-    //GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, msg); //表示.
-
     const FVector befPos = GetActorLocation();              //移動前の座標.
     {   
         vec.Z -= gravity;                                   //だんだん下へ.

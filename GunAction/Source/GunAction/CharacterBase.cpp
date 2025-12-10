@@ -18,6 +18,7 @@
 #include "Particles/ParticleSystemComponent.h"
 
 //他クラスのinclude.
+#include "BulletBase.h"
 #include "Steam_Revolver.h"
 #include "EngineUtils.h" //←これは何?
 
@@ -324,6 +325,52 @@ void ACharacterBase::PlayAnimationMontage(EAnimationState AnimState)
 #pragma endregion
 
 #pragma region "射撃"
+
+/// <summary>
+/// 弾を発射する.
+/// </summary>
+/// <returns>発射に成功したか</returns>
+bool ACharacterBase::ShotBulletExe(FVector loc, FRotator rot, FVector targetLoc, FActorSpawnParameters spawnParam)
+{
+	//弾クラスを生成.
+	ABulletBase* Bullet = GetWorld()->SpawnActor<ABulletBase>(BulletClass, loc, rot, spawnParam);
+
+	//生成に成功したら.
+	if (Bullet != nullptr)
+	{
+		//弾の位置をセット.
+		Bullet->ShotPos(targetLoc);
+
+		// 弾薬を消費
+		CurrentAmmoCount--;
+
+		UE_LOG(LogTemp, Warning, TEXT("Shot! Remaining Ammo: %d"), CurrentAmmoCount);
+
+		// マズルフラッシュエフェクトを再生
+		if (RevolverGun && RevolverGun->PS_Muzzleflash_Revolver)
+		{
+			// 古いパーティクルを確実に終了させてから新規に開始
+			RevolverGun->PS_Muzzleflash_Revolver->Deactivate();
+			RevolverGun->PS_Muzzleflash_Revolver->Activate(true);
+		}
+
+		if (RevolverGun && RevolverGun->S_Revolver_Shot_01_Cue)
+		{
+			RevolverGun->S_Revolver_Shot_01_Cue->Play(0.0f);
+			UE_LOG(LogTemp, Warning, TEXT("Shot Sound Played!"));
+		}
+
+		// 銃の射撃アニメーションを再生
+		if (RevolverGun)
+		{
+			RevolverGun->PlayFireAnimation();
+		}
+
+		return true; //発射成功.
+	}
+	return false; //発射失敗.
+}
+
 /// <summary>
 /// ボーンインデックスを初期化する関数
 /// </summary>

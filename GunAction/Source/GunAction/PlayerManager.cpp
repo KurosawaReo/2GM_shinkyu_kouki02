@@ -19,9 +19,6 @@
 #include "Components/BoxComponent.h"
 #include "Particles/ParticleSystemComponent.h"
 
-//他クラスのinclude.
-#include "BulletBase.h"
-
 //コンストラクタ.
 APlayerManager::APlayerManager() {
 
@@ -277,9 +274,9 @@ void APlayerManager::ShotBullet()
 	//弾の設定 - ②発射方向.
 	FRotator BulletRotation;
 	{
-		FVector BulletDirectionToTarget = TargetPosition - SpawnLocation;
-		BulletDirectionToTarget.Normalize();
-		BulletRotation = BulletDirectionToTarget.Rotation();
+		FVector dir = TargetPosition - SpawnLocation;
+		dir.Normalize();
+		BulletRotation = dir.Rotation();
 	}
 
 	//弾の設定 - ③スポーンパラメーター.
@@ -289,13 +286,12 @@ void APlayerManager::ShotBullet()
 		SpawnParams.Instigator = GetInstigator();
 	}
 
-	//弾クラスを生成.
-	ABulletBase* Bullet = GetWorld()->SpawnActor<ABulletBase>(BulletClass, SpawnLocation, BulletRotation, SpawnParams);
-	//生成に成功したら.
-	if (Bullet != nullptr)
-	{
-		//弾の位置をセット.
-		Bullet->ShotPos(TargetPosition);
+	//弾を発射.
+	bool ret = ShotBulletExe(SpawnLocation, BulletRotation, TargetPosition, SpawnParams);
+	//発射に成功したら.
+	if (ret) {
+		
+		GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, TEXT("ugoita"));
 
 		//ショット時にクロスヘアのエフェクトを実行
 		if (CrosshairWidget)
