@@ -7,7 +7,6 @@
 */
 #include "CharacterBase.h"
 
-#include "CrosshairWidget.h" 
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "GameFramework/SpringArmComponent.h"
@@ -448,10 +447,11 @@ void ACharacterBase::CalculateAndShot()
 		//弾クラスのメンバ関数.
 		Bullet->ShotPos(TargetPosition);
 
-		//ショット時にクロスヘアのエフェクトを実行
-		if (CrosshairWidget)
+		// ? 追加（コメント）
+		if (FollowCamera != nullptr)
 		{
-			CrosshairWidget->OnShotEffect();
+			// CrosshairWidgetはPlayerManagerで管理されるため、ここでは呼ばない
+			// PlayerManagerがこのメソッドをオーバーライドしてクロスヘアエフェクトを実行する
 		}
 
 		// 弾薬を消費
