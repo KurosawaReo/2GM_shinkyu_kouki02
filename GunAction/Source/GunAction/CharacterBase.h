@@ -19,10 +19,8 @@
 */
 
 //前方宣言.
-class UCrosshairWidget;
+
 class ABulletBase;
-class USpringArmComponent;
-class UCameraComponent;
 class ASteam_Revolver;
 
 // アニメーション状態の列挙型
@@ -44,21 +42,10 @@ class GUNACTION_API ACharacterBase : public ACharacter
 
 //▼ ===== 変数 ===== ▼.
 public:
-	//カメラコンポーネント
-	//TODO: そのうちPlayerManagerに移動したい(設計的に).
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "MyProperty|Base|Camera")
-	class USpringArmComponent* CameraBoom;
-
+	
+	//カメラコンポーネント（子クラスで実装される）
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "MyProperty|Base|Camera")
 	class UCameraComponent* FollowCamera;
-
-	//クロスヘア.
-	//TODO: そのうちPlayerManagerに移動したい(設計的に).
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "MyProperty|Base|UI")
-	TSubclassOf<UCrosshairWidget> CrosshairWidgetClass;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "MyProperty|Base|UI")
-	UCrosshairWidget* CrosshairWidget;
 
 	// 銃クラスの参照
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Base|Gun")
