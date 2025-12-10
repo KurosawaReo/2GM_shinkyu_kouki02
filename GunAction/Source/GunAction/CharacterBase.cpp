@@ -1,6 +1,5 @@
 /*
    - CharacterBase -
-   作成: 怜旺.
 
    プレイヤーと敵の基底クラス.
    元はなおと作のPlyerCharacterだったもの.
@@ -338,8 +337,6 @@ bool ACharacterBase::ShotBulletExe(FVector loc, FRotator rot, FVector targetLoc,
 	//生成に成功したら.
 	if (Bullet != nullptr)
 	{
-		//弾の位置をセット.
-		Bullet->ShotPos(targetLoc);
 
 		// 弾薬を消費
 		CurrentAmmoCount--;

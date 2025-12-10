@@ -1,6 +1,5 @@
 /*
    - CharacterBase -
-   作成: 怜旺.
 
    プレイヤーと敵の基底クラス.
    元はなおと作のPlyerCharacterだったもの.

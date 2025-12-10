@@ -290,38 +290,10 @@ void APlayerManager::ShotBullet()
 	bool ret = ShotBulletExe(SpawnLocation, BulletRotation, TargetPosition, SpawnParams);
 	//発射に成功したら.
 	if (ret) {
-		
-		GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, TEXT("ugoita"));
-
 		//ショット時にクロスヘアのエフェクトを実行
 		if (CrosshairWidget)
 		{
 			CrosshairWidget->OnShotEffect();
-		}
-
-		// 弾薬を消費
-		CurrentAmmoCount--;
-
-		UE_LOG(LogTemp, Warning, TEXT("Shot! Remaining Ammo: %d"), CurrentAmmoCount);
-
-		// マズルフラッシュエフェクトを再生
-		if (RevolverGun && RevolverGun->PS_Muzzleflash_Revolver)
-		{
-			// 古いパーティクルを確実に終了させてから新規に開始
-			RevolverGun->PS_Muzzleflash_Revolver->Deactivate();
-			RevolverGun->PS_Muzzleflash_Revolver->Activate(true);
-		}
-
-		if (RevolverGun && RevolverGun->S_Revolver_Shot_01_Cue)
-		{
-			RevolverGun->S_Revolver_Shot_01_Cue->Play(0.0f);
-			UE_LOG(LogTemp, Warning, TEXT("Shot Sound Played!"));
-		}
-
-		// 銃の射撃アニメーションを再生
-		if (RevolverGun)
-		{
-			RevolverGun->PlayFireAnimation();
 		}
 	}
 
