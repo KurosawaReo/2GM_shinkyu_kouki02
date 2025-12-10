@@ -18,10 +18,7 @@
 */
 
 //前方宣言.
-class UCrosshairWidget;
 class ABulletBase;
-class USpringArmComponent;
-class UCameraComponent;
 class ASteam_Revolver;
 
 // アニメーション状態の列挙型
@@ -43,14 +40,6 @@ class GUNACTION_API ACharacterBase : public ACharacter
 
 //▼ ===== 変数 ===== ▼.
 public:
-#pragma region "Camera"
-	//カメラコンポーネント.
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "MyProperty|Base|Camera")
-	class USpringArmComponent* CameraBoom;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "MyProperty|Base|Camera")
-	class UCameraComponent* FollowCamera;
-#pragma endregion
 
 #pragma region "Gun"
 	//銃クラスの参照.
@@ -168,18 +157,6 @@ protected:
 	virtual void Tick(float DeltaTime) override;
 #pragma endregion
 
-#pragma region "カメラ"
-	// カメラの向きを取得する関数.
-	UFUNCTION(BlueprintCallable, Category = "Camera")
-	FVector  GetCameraVector(FString dir) const;
-
-	UFUNCTION(BlueprintCallable, Category = "Camera")
-	FVector  GetCameraLocation() const;
-
-	UFUNCTION(BlueprintCallable, Category = "Camera")
-	FRotator GetCameraRotation() const;
-#pragma endregion
-
 #pragma region "移動"
 	//アニメーションを更新.
 	void UpdateAnimationState();
@@ -209,10 +186,5 @@ protected:
 
 	//腕のボーンを回転させる関数.
 	void RotateArmBones(const FRotator& TargetRotation);
-	
-	//カメラ前方の目標地点を計算する関数.
-	UFUNCTION(BlueprintCallable, Category = "Bullet")
-	FVector GetTargetPos(float Distance) const;
-
 #pragma endregion
 };

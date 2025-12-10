@@ -40,15 +40,16 @@ AEnemyManager::AEnemyManager()
 
 	GetCharacterMovement()->bOrientRotationToMovement = true;
 	GetCharacterMovement()->MaxWalkSpeed = 600.0f;
-
-	CurrentState = EEnemyState::ES_Alive;
 }
 //召喚した瞬間.
 void AEnemyManager::BeginPlay() {
 
 	ACharacterBase::BeginPlay(); //親クラスのBeginPlay()を呼び出す.
 
-	CurrentState = EEnemyState::ES_Alive; //初期state.
+	//初期state.
+	CurrentState = EEnemyState::ES_Alive;
+	//一定時間ごとに弾を発射する.
+	GetWorldTimerManager().SetTimer(tmShot, this, &AEnemyManager::ShotBullet, shotTime, true);
 }
 //常に実行.
 void AEnemyManager::Tick(float DeltaTime) {
@@ -154,5 +155,34 @@ void AEnemyManager::DisableComponents()
 /// </summary>
 void AEnemyManager::ShotBullet()
 {
+	GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, TEXT("ugoita"));
+
+	//目標地点を計算(仮)
+	const FVector TargetPosition = GetActorLocation() + GetActorForwardVector() * 100;
+
+	//弾の設定 - ①スポーン位置.
+	FVector SpawnLocation;
+	{
+		if (RevolverGun && RevolverGun->Muzzle) {
+			SpawnLocation = RevolverGun->Muzzle->GetComponentLocation();
+		}
+	}
+
+	//弾の設定 - ②発射方向.
+	FRotator BulletRotation;
+	{
+		FVector dir = TargetPosition - SpawnLocation;
+		dir.Normalize();
+		BulletRotation = dir.Rotation();
+	}
+
+	//弾の設定 - ③スポーンパラメーター.
+	FActorSpawnParameters SpawnParams;
+	{
+		SpawnParams.Owner = this;
+		SpawnParams.Instigator = GetInstigator();
+	}
+
+	ShotBulletExe(SpawnLocation, BulletRotation, TargetPosition, SpawnParams);
 }
 #pragma endregion

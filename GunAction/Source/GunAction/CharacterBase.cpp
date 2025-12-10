@@ -6,7 +6,6 @@
 */
 #include "CharacterBase.h"
 
-#include "CrosshairWidget.h" 
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "GameFramework/SpringArmComponent.h"
@@ -113,65 +112,6 @@ void ACharacterBase::Tick(float DeltaTime)
 
 	//リロード時間の更新.
 	UpdateReloadTimer(DeltaTime);
-}
-#pragma endregion
-
-#pragma region "カメラ"
-/// <summary>
-/// GetCameraVector - カメラからの方向ベクトルを取得.
-/// (弾の発射方向などの計算に使用)
-/// </summary>
-/// <param name="dir">"Forward", "Right", "up" のどれか</param>
-/// <returns>ベクトル</returns>
-FVector ACharacterBase::GetCameraVector(FString dir) const
-{
-	//カメラがない時はZeroVectorを返す.
-	if (FollowCamera == nullptr) {
-		return FVector::ZeroVector;
-	}
-
-	//前方向.
-	if (dir == "Forward") {
-		return FollowCamera->GetForwardVector();
-	}
-	//右方向.
-	else if (dir == "Right") {
-		return FollowCamera->GetRightVector();
-	}
-	//上方向.
-	else if (dir == "Up") {
-		return FollowCamera->GetUpVector();
-	}
-	//不正な指定.
-	else {
-		GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, TEXT("GetCameraVectorに失敗"));
-		return FVector::ZeroVector;
-	}
-}
-/// <summary>
-/// GetCameraLocation - カメラのワールド座標を取得.
-/// 弾の発射位置などの計算に使用される.
-/// </summary>
-/// <returns>カメラのワールド座標。カメラがない場合はZeroVector</returns>
-FVector ACharacterBase::GetCameraLocation() const
-{
-	if (FollowCamera == nullptr)
-	{
-		return FVector::ZeroVector;
-	}
-	return FollowCamera->GetComponentLocation();
-}
-/// <summary>
-/// GetCameraRotation - カメラの回転を取得.
-/// </summary>
-/// <returns>カメラの回転。カメラがない場合はZeroRotator</returns>
-FRotator ACharacterBase::GetCameraRotation() const
-{
-	if (FollowCamera == nullptr)
-	{
-		return FRotator::ZeroRotator;
-	}
-	return FollowCamera->GetComponentRotation();
 }
 #pragma endregion
 
@@ -337,7 +277,6 @@ bool ACharacterBase::ShotBulletExe(FVector loc, FRotator rot, FVector targetLoc,
 	//生成に成功したら.
 	if (Bullet != nullptr)
 	{
-
 		// 弾薬を消費
 		CurrentAmmoCount--;
 
@@ -526,27 +465,5 @@ void ACharacterBase::RotateArmBones(const FRotator& TargetRotation)
 	// キャラクター全体の回転で対応
 	// 腕のボーン操作はアニメーションBP側で自動的に追従します
 	UE_LOG(LogTemp, Warning, TEXT("Character rotation - Pitch: %f, Yaw: %f"), TargetRotation.Pitch, TargetRotation.Yaw);
-}
-
-/// <summary>
-/// ターゲット位置を計算する関数.
-/// カメラの位置から前方向へ指定距離だけ離れた地点を計算する.
-/// 弾の発射目標地点を決定するために使用される.
-/// </summary>
-FVector ACharacterBase::GetTargetPos(float Distance) const
-{
-	if (FollowCamera == nullptr)
-	{
-		return FVector::ZeroVector;
-	}
-
-	//カメラの位置を取得.
-	FVector CameraLocation = GetCameraLocation();
-	//カメラの方向を取得.
-	FVector ForwardVector = GetCameraVector("Forward"); //前.
-	//位置 + (前方向*距離)
-	FVector TargetPosition = CameraLocation + (ForwardVector * Distance);
-
-	return TargetPosition;
 }
 #pragma endregion

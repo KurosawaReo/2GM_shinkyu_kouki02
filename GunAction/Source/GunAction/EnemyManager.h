@@ -46,7 +46,13 @@ public:
 	//死亡時のサウンド.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Enemy")
 	class USoundBase* DeathSound;
-// 
+
+	//弾発射用タイマー.
+	FTimerHandle tmShot;
+	//発射間隔.
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Enemy|Shot")
+	float shotTime = 1.0f;
+
 //▼ ===== 関数 ===== ▼.
 public:
 #pragma region "get"

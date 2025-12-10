@@ -89,6 +89,7 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation|Shooting")
 	class UAnimMontage* PlayerFireAnimMontage;
 
+
 	//移動パラメーター.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Movement)
 	float BaseTurnRate = 45.0f;
@@ -121,6 +122,18 @@ public:
 
 	UPROPERTY(BlueprintReadOnly, Category = "Ammunition")
 	float ReloadTimerElapsed = 0.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category ="IK")
+	FVector RightHandIKLocation = FVector::ZeroVector;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "IK")
+	float RightHandIKAlpha = 1.0f;
+
+	//アイムオフセット用の回転値.
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Aiming")
+	float AimPitch = 0.0f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Aiming")
+	float AimYaw = 0.0f;
 
 	//インスペクターに表示する方法.
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Movement)
