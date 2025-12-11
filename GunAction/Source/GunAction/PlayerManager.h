@@ -27,20 +27,19 @@ class GUNACTION_API APlayerManager : public ACharacterBase
 
 //▼ ===== 変数 ===== ▼.
 public:
-
-	//カメラコンポーネント
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "MyProperty|Player|Camera")
-	class USpringArmComponent* CameraBoom;
-
-	//UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "MyProperty|Player|Camera")
-	//class UCameraComponent* FollowCamera;
-
 	//クロスヘア.
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "MyProperty|Player|UI")
 	TSubclassOf<UCrosshairWidget> CrosshairWidgetClass;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "MyProperty|Player|UI")
 	UCrosshairWidget* CrosshairWidget;
+
+	//カメラコンポーネント
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "MyProperty|Player|Camera")
+	class USpringArmComponent* CameraBoom;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "MyProperty|Player|Camera")
+	class UCameraComponent* FollowCamera;
 
 	// マズルソケットの名前
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Gun|Muzzle")
@@ -89,12 +88,30 @@ private:
 	// マズル方向を取得する関数
 	FRotator GetMuzzleRotation() const;
 
-	// 親クラスのShotBulletをオーバーライド
-	virtual void ShotBullet() override;
+	
 
+#pragma endregion
+
+#pragma region "カメラ"
+	UFUNCTION(BlueprintCallable, Category = "Camera")
+	FVector  GetCameraVector(FString dir) const;
+
+	UFUNCTION(BlueprintCallable, Category = "Camera")
+	FVector  GetCameraLocation() const;
+
+	UFUNCTION(BlueprintCallable, Category = "Camera")
+	FRotator GetCameraRotation() const;
+
+	//カメラ前方の目標地点を計算する関数.
+//	UFUNCTION(BlueprintCallable, Category = "Bullet")
+//	FVector GetTargetPos(float Distance) const;
 #pragma endregion
 
 #pragma region "UI"
 	void InitializeUI();
+#pragma endregion
+
+#pragma region "射撃"
+	void ShotBullet() override; //override
 #pragma endregion
 };

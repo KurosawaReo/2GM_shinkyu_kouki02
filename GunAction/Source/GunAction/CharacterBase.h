@@ -1,6 +1,5 @@
 /*
    - CharacterBase -
-   作成: 怜旺.
 
    プレイヤーと敵の基底クラス.
    元はなおと作のPlyerCharacterだったもの.
@@ -19,7 +18,6 @@
 */
 
 //前方宣言.
-
 class ABulletBase;
 class ASteam_Revolver;
 
@@ -42,24 +40,26 @@ class GUNACTION_API ACharacterBase : public ACharacter
 
 //▼ ===== 変数 ===== ▼.
 public:
-	
-	//カメラコンポーネント（子クラスで実装される）
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "MyProperty|Base|Camera")
-	class UCameraComponent* FollowCamera;
 
-	// 銃クラスの参照
+#pragma region "Gun"
+	//銃クラスの参照.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Base|Gun")
 	TSubclassOf<ASteam_Revolver> RevolverGunClass;
 
 	UPROPERTY(BlueprintReadOnly, Category = "MyProperty|Base|Gun")
 	ASteam_Revolver* RevolverGun;
+#pragma endregion
 
+#pragma region "Bullet"
 	// 弾クラスの参照（Blueprintで設定可能）
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Base|Bullet")
 	TSubclassOf<AActor> BulletClass;
 	// 弾の発射距離（エディタで調整可能）
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Base|Bullet")
-	float BulletTargetDistance = 10000.0f; // 100メートル先
+	float BulletTargetDistance = 10000.0f;
+#pragma endregion
+
+#pragma region "Animation"
 
 	//腕のボーンインデックスをキャッシュ.
 	UPROPERTY(VisibleAnywhere, Category = "MyProperty|Base|Animation")
@@ -69,6 +69,9 @@ public:
 	int32 RightForearmBoneIndex = INDEX_NONE;
 
 	//アニメーション関連.
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Base|Animation")
+	EAnimationState CurrentAnimationState; //現在のアニメーション状態.
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Base|Animation")
 	class UAnimMontage* IdleAnimMontage;
 
@@ -90,7 +93,10 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Base|Animation|Shooting")
 	class UAnimMontage* PlayerFireAnimMontage;
 
-	//移動パラメーター.
+#pragma endregion
+
+#pragma region "Movement"
+	// 移動パラメーター.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Base|Movement")
 	float BaseTurnRate = 45.0f;
 
@@ -103,7 +109,23 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Base|Movement")
 	float RunSpeed = 800.0f;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "MyProperty|Base|Movement")
+	bool bIsSprinting;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "MyProperty|Base|Movement")
+	bool bIsMoving;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "MyProperty|Base|Movement")
+	bool bIsJumping;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "MyProperty|Base|Movement")
+	bool bAWasJumping;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "MyProperty|Base|Movement")
+	double CurrentSpeed;
+#pragma endregion
+
+#pragma region "Ammunition"
 	// 弾薬関連
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Base|Ammunition")
 	int32 MaxAmmoPerMagazine = 6;
@@ -119,26 +141,7 @@ public:
 
 	UPROPERTY(BlueprintReadOnly, Category = "MyProperty|Base|Ammunition")
 	float ReloadTimerElapsed = 0.0f;
-
-	//インスペクターに表示する方法.
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "MyProperty|Base|Movement")
-	bool bIsSprinting;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "MyProperty|Base|Movement")
-	bool bIsMoving;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "MyProperty|Base|Movement")
-	bool bIsJumping;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "MyProperty|Base|Movement")
-	bool bAWasJumping;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "MyProperty|Base|Movement")
-	double CurrentSpeed;
-
-	//現在のアニメーション状態.
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Base|Animation")
-	EAnimationState CurrentAnimationState;
+#pragma endregion
 
 //▼ ===== 関数 ===== ▼.
 public:
@@ -154,19 +157,6 @@ protected:
 	virtual void Tick(float DeltaTime) override;
 #pragma endregion
 
-#pragma region "カメラ"
-	// カメラの向きを取得する関数.
-	//TODO: そのうちPlayerManagerに移動したい(設計的に).
-	UFUNCTION(BlueprintCallable, Category = "Camera")
-	FVector GetCameraVector(FString dir) const;
-
-	UFUNCTION(BlueprintCallable, Category = "Camera")
-	FVector GetCameraLocation() const;
-
-	UFUNCTION(BlueprintCallable, Category = "Camera")
-	FRotator GetCameraRotation() const;
-#pragma endregion
-
 #pragma region "移動"
 	//アニメーションを更新.
 	void UpdateAnimationState();
@@ -177,29 +167,25 @@ protected:
 #pragma endregion
 
 #pragma region "射撃"
-	// 銃を装備する.
-	void EquipGun();
 
-	// カメラの前方向 × 距離の位置を計算.
-	virtual void CalculateAndShot();
-
-	//弾発射処理.
-	virtual void ShotBullet();
-
-	// リロード開始
-	void StartReload();
-
-	// リロード時間の更新
-	void UpdateReloadTimer(float DeltaTime);
+	//弾発射処理[仮想関数]
+	virtual void ShotBullet(){} 
+	//弾を発射する.
+	bool ShotBulletExe(FVector loc, FRotator rot, FVector targetLoc, FActorSpawnParameters spawnParam);
 
 	//ボーンインデックスを初期化する関数.
 	void InitializeBoneIndices();
 
+	//リロード開始.
+	void StartReload();
+
+	//リロード時間の更新.
+	void UpdateReloadTimer(float DeltaTime);
+
+	//銃を装備する..
+	void EquipGun();
+
 	//腕のボーンを回転させる関数.
 	void RotateArmBones(const FRotator& TargetRotation);
-
-	// カメラ前方の目標地点を計算する関数.
-	UFUNCTION(BlueprintCallable, Category = "Bullet")
-	FVector CalculateTargetPosition(float Distance) const;
 #pragma endregion
 };

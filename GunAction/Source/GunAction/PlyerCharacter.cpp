@@ -747,7 +747,7 @@ void APlyerCharacter::UpdateReloadTimer(float DeltaTime)
 /// カメラの位置から前方向へ指定距離だけ離れた地点を計算する.
 /// 弾の発射目標地点を決定するために使用される.
 /// </summary>
-FVector APlyerCharacter::CalculateTargetPosition(float Distance) const
+FVector APlyerCharacter::GetTargetPos(float Distance) const
 {
 	if (FollowCamera == nullptr)
 	{

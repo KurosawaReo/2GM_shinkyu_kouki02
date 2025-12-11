@@ -170,6 +170,7 @@ void APlayerManager::StopSprint()
 }
 #pragma endregion
 
+
 #pragma region "銃システム"
 
 /// <summary>
@@ -230,80 +231,65 @@ FRotator APlayerManager::GetMuzzleRotation() const
 	return GunMesh->GetSocketRotation(MuzzleSocketName);
 }
 
-void APlayerManager::ShotBullet()
+#pragma endregion
+
+
+#pragma region "�J����"
+/// <summary>
+/// GetCameraVector - �J��������̕����x�N�g����擾.
+/// (�e�̔��˕����Ȃǂ̌v�Z�Ɏg�p)
+/// </summary>
+/// <param name="dir">"Forward", "Right", "up" �̂ǂꂩ</param>
+/// <returns>�x�N�g��</returns>
+FVector APlayerManager::GetCameraVector(FString dir) const
 {
-
-	// 銃がない、またはリロード中は発射できない
-	if (bIsReloading)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("Cannot fire: Gun not ready or reloading!"));
-		return;
+	//�J�������Ȃ�����ZeroVector��Ԃ�.
+	if (FollowCamera == nullptr) {
+		return FVector::ZeroVector;
 	}
 
-	// 弾切れチェック
-	if (CurrentAmmoCount  <= 0)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("Out of ammo! Reload needed."));
-		// リロード開始
-		StartReload();
-		return;
+	//�O����.
+	if (dir == "Forward") {
+		return FollowCamera->GetForwardVector();
 	}
-
-	// ===== 重要: マズル位置をリアルタイムで取得 =====
-	FVector MuzzlePosition = GetMuzzleLocation();
-	FRotator MuzzleRotation = GetMuzzleRotation();
-	FVector FireDirection = MuzzleRotation.Vector();
-
-	// デバッグ用：マズル位置を表示（ビューポートで確認）
-	DrawDebugPoint(GetWorld(), MuzzlePosition, 10.0f, FColor::Red, false, 2.0f);
-	DrawDebugLine(GetWorld(), MuzzlePosition, MuzzlePosition + FireDirection * 100.0f, FColor::Green, false, 2.0f);
-
-	// ===== 弾生成と発射 =====
-	// ここで銃弾アクター（ABullet等）を生成
-	if (BulletClass != nullptr)
-	{
-		FActorSpawnParameters SpawnParams;
-		SpawnParams.Owner = this;
-		SpawnParams.Instigator = this;
-
-		AActor* NewBullet = GetWorld()->SpawnActor<AActor>(
-			BulletClass,
-			MuzzlePosition,        // マズル位置から生成
-			MuzzleRotation,         // マズル方向で発射
-		    SpawnParams //渡す.
-			);
-
-		if (NewBullet != nullptr)
-		{
-			CurrentAmmoCount--;
-		}
-	
+	//�E����.
+	else if (dir == "Right") {
+		return FollowCamera->GetRightVector();
 	}
-
-	// ===== 射撃エフェクト・サウンド =====
-	// マズルフラッシュ
-	if (MuzzleFlashParticle != nullptr)  // ✓ 正しい変数名
-	{
-		UGameplayStatics::SpawnEmitterAtLocation(
-			GetWorld(),
-			MuzzleFlashParticle,
-			MuzzlePosition,
-			MuzzleRotation,
-			FVector(1.0f)
-		);
+	//�����.
+	else if (dir == "Up") {
+		return FollowCamera->GetUpVector();
 	}
-
-	if (FireSound != nullptr)  // ✓ 正しい変数名
-	{
-		UGameplayStatics::PlaySoundAtLocation(
-			GetWorld(),
-			FireSound,
-			MuzzlePosition
-		);
+	//�s���Ȏw��.
+	else {
+		GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, TEXT("GetCameraVector�Ɏ��s"));
+		return FVector::ZeroVector;
 	}
-
-	// PlayFireAnimMontage()は親クラスのメソッド
-	PlayFireAnimMontage();
+}
+/// <summary>
+/// GetCameraLocation - �J�����̃��[���h���W��擾.
+/// �e�̔��ˈʒu�Ȃǂ̌v�Z�Ɏg�p�����.
+/// </summary>
+/// <returns>�J�����̃��[���h���W�B�J�������Ȃ��ꍇ��ZeroVector</returns>
+FVector APlayerManager::GetCameraLocation() const
+{
+	if (FollowCamera == nullptr)
+	{
+		return FVector::ZeroVector;
+	}
+	return FollowCamera->GetComponentLocation();
+}
+/// <summary>
+/// GetCameraRotation - �J�����̉�]��擾.
+/// </summary>
+/// <returns>�J�����̉�]�B�J�������Ȃ��ꍇ��ZeroRotator</returns>
+FRotator APlayerManager::GetCameraRotation() const
+{
+	if (FollowCamera == nullptr)
+	{
+		return FRotator::ZeroRotator;
+	}
+	return FollowCamera->GetComponentRotation();
 }
 
 #pragma endregion
@@ -340,5 +326,117 @@ void APlayerManager::InitializeUI()
 	{
 		UE_LOG(LogTemp, Error, TEXT("Failed to create CrosshairWidget!"));
 	}
+}
+#pragma endregion
+
+#pragma region "射撃"
+/// <summary>
+/// ShotBullet() - ���ˑ����������Ɏ��s����.
+/// [�v���C���[��p]
+/// </summary>
+void APlayerManager::ShotBullet()
+{
+	//�����[�h���͎ˌ��s��.
+	if (bIsReloading)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Reloading... Cannot shoot!"));
+		return;
+	}
+	//�e�򂪂Ȃ��ꍇ�̓����[�h�J�n.
+	if (CurrentAmmoCount <= 0)
+	{
+		StartReload();
+		return;
+	}
+	//BulletClass��null�`�F�b�N.
+	if (BulletClass == nullptr)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("BulletClass is not set! Please set it in Blueprint."));
+		return;
+	}
+	//null�`�F�b�N.
+	if (FollowCamera == nullptr || GetWorld() == nullptr)
+	{
+		return;
+	}
+
+	//�N���X�w�A�̒��S���W���ʍ��W�Ōv�Z.
+	const FVector2D ViewportSize = FVector2D(GEngine->GameViewport->Viewport->GetSizeXY());
+	const FVector2D CrosshairScreenLocation = ViewportSize / 2.0f; // ��ʒ���.
+
+	//�X�N���[�����W����[���h���W�ɕϊ�.
+	FVector CrosshairWorldLocation  = FVector::ZeroVector;
+	FVector CrosshairWorldDirection = FVector::ZeroVector;
+	//����擾����.
+	APlayerController* PlayerController = Cast<APlayerController>(Controller);
+	if (PlayerController)
+	{
+		PlayerController->DeprojectScreenPositionToWorld(
+			CrosshairScreenLocation.X,
+			CrosshairScreenLocation.Y,
+			CrosshairWorldLocation,
+			CrosshairWorldDirection
+		);
+	}
+
+	//�ڕW�n�_��v�Z.
+	const FVector TargetPosition = CrosshairWorldLocation + (CrosshairWorldDirection * BulletTargetDistance);
+	//�J�����̈ʒu��擾.
+	const FVector  CameraLocation = FollowCamera->GetComponentLocation();
+	const FRotator CameraRotation = FollowCamera->GetComponentRotation();
+
+	//�e�̐ݒ� - �@�X�|�[���ʒu.
+	FVector SpawnLocation;
+	{
+		if (RevolverGun && RevolverGun->Muzzle) {
+			SpawnLocation = RevolverGun->Muzzle->GetComponentLocation();
+		}
+		else{ 
+			//�}�Y�����Ȃ��ꍇ�̓J�����̏����O�����甭��.
+			SpawnLocation = CameraLocation + (GetCameraVector("Forward") * 100.0f) - (GetCameraVector("Right") * 20.0f);
+		}
+	}
+
+	//�e�̐ݒ� - �A���˕���.
+	FRotator BulletRotation;
+	{
+		FVector dir = TargetPosition - SpawnLocation;
+		dir.Normalize();
+		BulletRotation = dir.Rotation();
+	}
+
+	//�e�̐ݒ� - �B�X�|�[���p�����[�^�[.
+	FActorSpawnParameters SpawnParams;
+	{
+		SpawnParams.Owner = this;
+		SpawnParams.Instigator = GetInstigator();
+	}
+
+	//�e�𔭎�.
+	bool ret = ShotBulletExe(SpawnLocation, BulletRotation, TargetPosition, SpawnParams);
+	//���˂ɐ���������.
+	if (ret) {
+		//�V���b�g���ɃN���X�w�A�̃G�t�F�N�g����s
+		if (CrosshairWidget)
+		{
+			CrosshairWidget->OnShotEffect();
+		}
+	}
+
+	// �v���C���[�̉�]��N���X�w�A�����Ɍ�������
+	{
+		FVector DirectionToTarget = TargetPosition - GetActorLocation();
+		DirectionToTarget.Normalize();
+		FRotator TargetRotation = DirectionToTarget.Rotation();
+
+		// Y���iYaw�j�̂݉�]������i�㉺�͕ς��Ȃ��j
+		FRotator NewRotation = GetActorRotation();
+		NewRotation.Yaw = TargetRotation.Yaw;
+		NewRotation.Pitch = TargetRotation.Pitch;
+		SetActorRotation(NewRotation);
+	}
+
+	//�v���C���[�A�j���[�V����.
+	PlayFireAnimMontage();
 }
 #pragma endregion

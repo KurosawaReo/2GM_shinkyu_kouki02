@@ -1,6 +1,6 @@
 /*
    - BulletBase -
-   作成: 怜旺.
+   担当: 怜旺
 
    弾の元となる基底クラス.
 */
@@ -33,6 +33,9 @@ ABulletBase::ABulletBase()
 void ABulletBase::BeginPlay()
 {
 	Super::BeginPlay();
+
+    //前方向を取得.
+    vec = GetActorForwardVector();
 }
 
 /// <summary>
@@ -62,12 +65,9 @@ void ABulletBase::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-    //FString msg = FString::Printf(TEXT("vec: %f %f %f"), vec.X, vec.Y, vec.Z); //変数組み込み.
-    //GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, msg); //表示.
-
     const FVector befPos = GetActorLocation();              //移動前の座標.
     {   
-        vec.Z -= gravity;                                   //だんだん下へ.
+        vec.Z -= gravity;                                   //重力.
         SetActorLocation(GetActorLocation() + vec * speed); //前方向に移動.
     }
     const FVector nowPos = GetActorLocation();              //移動後の座標.
@@ -84,21 +84,23 @@ void ABulletBase::Tick(float DeltaTime)
         1.0f               // 太さ
     );
 
-    counter += 1; //カウンター.
+    //カウンター.
+    counter += 1;
+    //一定時間経過で消滅.
     if (counter >= deleteTime) {
         Destroy();
     }
 }
 
 /// <summary>
-/// 発射処理 | 進行方向を指定.
+/// 発射処理 | 進行方向を指定(未使用)
 /// </summary>
 /// <param name="forward">進行方向</param>
 void ABulletBase::ShotForward(FVector forward) {
 	this->vec = forward; //進行方向を記録.
 }
 /// <summary>
-/// 発射処理 | 目標地点を指定.
+/// 発射処理 | 目標地点を指定(未使用)
 /// </summary>
 /// <param name="position">目標座標</param>
 void ABulletBase::ShotPos(FVector position) {
