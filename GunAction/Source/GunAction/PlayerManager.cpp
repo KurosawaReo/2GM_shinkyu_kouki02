@@ -226,32 +226,6 @@ FRotator APlayerManager::GetCameraRotation() const
 	}
 	return FollowCamera->GetComponentRotation();
 }
-
-/*
-【未使用と思われる】
-
-/// <summary>
-/// ターゲット位置を計算する関数.
-/// カメラの位置から前方向へ指定距離だけ離れた地点を計算する.
-/// 弾の発射目標地点を決定するために使用される.
-/// </summary>
-FVector APlayerManager::GetTargetPos(float Distance) const
-{
-	if (FollowCamera == nullptr)
-	{
-		return FVector::ZeroVector;
-	}
-
-	//カメラの位置を取得.
-	FVector CameraLocation = GetCameraLocation();
-	//カメラの方向を取得.
-	FVector ForwardVector = GetCameraVector("Forward"); //前.
-	//位置 + (前方向*距離)
-	FVector TargetPosition = CameraLocation + (ForwardVector * Distance);
-
-	return TargetPosition;
-}
-*/
 #pragma endregion
 
 #pragma region UI

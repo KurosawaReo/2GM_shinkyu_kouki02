@@ -76,10 +76,6 @@ protected:
 
 	UFUNCTION(BlueprintCallable, Category = "Camera")
 	FRotator GetCameraRotation() const;
-
-	//カメラ前方の目標地点を計算する関数.
-//	UFUNCTION(BlueprintCallable, Category = "Bullet")
-//	FVector GetTargetPos(float Distance) const;
 #pragma endregion
 
 #pragma region "UI"
