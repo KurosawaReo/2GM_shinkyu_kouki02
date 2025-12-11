@@ -157,8 +157,11 @@ void AEnemyManager::ShotBullet()
 {
 	GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, TEXT("ugoita"));
 
+	const FVector pos     = GetActorLocation();
+	const FVector forward = GetActorForwardVector();
+
 	//目標地点を計算(仮)
-	const FVector TargetPosition = GetActorLocation() + GetActorForwardVector() * 100;
+	const FVector TargetPosition = pos + forward * shotStartDist + forward * shotTargetDist;
 
 	//弾の設定 - ①スポーン位置.
 	FVector SpawnLocation;

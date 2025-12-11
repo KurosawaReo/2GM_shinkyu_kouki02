@@ -49,6 +49,12 @@ public:
 
 	//弾発射用タイマー.
 	FTimerHandle tmShot;
+	//発射開始距離.
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Enemy|Shot")
+	float shotStartDist  = 1.0f;
+	//発射目標地点距離.
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Enemy|Shot")
+	float shotTargetDist = 1.0f;
 	//発射間隔.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Enemy|Shot")
 	float shotTime = 1.0f;
