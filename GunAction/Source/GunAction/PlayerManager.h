@@ -45,13 +45,7 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Gun|Muzzle")
 	FName MuzzleSocketName = FName("Muzzle"); // スケルタルメッシュ内のソケット名
 
-	// マズルフラッシュ用パーティクル
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Gun|Effect")
-	class UParticleSystem* MuzzleFlashParticle;
-
-	// 射撃音
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Gun|Effect")
-	class USoundBase* FireSound;
+	
 
 //▼ ===== 関数 ===== ▼.
 protected:

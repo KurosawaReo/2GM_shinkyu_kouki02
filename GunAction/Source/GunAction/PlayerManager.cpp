@@ -18,8 +18,6 @@
 #include "Components/AudioComponent.h"
 #include "Components/BoxComponent.h"
 #include "Particles/ParticleSystemComponent.h"
-#include "Kismet/GameplayStatics.h"
-
 //コンストラクタ.
 APlayerManager::APlayerManager() {
 
@@ -234,43 +232,43 @@ FRotator APlayerManager::GetMuzzleRotation() const
 #pragma endregion
 
 
-#pragma region "�J����"
+#pragma region "カメラ"
 /// <summary>
-/// GetCameraVector - �J��������̕����x�N�g����擾.
-/// (�e�̔��˕����Ȃǂ̌v�Z�Ɏg�p)
+/// GetCameraVector - カメラからの方向ベクトルを取得.
+/// (弾の発射方向などの計算に使用)
 /// </summary>
-/// <param name="dir">"Forward", "Right", "up" �̂ǂꂩ</param>
-/// <returns>�x�N�g��</returns>
+/// <param name="dir">"Forward", "Right", "up" のどれか</param>
+/// <returns>ベクトル</returns>
 FVector APlayerManager::GetCameraVector(FString dir) const
 {
-	//�J�������Ȃ�����ZeroVector��Ԃ�.
+	//カメラがない時はZeroVectorを返す.
 	if (FollowCamera == nullptr) {
 		return FVector::ZeroVector;
 	}
 
-	//�O����.
+	//前方向.
 	if (dir == "Forward") {
 		return FollowCamera->GetForwardVector();
 	}
-	//�E����.
+	//右方向.
 	else if (dir == "Right") {
 		return FollowCamera->GetRightVector();
 	}
-	//�����.
+	//上方向.
 	else if (dir == "Up") {
 		return FollowCamera->GetUpVector();
 	}
-	//�s���Ȏw��.
+	//不正な指定.
 	else {
-		GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, TEXT("GetCameraVector�Ɏ��s"));
+		GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, TEXT("GetCameraVectorに失敗"));
 		return FVector::ZeroVector;
 	}
 }
 /// <summary>
-/// GetCameraLocation - �J�����̃��[���h���W��擾.
-/// �e�̔��ˈʒu�Ȃǂ̌v�Z�Ɏg�p�����.
+/// GetCameraLocation - カメラのワールド座標を取得.
+/// 弾の発射位置などの計算に使用される.
 /// </summary>
-/// <returns>�J�����̃��[���h���W�B�J�������Ȃ��ꍇ��ZeroVector</returns>
+/// <returns>カメラのワールド座標。カメラがない場合はZeroVector</returns>
 FVector APlayerManager::GetCameraLocation() const
 {
 	if (FollowCamera == nullptr)
@@ -280,9 +278,9 @@ FVector APlayerManager::GetCameraLocation() const
 	return FollowCamera->GetComponentLocation();
 }
 /// <summary>
-/// GetCameraRotation - �J�����̉�]��擾.
+/// GetCameraRotation - カメラの回転を取得.
 /// </summary>
-/// <returns>�J�����̉�]�B�J�������Ȃ��ꍇ��ZeroRotator</returns>
+/// <returns>カメラの回転。カメラがない場合はZeroRotator</returns>
 FRotator APlayerManager::GetCameraRotation() const
 {
 	if (FollowCamera == nullptr)
@@ -291,9 +289,7 @@ FRotator APlayerManager::GetCameraRotation() const
 	}
 	return FollowCamera->GetComponentRotation();
 }
-
 #pragma endregion
-
 
 #pragma region UI
 /// <summary>
@@ -331,43 +327,43 @@ void APlayerManager::InitializeUI()
 
 #pragma region "射撃"
 /// <summary>
-/// ShotBullet() - ���ˑ����������Ɏ��s����.
-/// [�v���C���[��p]
+/// ShotBullet() - 発射操作をした時に実行する.
+/// [プレイヤー専用]
 /// </summary>
 void APlayerManager::ShotBullet()
 {
-	//�����[�h���͎ˌ��s��.
+	//リロード中は射撃不可.
 	if (bIsReloading)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Reloading... Cannot shoot!"));
 		return;
 	}
-	//�e�򂪂Ȃ��ꍇ�̓����[�h�J�n.
+	//弾薬がない場合はリロード開始.
 	if (CurrentAmmoCount <= 0)
 	{
 		StartReload();
 		return;
 	}
-	//BulletClass��null�`�F�b�N.
+	//BulletClassのnullチェック.
 	if (BulletClass == nullptr)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("BulletClass is not set! Please set it in Blueprint."));
 		return;
 	}
-	//null�`�F�b�N.
+	//nullチェック.
 	if (FollowCamera == nullptr || GetWorld() == nullptr)
 	{
 		return;
 	}
 
-	//�N���X�w�A�̒��S���W���ʍ��W�Ōv�Z.
+	//クロスヘアの中心座標を画面座標で計算.
 	const FVector2D ViewportSize = FVector2D(GEngine->GameViewport->Viewport->GetSizeXY());
-	const FVector2D CrosshairScreenLocation = ViewportSize / 2.0f; // ��ʒ���.
+	const FVector2D CrosshairScreenLocation = ViewportSize / 2.0f; // 画面中央.
 
-	//�X�N���[�����W����[���h���W�ɕϊ�.
-	FVector CrosshairWorldLocation  = FVector::ZeroVector;
+	//スクリーン座標をワールド座標に変換.
+	FVector CrosshairWorldLocation = FVector::ZeroVector;
 	FVector CrosshairWorldDirection = FVector::ZeroVector;
-	//����擾����.
+	//↑を取得する.
 	APlayerController* PlayerController = Cast<APlayerController>(Controller);
 	if (PlayerController)
 	{
@@ -379,25 +375,25 @@ void APlayerManager::ShotBullet()
 		);
 	}
 
-	//�ڕW�n�_��v�Z.
+	//目標地点を計算.
 	const FVector TargetPosition = CrosshairWorldLocation + (CrosshairWorldDirection * BulletTargetDistance);
-	//�J�����̈ʒu��擾.
+	//カメラの位置を取得.
 	const FVector  CameraLocation = FollowCamera->GetComponentLocation();
 	const FRotator CameraRotation = FollowCamera->GetComponentRotation();
 
-	//�e�̐ݒ� - �@�X�|�[���ʒu.
+	//弾の設定 - ①スポーン位置.
 	FVector SpawnLocation;
 	{
 		if (RevolverGun && RevolverGun->Muzzle) {
 			SpawnLocation = RevolverGun->Muzzle->GetComponentLocation();
 		}
-		else{ 
-			//�}�Y�����Ȃ��ꍇ�̓J�����̏����O�����甭��.
+		else {
+			//マズルがない場合はカメラの少し前方から発射.
 			SpawnLocation = CameraLocation + (GetCameraVector("Forward") * 100.0f) - (GetCameraVector("Right") * 20.0f);
 		}
 	}
 
-	//�e�̐ݒ� - �A���˕���.
+	//弾の設定 - ②発射方向.
 	FRotator BulletRotation;
 	{
 		FVector dir = TargetPosition - SpawnLocation;
@@ -405,38 +401,38 @@ void APlayerManager::ShotBullet()
 		BulletRotation = dir.Rotation();
 	}
 
-	//�e�̐ݒ� - �B�X�|�[���p�����[�^�[.
+	//弾の設定 - ③スポーンパラメーター.
 	FActorSpawnParameters SpawnParams;
 	{
 		SpawnParams.Owner = this;
 		SpawnParams.Instigator = GetInstigator();
 	}
 
-	//�e�𔭎�.
+	//弾を発射.
 	bool ret = ShotBulletExe(SpawnLocation, BulletRotation, TargetPosition, SpawnParams);
-	//���˂ɐ���������.
+	//発射に成功したら.
 	if (ret) {
-		//�V���b�g���ɃN���X�w�A�̃G�t�F�N�g����s
+		//ショット時にクロスヘアのエフェクトを実行
 		if (CrosshairWidget)
 		{
 			CrosshairWidget->OnShotEffect();
 		}
 	}
 
-	// �v���C���[�̉�]��N���X�w�A�����Ɍ�������
+	// プレイヤーの回転をクロスヘア方向に向かせる
 	{
 		FVector DirectionToTarget = TargetPosition - GetActorLocation();
 		DirectionToTarget.Normalize();
 		FRotator TargetRotation = DirectionToTarget.Rotation();
 
-		// Y���iYaw�j�̂݉�]������i�㉺�͕ς��Ȃ��j
+		// Y軸（Yaw）のみ回転させる（上下は変わらない）
 		FRotator NewRotation = GetActorRotation();
 		NewRotation.Yaw = TargetRotation.Yaw;
 		NewRotation.Pitch = TargetRotation.Pitch;
 		SetActorRotation(NewRotation);
 	}
 
-	//�v���C���[�A�j���[�V����.
+	//プレイヤーアニメーション.
 	PlayFireAnimMontage();
 }
 #pragma endregion
