@@ -181,10 +181,10 @@ protected:
 	void EquipGun();
 
 	// カメラの前方向 × 距離の位置を計算.
-	void CalculateAndShot();
+	virtual void CalculateAndShot();
 
 	//弾発射処理.
-	void ShotBullet();
+	virtual void ShotBullet();
 
 	// リロード開始
 	void StartReload();

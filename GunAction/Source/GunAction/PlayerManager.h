@@ -32,8 +32,8 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "MyProperty|Player|Camera")
 	class USpringArmComponent* CameraBoom;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "MyProperty|Player|Camera")
-	class UCameraComponent* FollowCamera;
+	//UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "MyProperty|Player|Camera")
+	//class UCameraComponent* FollowCamera;
 
 	//クロスヘア.
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "MyProperty|Player|UI")
@@ -41,6 +41,18 @@ public:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "MyProperty|Player|UI")
 	UCrosshairWidget* CrosshairWidget;
+
+	// マズルソケットの名前
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Gun|Muzzle")
+	FName MuzzleSocketName = FName("Muzzle"); // スケルタルメッシュ内のソケット名
+
+	// マズルフラッシュ用パーティクル
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Gun|Effect")
+	class UParticleSystem* MuzzleFlashParticle;
+
+	// 射撃音
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Gun|Effect")
+	class USoundBase* FireSound;
 
 //▼ ===== 関数 ===== ▼.
 protected:
@@ -66,6 +78,20 @@ protected:
 	void LookUpAtRate(float Rate);
 	void StartSprint();
 	void StopSprint();
+#pragma endregion
+
+#pragma region "銃システム"
+private:
+	
+	// マズル位置を取得する関数
+	FVector GetMuzzleLocation() const;
+
+	// マズル方向を取得する関数
+	FRotator GetMuzzleRotation() const;
+
+	// 親クラスのShotBulletをオーバーライド
+	virtual void ShotBullet() override;
+
 #pragma endregion
 
 #pragma region "UI"
