@@ -1,6 +1,6 @@
 /*
    - BulletBase -
-   作成: 怜旺.
+   担当: 怜旺
 
    弾の基底クラス.
    そのうち継承して使うことを想定.
@@ -34,12 +34,12 @@ class GUNACTION_API ABulletBase : public AActor
 {
 	GENERATED_BODY()
 
-//▼コンポーネント.
+//▼ ===== コンポーネント ===== ▼.
 private:
 	UPROPERTY(VisibleAnywhere)
 	class USphereComponent* cmpSphere; //球体.
 
-//▼変数.
+//▼ ===== 変数 ===== ▼.
 private:
 	FVector vec;     //進行方向.
 	float   counter; //経過時間.
@@ -52,7 +52,7 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = MyProperty)
 	float   deleteTime = 50; //消滅までの時間.
 
-//▼関数.
+//▼ ===== 関数 ===== ▼.
 public:	
 	//コンストラクタ.
 	ABulletBase();
