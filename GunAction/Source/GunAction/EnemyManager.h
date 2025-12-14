@@ -5,7 +5,7 @@
    [クラス構成]
    CharacterBase
    └PlayerManager 
-   └EnemyManager  ←ここ
+   └EnemyManager  ←今ここ
 */
 #pragma once
 
@@ -13,17 +13,6 @@
 #include "PlayerManager.h"
 #include "CharacterBase.h" //親クラス.
 #include "EnemyManager.generated.h"
-
-/// <summary>
-/// 敵のstate列挙体.
-/// UEではこういう書き方をするっぽい.
-/// </summary>
-UENUM(BlueprintType)
-enum class EEnemyState : uint8
-{
-	ES_Alive UMETA(DisplayName = "Alive"),
-	ES_Dead  UMETA(DisplayName = "Dead")
-};
 
 /// <summary>
 /// 敵クラス.
@@ -51,10 +40,7 @@ public:
 	FTimerHandle tmShot;
 	//発射開始距離.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Enemy|Shot")
-	float shotStartDist  = 1.0f;
-	//発射目標地点距離.
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Enemy|Shot")
-	float shotTargetDist = 1.0f;
+	float shotStartDist = 1.0f;
 	//発射間隔.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Enemy|Shot")
 	float shotTime = 1.0f;
@@ -73,9 +59,8 @@ public:
 #pragma endregion
 
 #pragma region "ダメージ処理"
-	UFUNCTION()
-	void OnBulletHit();						//弾が当たったら実行される.
-	void Die();								//死亡処理.
+	void OnBulletHit() override;			//弾が当たったら実行される.
+	void Die()         override;			//死亡処理.
 	
 	void PlayDeathAnimation();				//死亡アニメーション再生.
 	void PlayDeathEffect();					//死亡エフェクト再生.

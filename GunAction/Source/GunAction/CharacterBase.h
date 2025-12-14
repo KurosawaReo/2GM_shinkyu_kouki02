@@ -1,9 +1,41 @@
-/*
+/*----------------------------------------------------/
    - CharacterBase -
+   プレイヤーと敵の親クラス.
+/-----------------------------------------------------/
+   [クラス構成]
+   CharacterBase   ←今ここ
+   └PlayerManager
+   └EnemyManager
 
-   プレイヤーと敵の基底クラス.
-   元はなおと作のPlyerCharacterだったもの.
-*/
+   CharacterBase: プレイヤーと敵 に使うものを入れる
+   PlayerManager: プレイヤー     に使うものを入れる
+   EnemyManager : 敵             に使うものを入れる
+/-----------------------------------------------------/
+   [仮想関数]
+   ざっくり解説。(※あくまでも使い方の一例)
+
+   virtualに対してoverride(=上書き)する。
+
+   //親のクラス.
+   class CharacterBase 
+   {
+       void BeginPlay(){
+	       Test(); //①とりあえず親から関数を呼びたい!
+	   }
+       virtual void Test(){}; //②けど中身はまだ作らないよ(→virtual)
+   }
+
+   //子のクラス.
+   class PlayerManager : public CharacterBase 
+   {
+       void Test() override; //③子で中身を作りますよ(→override)
+   }
+
+   //④その中身はこれですよ.
+   void PlayerManager::Test(){
+       ...
+   }
+/----------------------------------------------------*/
 #pragma once
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
@@ -11,11 +43,16 @@
 #include "Steam_Revolver.h"
 #include "CharacterBase.generated.h"
 
-/*
-   [TODO] 2025/12/08
-   CharacterBaseには、プレイヤーと敵の共通処理を入れたい.
-   そのため、プレイヤーにしか必要のないカメラやUIなどは、ここではなくPlayerManagerに移動する.
-*/
+/// <summary>
+/// 敵のstate列挙体.
+/// UEではこういう書き方をするっぽい.
+/// </summary>
+UENUM(BlueprintType)
+enum class EEnemyState : uint8
+{
+	ES_Alive UMETA(DisplayName = "Alive"),
+	ES_Dead  UMETA(DisplayName = "Dead")
+};
 
 //前方宣言.
 class ABulletBase;
@@ -167,10 +204,10 @@ protected:
 #pragma endregion
 
 #pragma region "射撃"
-	//弾発射処理[仮想関数]
+	//[仮想関数] 弾発射処理.
 	virtual void ShotBullet(){} 
 	//弾を発射する.
-	bool ShotBulletExe(FVector targetPos);
+	bool ShotBulletExe(AActor* user, FVector targetPos);
 
 	//ボーンインデックスを初期化する関数.
 	void InitializeBoneIndices();
@@ -186,5 +223,11 @@ protected:
 
 	//腕のボーンを回転させる関数.
 	void RotateArmBones(const FRotator& TargetRotation);
+#pragma endregion
+
+#pragma region "ダメージ処理"
+	UFUNCTION()
+	virtual void OnBulletHit(){}	//[仮想関数] 弾が当たったら実行される.
+	virtual void Die(){}			//[仮想関数] 死亡処理.
 #pragma endregion
 };

@@ -603,7 +603,7 @@ void APlyerCharacter::CalculateAndShot()
 	if (Bullet != nullptr)
 	{
 		//弾クラスのメンバ関数.
-		Bullet->ShotPos(TargetPosition);
+//		Bullet->ShotPos(TargetPosition);
 
 		//ショット時にクロスヘアのエフェクトを実行
 		if (CrosshairWidget)

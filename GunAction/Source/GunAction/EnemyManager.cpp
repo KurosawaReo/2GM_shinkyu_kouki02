@@ -79,6 +79,7 @@ void AEnemyManager::Tick(float DeltaTime) {
 //’e‚ª“–‚½‚Á‚½‚çÀs‚³‚ê‚é.
 void AEnemyManager::OnBulletHit() 
 {
+	GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, TEXT("hit enemy"));
 	Die(); //€–Sˆ—.
 }
 //€–Sˆ—.
@@ -155,14 +156,12 @@ void AEnemyManager::DisableComponents()
 /// </summary>
 void AEnemyManager::ShotBullet()
 {
-	GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, TEXT("ugoita"));
-
 	const FVector pos     = GetActorLocation();
 	const FVector forward = GetActorForwardVector();
 
 	//–Ú•W’n“_‚ğŒvZ(‰¼)
-	const FVector TargetPosition = pos + forward * shotStartDist + forward * shotTargetDist;
+	const FVector TargetPosition = pos + forward * shotStartDist;
 	//’e‚ğ”­Ë.
-	ShotBulletExe(TargetPosition);
+	ShotBulletExe(this, TargetPosition);
 }
 #pragma endregion

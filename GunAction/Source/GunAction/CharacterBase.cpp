@@ -270,7 +270,7 @@ void ACharacterBase::PlayAnimationMontage(EAnimationState AnimState)
 /// </summary>
 /// <param name="targetPos">目標座標</param>
 /// <returns>発射に成功したか</returns>
-bool ACharacterBase::ShotBulletExe(FVector targetPos)
+bool ACharacterBase::ShotBulletExe(AActor* user, FVector targetPos)
 {
 	//弾の設定 - ①スポーン位置.
 	FVector SpawnLocation;
@@ -304,6 +304,8 @@ bool ACharacterBase::ShotBulletExe(FVector targetPos)
 	//生成に成功したら.
 	if (Bullet != nullptr)
 	{
+		Bullet->SetUser(user); //撃った人を登録.
+
 		// 弾薬を消費
 		CurrentAmmoCount--;
 
@@ -323,11 +325,14 @@ bool ACharacterBase::ShotBulletExe(FVector targetPos)
 			UE_LOG(LogTemp, Warning, TEXT("Shot Sound Played!"));
 		}
 
-		// 銃の射撃アニメーションを再生
+		//銃の射撃アニメーションを再生
 		if (RevolverGun)
 		{
 			RevolverGun->PlayFireAnimation();
 		}
+
+		//射撃アニメーション.
+		PlayFireAnimMontage();
 
 		return true; //発射成功.
 	}

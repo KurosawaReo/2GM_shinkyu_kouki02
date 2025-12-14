@@ -316,7 +316,7 @@ void APlayerManager::ShotBullet()
 	const FVector TargetPosition = CrosshairWorldLocation + (CrosshairWorldDirection * BulletTargetDistance);
 
 	//弾を発射.
-	bool ret = ShotBulletExe(TargetPosition);
+	bool ret = ShotBulletExe(this, TargetPosition);
 	//発射に成功したら.
 	if (ret) {
 		//ショット時にクロスヘアのエフェクトを実行
@@ -338,8 +338,18 @@ void APlayerManager::ShotBullet()
 		NewRotation.Pitch = TargetRotation.Pitch;
 		SetActorRotation(NewRotation);
 	}
+}
+#pragma endregion
 
-	//プレイヤーアニメーション.
-	PlayFireAnimMontage();
+#pragma region "ダメージ処理"
+//弾が当たったら実行される.
+void APlayerManager::OnBulletHit() {
+
+	GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, TEXT("hit player"));
+	//TODO
+}
+//死亡処理.
+void APlayerManager::Die() {
+	//TODO
 }
 #pragma endregion

@@ -4,7 +4,7 @@
 
    [クラス構成]
    CharacterBase
-   └PlayerManager ←ここ
+   └PlayerManager ←今ここ
    └EnemyManager
 */
 #pragma once
@@ -84,5 +84,11 @@ protected:
 
 #pragma region "射撃"
 	void ShotBullet() override; //override
+#pragma endregion
+
+public:
+#pragma region "ダメージ処理"
+	void OnBulletHit() override; //弾が当たったら実行される.
+	void Die()         override; //死亡処理.
 #pragma endregion
 };
