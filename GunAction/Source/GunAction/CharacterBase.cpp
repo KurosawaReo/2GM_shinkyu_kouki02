@@ -268,11 +268,38 @@ void ACharacterBase::PlayAnimationMontage(EAnimationState AnimState)
 /// <summary>
 /// 弾を発射する.
 /// </summary>
+/// <param name="targetPos">目標座標</param>
 /// <returns>発射に成功したか</returns>
-bool ACharacterBase::ShotBulletExe(FVector loc, FRotator rot, FVector targetLoc, FActorSpawnParameters spawnParam)
+bool ACharacterBase::ShotBulletExe(FVector targetPos)
 {
+	//弾の設定 - ①スポーン位置.
+	FVector SpawnLocation;
+	{
+		if (RevolverGun && RevolverGun->Muzzle) {
+			SpawnLocation = RevolverGun->Muzzle->GetComponentLocation();
+		}
+		//↓TODO: マズルがないは場合どうするか.
+//		else{ 
+//			//マズルがない場合はカメラの少し前方から発射.
+//			SpawnLocation = CameraLocation + (GetCameraVector("Forward") * 100.0f) - (GetCameraVector("Right") * 20.0f);
+//		}
+	}
+	//弾の設定 - ②発射方向.
+	FRotator BulletRotation;
+	{
+		FVector dir = targetPos - SpawnLocation;
+		dir.Normalize();
+		BulletRotation = dir.Rotation();
+	}
+	//弾の設定 - ③スポーンパラメーター.
+	FActorSpawnParameters SpawnParams;
+	{
+		SpawnParams.Owner = this;
+		SpawnParams.Instigator = GetInstigator();
+	}
+
 	//弾クラスを生成.
-	ABulletBase* Bullet = GetWorld()->SpawnActor<ABulletBase>(BulletClass, loc, rot, spawnParam);
+	ABulletBase* Bullet = GetWorld()->SpawnActor<ABulletBase>(BulletClass, SpawnLocation, BulletRotation, SpawnParams);
 
 	//生成に成功したら.
 	if (Bullet != nullptr)

@@ -162,30 +162,7 @@ void AEnemyManager::ShotBullet()
 
 	//目標地点を計算(仮)
 	const FVector TargetPosition = pos + forward * shotStartDist + forward * shotTargetDist;
-
-	//弾の設定 - ①スポーン位置.
-	FVector SpawnLocation;
-	{
-		if (RevolverGun && RevolverGun->Muzzle) {
-			SpawnLocation = RevolverGun->Muzzle->GetComponentLocation();
-		}
-	}
-
-	//弾の設定 - ②発射方向.
-	FRotator BulletRotation;
-	{
-		FVector dir = TargetPosition - SpawnLocation;
-		dir.Normalize();
-		BulletRotation = dir.Rotation();
-	}
-
-	//弾の設定 - ③スポーンパラメーター.
-	FActorSpawnParameters SpawnParams;
-	{
-		SpawnParams.Owner = this;
-		SpawnParams.Instigator = GetInstigator();
-	}
-
-	ShotBulletExe(SpawnLocation, BulletRotation, TargetPosition, SpawnParams);
+	//弾を発射.
+	ShotBulletExe(TargetPosition);
 }
 #pragma endregion

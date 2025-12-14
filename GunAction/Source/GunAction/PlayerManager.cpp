@@ -314,39 +314,9 @@ void APlayerManager::ShotBullet()
 
 	//目標地点を計算.
 	const FVector TargetPosition = CrosshairWorldLocation + (CrosshairWorldDirection * BulletTargetDistance);
-	//カメラの位置を取得.
-	const FVector  CameraLocation = FollowCamera->GetComponentLocation();
-	const FRotator CameraRotation = FollowCamera->GetComponentRotation();
-
-	//弾の設定 - ①スポーン位置.
-	FVector SpawnLocation;
-	{
-		if (RevolverGun && RevolverGun->Muzzle) {
-			SpawnLocation = RevolverGun->Muzzle->GetComponentLocation();
-		}
-		else{ 
-			//マズルがない場合はカメラの少し前方から発射.
-			SpawnLocation = CameraLocation + (GetCameraVector("Forward") * 100.0f) - (GetCameraVector("Right") * 20.0f);
-		}
-	}
-
-	//弾の設定 - ②発射方向.
-	FRotator BulletRotation;
-	{
-		FVector dir = TargetPosition - SpawnLocation;
-		dir.Normalize();
-		BulletRotation = dir.Rotation();
-	}
-
-	//弾の設定 - ③スポーンパラメーター.
-	FActorSpawnParameters SpawnParams;
-	{
-		SpawnParams.Owner = this;
-		SpawnParams.Instigator = GetInstigator();
-	}
 
 	//弾を発射.
-	bool ret = ShotBulletExe(SpawnLocation, BulletRotation, TargetPosition, SpawnParams);
+	bool ret = ShotBulletExe(TargetPosition);
 	//発射に成功したら.
 	if (ret) {
 		//ショット時にクロスヘアのエフェクトを実行

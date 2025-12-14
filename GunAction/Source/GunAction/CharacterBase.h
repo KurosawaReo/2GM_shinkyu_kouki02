@@ -170,7 +170,7 @@ protected:
 	//弾発射処理[仮想関数]
 	virtual void ShotBullet(){} 
 	//弾を発射する.
-	bool ShotBulletExe(FVector loc, FRotator rot, FVector targetLoc, FActorSpawnParameters spawnParam);
+	bool ShotBulletExe(FVector targetPos);
 
 	//ボーンインデックスを初期化する関数.
 	void InitializeBoneIndices();
