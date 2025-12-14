@@ -124,7 +124,7 @@ void APlyerCharacter::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 
 	//アニメーション状態を更新.
-	UpdateAnimationState();
+	UpdateAnimState();
 
 	//リロード時間の更新.
 	UpdateReloadTimer(DeltaTime);
@@ -338,7 +338,7 @@ void APlyerCharacter::StopSprint()
 /// アニメーション状態を更新する関数.
 /// キャラクターの移動状態に応じてIdleまたはMoveアニメーションを再生.
 /// </summary>
-void APlyerCharacter::UpdateAnimationState()
+void APlyerCharacter::UpdateAnimState()
 {
 	//現在の速度を取得.
 	CurrentSpeed = GetCharacterMovement()->Velocity.Length();
@@ -399,10 +399,10 @@ void APlyerCharacter::UpdateAnimationState()
 	if (NewAnimationState != CurrentAnimationState)
 	{
 		CurrentAnimationState = NewAnimationState;
-		PlayAnimationMontage(NewAnimationState);
+		PlayAnimMontage(NewAnimationState);
 	}
 }
-void APlyerCharacter::PlayAnimationMontage(EAnimationStateTmp AnimState)
+void APlyerCharacter::PlayAnimMontage(EAnimationStateTmp AnimState)
 {
 	UAnimMontage* MontageToPlay = nullptr;
 
@@ -641,7 +641,7 @@ void APlyerCharacter::CalculateAndShot()
 }
 void APlyerCharacter::PlayFireAnimMontage()
 {
-	if (PlayerFireAnimMontage == nullptr)
+	if (ShotAnimMontage == nullptr)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("PlayerFireAnimMontage is not set!"));
 		return;
@@ -661,8 +661,8 @@ void APlyerCharacter::PlayFireAnimMontage()
 		return;
 	}
 
-	UE_LOG(LogTemp, Warning, TEXT("Playing player fire montage: %s"), *PlayerFireAnimMontage->GetName());
-	FireAnimInstance->Montage_Play(PlayerFireAnimMontage, 1.0f);
+	UE_LOG(LogTemp, Warning, TEXT("Playing player fire montage: %s"), *ShotAnimMontage->GetName());
+	FireAnimInstance->Montage_Play(ShotAnimMontage, 1.0f);
 }
 
 /// <summary>

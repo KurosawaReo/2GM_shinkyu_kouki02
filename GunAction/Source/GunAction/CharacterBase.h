@@ -67,7 +67,8 @@ enum class EAnimationState : uint8
 	Run      UMETA(DisplayName = "Run"),
 	JumpUp   UMETA(DisplayName = "JumpUp"),
 	JumpMid  UMETA(DisplayName = "JumpMid"),
-	JumpDown UMETA(DisplayName = "JumpDown")
+	JumpDown UMETA(DisplayName = "JumpDown"),
+	Shot     UMETA(DisplayName = "Shot")
 };
 
 UCLASS()
@@ -105,7 +106,12 @@ public:
 	UPROPERTY(VisibleAnywhere, Category = "MyProperty|Base|Animation")
 	int32 RightForearmBoneIndex = INDEX_NONE;
 
-	//アニメーション関連.
+	//アニメーション関係.
+	float shotAnimTimer;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Base|Animation|Time")
+	float initShotAnimTime; //射撃アニメーション時間.
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Base|Animation")
 	EAnimationState CurrentAnimationState; //現在のアニメーション状態.
 
@@ -127,8 +133,8 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Base|Animation")
 	class UAnimMontage* JumpDownAnimMontage;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Base|Animation|Shooting")
-	class UAnimMontage* PlayerFireAnimMontage;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Base|Animation")
+	class UAnimMontage* ShotAnimMontage;
 
 #pragma endregion
 
@@ -195,14 +201,10 @@ protected:
 #pragma endregion
 
 #pragma region "移動"
-	//アニメーションを更新.
-	void UpdateAnimationState();
-
-	//TODO: この2つややこしい、混ぜれない? <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-	//攻撃アニメーション.
-	void PlayFireAnimMontage();
-	//アニメーションモンタージュを再生.
-	void PlayAnimationMontage(EAnimationState AnimState);
+	//アニメーション更新.
+	void UpdateAnimState(float DeltaTime);
+	//アニメーション再生.
+	void PlayAnimMontage(EAnimationState AnimState);
 #pragma endregion
 
 #pragma region "射撃"

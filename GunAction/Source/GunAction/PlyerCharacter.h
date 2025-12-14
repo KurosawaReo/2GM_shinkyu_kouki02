@@ -87,7 +87,7 @@ public:
 	class UAnimMontage* JumpDownAnimMontage;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation|Shooting")
-	class UAnimMontage* PlayerFireAnimMontage;
+	class UAnimMontage* ShotAnimMontage;
 
 
 	//移動パラメーター.
@@ -194,12 +194,12 @@ protected:
 	void StartSprint();
 	void StopSprint();
 	//アニメーションを更新.
-	void UpdateAnimationState();
+	void UpdateAnimState();
 
 	//プレイヤー攻撃アニメーション.
 	void PlayFireAnimMontage();
 	//アニメーションモンタージュを再生.
-	void PlayAnimationMontage(EAnimationStateTmp AnimState);
+	void PlayAnimMontage(EAnimationStateTmp AnimState);
 #pragma endregion
 
 #pragma region "UI"

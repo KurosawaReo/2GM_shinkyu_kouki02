@@ -108,8 +108,7 @@ void ACharacterBase::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 
 	//アニメーション状態を更新.
-	UpdateAnimationState();
-
+	UpdateAnimState(DeltaTime);
 	//リロード時間の更新.
 	UpdateReloadTimer(DeltaTime);
 }
@@ -118,79 +117,89 @@ void ACharacterBase::Tick(float DeltaTime)
 #pragma region "移動"
 
 /// <summary>
-/// アニメーション状態を更新する関数.
-/// キャラクターの移動状態に応じてIdleまたはMoveアニメーションを再生.
+/// アニメーション状態を更新.
+/// 操作に応じてIdleやMoveなどのアニメーションを再生.
 /// </summary>
-void ACharacterBase::UpdateAnimationState()
+void ACharacterBase::UpdateAnimState(float DeltaTime)
 {
-	//現在の速度を取得.
-	CurrentSpeed = GetCharacterMovement()->Velocity.Length();
-
-	//ジャンプ状態の判定.
-	bool bIsAirborne = !GetCharacterMovement()->IsMovingOnGround() && GetCharacterMovement()->Velocity.Z != 0.0f;
-
-	EAnimationState NewAnimationState = CurrentAnimationState;
-	if (bIsAirborne)
-	{
-		//空中にいる場合,垂直速度でジャンプ状態を判定.
-		float VerticalVelocity = GetCharacterMovement()->Velocity.Z;
-
-		if (VerticalVelocity > 100.0f)
-		{
-			//ジャンプアップ状態.
-			NewAnimationState = EAnimationState::JumpUp;
-		}
-		else if (VerticalVelocity < -100.0f)
-		{
-			//ジャンプダウン状態.
-			NewAnimationState = EAnimationState::JumpDown;
-		}
-		else
-		{
-			//ジャンプ中状態.
-			NewAnimationState = EAnimationState::JumpMid;
-		}
-		bIsJumping = true;
+	//射撃中.
+	if (shotAnimTimer > 0) {
+		shotAnimTimer -= DeltaTime;
 	}
-	else
-	{
-		//地面にいる場合.
-		bIsJumping = false;
-
-		if (CurrentSpeed > 0.1f)
+	//射撃してない.
+	else {
+		//次の状態に変える.
+		EAnimationState NewAnimationState;
 		{
-			bIsMoving = true;
+			//現在の速度を取得.
+			CurrentSpeed = GetCharacterMovement()->Velocity.Length();
+			//ジャンプ状態の判定.
+			bool bIsAirborne = !GetCharacterMovement()->IsMovingOnGround() && GetCharacterMovement()->Velocity.Z != 0.0f;
 
-			//スプリント中か判定.
-			if (bIsSprinting)
+			if (bIsAirborne)
 			{
-				NewAnimationState = EAnimationState::Run;
+				//空中にいる場合,垂直速度でジャンプ状態を判定.
+				float VerticalVelocity = GetCharacterMovement()->Velocity.Z;
+
+				if (VerticalVelocity > 100.0f)
+				{
+					//ジャンプアップ状態.
+					NewAnimationState = EAnimationState::JumpUp;
+				}
+				else if (VerticalVelocity < -100.0f)
+				{
+					//ジャンプダウン状態.
+					NewAnimationState = EAnimationState::JumpDown;
+				}
+				else
+				{
+					//ジャンプ中状態.
+					NewAnimationState = EAnimationState::JumpMid;
+				}
+				bIsJumping = true;
 			}
 			else
 			{
-				NewAnimationState = EAnimationState::Move;
+				//地面にいる場合.
+				bIsJumping = false;
+
+				if (CurrentSpeed > 0.1f)
+				{
+					bIsMoving = true;
+
+					//スプリント中か判定.
+					if (bIsSprinting)
+					{
+						NewAnimationState = EAnimationState::Run;
+					}
+					else
+					{
+						NewAnimationState = EAnimationState::Move;
+					}
+				}
+				else
+				{
+					bIsMoving = false;
+					NewAnimationState = EAnimationState::Idle;
+				}
 			}
 		}
-		else
-		{
-			bIsMoving = false;
-			NewAnimationState = EAnimationState::Idle;
-		}
-	}
-
-	//アニメーションが変わった場合のみ再生.
-	if (NewAnimationState != CurrentAnimationState)
-	{
-		CurrentAnimationState = NewAnimationState;
-		PlayAnimationMontage(NewAnimationState);
+		//射撃以外のアニメーション.
+		PlayAnimMontage(NewAnimationState);
 	}
 }
 
+/*
+　【注意】PlayAnimMontage関数にまとめた。
+
+/// <summary>
+/// 射撃アニメーション.
+/// </summary>
 void ACharacterBase::PlayFireAnimMontage()
 {
-	if (PlayerFireAnimMontage == nullptr)
+	if (ShotAnimMontage == nullptr)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("PlayerFireAnimMontage is not set!"));
+		UE_LOG(LogTemp, Warning, TEXT("ShotAnimMontage is not set!"));
 		return;
 	}
 
@@ -208,14 +217,24 @@ void ACharacterBase::PlayFireAnimMontage()
 		return;
 	}
 
-	UE_LOG(LogTemp, Warning, TEXT("Playing player fire montage: %s"), *PlayerFireAnimMontage->GetName());
-	FireAnimInstance->Montage_Play(PlayerFireAnimMontage, 1.0f);
+	UE_LOG(LogTemp, Warning, TEXT("Playing player fire montage: %s"), *ShotAnimMontage->GetName());
+	FireAnimInstance->Montage_Play(ShotAnimMontage, 1.0f);
 }
+*/
 
-void ACharacterBase::PlayAnimationMontage(EAnimationState AnimState)
+/// <summary>
+/// 移動, ジャンプ, 射撃などのアニメーション切り替え.
+/// </summary>
+void ACharacterBase::PlayAnimMontage(EAnimationState AnimState)
 {
-	UAnimMontage* MontageToPlay = nullptr;
+	//アニメーションが同じなら.
+	if (CurrentAnimationState == AnimState) {
+		return; //処理しない.
+	}
+	CurrentAnimationState = AnimState; //状態更新.
 
+	//状態別の処理.
+	UAnimMontage* MontageToPlay = nullptr;
 	switch (AnimState)
 	{
 		case EAnimationState::Idle:
@@ -236,28 +255,33 @@ void ACharacterBase::PlayAnimationMontage(EAnimationState AnimState)
 		case EAnimationState::JumpDown:
 			MontageToPlay = JumpDownAnimMontage;
 			break;
-		default:
+		case EAnimationState::Shot:
+			MontageToPlay = ShotAnimMontage;
 			break;
+
+		default: break;
 	}
+
+	//nullチェック.
 	if (MontageToPlay == nullptr)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("MontageToPlay is null for animation state: %d"), (int32)AnimState);
 		return;
 	}
-
 	if (GetMesh() == nullptr)
 	{
 		UE_LOG(LogTemp, Error, TEXT("Mesh is invalid!"));
 		return;
 	}
 
+	//アニメーションインスタンス取得.
 	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
 	if (AnimInstance == nullptr)
 	{
 		UE_LOG(LogTemp, Error, TEXT("AnimInstance is null! Mesh: %s"), GetMesh() ? TEXT("Valid") : TEXT("Invalid"));
 		return;
 	}
-
+	//アニメーション再生.
 	UE_LOG(LogTemp, Warning, TEXT("Playing montage: %s for state: %d"), *MontageToPlay->GetName(), (int32)AnimState);
 	AnimInstance->Montage_Play(MontageToPlay, 1.0f);
 }
@@ -328,7 +352,9 @@ bool ACharacterBase::ShotBulletExe(AActor* user, FVector targetPos)
 		}
 
 		//射撃アニメーション.
-		PlayFireAnimMontage();
+		PlayAnimMontage(EAnimationState::Shot);
+		//しばらくは射撃アニメーションを再生.
+		shotAnimTimer = initShotAnimTime;
 
 		return true; //発射成功.
 	}
