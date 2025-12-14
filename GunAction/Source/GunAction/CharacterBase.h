@@ -197,6 +197,8 @@ protected:
 #pragma region "移動"
 	//アニメーションを更新.
 	void UpdateAnimationState();
+
+	//TODO: この2つややこしい、混ぜれない? <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 	//攻撃アニメーション.
 	void PlayFireAnimMontage();
 	//アニメーションモンタージュを再生.

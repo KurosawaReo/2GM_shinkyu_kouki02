@@ -218,26 +218,26 @@ void ACharacterBase::PlayAnimationMontage(EAnimationState AnimState)
 
 	switch (AnimState)
 	{
-	case EAnimationState::Idle:
-		MontageToPlay = IdleAnimMontage;
-		break;
-	case EAnimationState::Move:
-		MontageToPlay = MoveAnimMontage;
-		break;
-	case EAnimationState::Run:
-		MontageToPlay = SprintAnimMontage;
-		break;
-	case EAnimationState::JumpUp:
-		MontageToPlay = JumpUpAnimMontage;
-		break;
-	case EAnimationState::JumpMid:
-		MontageToPlay = JumpMidAnimMontage;
-		break;
-	case EAnimationState::JumpDown:
-		MontageToPlay = JumpDownAnimMontage;
-		break;
-	default:
-		break;
+		case EAnimationState::Idle:
+			MontageToPlay = IdleAnimMontage;
+			break;
+		case EAnimationState::Move:
+			MontageToPlay = MoveAnimMontage;
+			break;
+		case EAnimationState::Run:
+			MontageToPlay = SprintAnimMontage;
+			break;
+		case EAnimationState::JumpUp:
+			MontageToPlay = JumpUpAnimMontage;
+			break;
+		case EAnimationState::JumpMid:
+			MontageToPlay = JumpMidAnimMontage;
+			break;
+		case EAnimationState::JumpDown:
+			MontageToPlay = JumpDownAnimMontage;
+			break;
+		default:
+			break;
 	}
 	if (MontageToPlay == nullptr)
 	{
@@ -275,14 +275,10 @@ bool ACharacterBase::ShotBulletExe(AActor* user, FVector targetPos)
 	//弾の設定 - ①スポーン位置.
 	FVector SpawnLocation;
 	{
+		//TODO: マズルがあること前提の処理, 銃を撃たない敵はどうするか.
 		if (RevolverGun && RevolverGun->Muzzle) {
 			SpawnLocation = RevolverGun->Muzzle->GetComponentLocation();
 		}
-		//↓TODO: マズルがないは場合どうするか.
-//		else{ 
-//			//マズルがない場合はカメラの少し前方から発射.
-//			SpawnLocation = CameraLocation + (GetCameraVector("Forward") * 100.0f) - (GetCameraVector("Right") * 20.0f);
-//		}
 	}
 	//弾の設定 - ②発射方向.
 	FRotator BulletRotation;

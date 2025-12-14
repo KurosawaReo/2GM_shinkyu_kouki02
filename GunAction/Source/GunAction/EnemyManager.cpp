@@ -131,20 +131,19 @@ void AEnemyManager::PlayDeathSound()
 //コンポーネント無効化.
 void AEnemyManager::DisableComponents()
 {
-	// 移動を停止
-	if (GetCharacterMovement())
-	{
-		GetCharacterMovement()->StopMovementImmediately();
-		GetCharacterMovement()->DisableMovement();
-	}
-
 	// カプセルのコリジョンを無効化
-	if (GetCapsuleComponent())
-	{
-		//GetCapsuleComponent()->SetCollisionEnabled(ECC_NoCollision);
-	}
+	//GetCapsuleComponent()->SetCollisionEnabled(ECC_NoCollision);
 
-	// Tickを停止
+	//移動を停止.
+	if (auto cmp = GetCharacterMovement()) {
+		cmp->StopMovementImmediately();
+		cmp->DisableMovement();
+	}
+	//銃を無効に.
+	if (RevolverGun) {
+		RevolverGun->Destroy(); //kari.
+	}
+	//Tickを停止.
 	SetActorTickEnabled(false);
 }
 #pragma endregion
@@ -156,11 +155,16 @@ void AEnemyManager::DisableComponents()
 /// </summary>
 void AEnemyManager::ShotBullet()
 {
-	const FVector pos     = GetActorLocation();
-	const FVector forward = GetActorForwardVector();
+	//プレイヤー取得.
+	ACharacter* player = UGameplayStatics::GetPlayerCharacter(GetWorld(), 0);
+	FVector plyPos = player->GetActorLocation();
 
-	//目標地点を計算(仮)
-	const FVector TargetPosition = pos + forward * shotStartDist;
+	//目標地点を計算.
+	const FVector TargetPosition = FVector(
+		plyPos.X + FMath::FRandRange(-shotPosRandom, shotPosRandom),
+		plyPos.Y + FMath::FRandRange(-shotPosRandom, shotPosRandom),
+		plyPos.Z + FMath::FRandRange(-shotPosRandom, shotPosRandom)
+	);
 	//弾を発射.
 	ShotBulletExe(this, TargetPosition);
 }
