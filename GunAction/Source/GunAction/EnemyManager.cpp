@@ -79,6 +79,7 @@ void AEnemyManager::Tick(float DeltaTime) {
 //弾が当たったら実行される.
 void AEnemyManager::OnBulletHit() 
 {
+	GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, TEXT("hit enemy"));
 	Die(); //死亡処理.
 }
 //死亡処理.
@@ -130,20 +131,19 @@ void AEnemyManager::PlayDeathSound()
 //コンポーネント無効化.
 void AEnemyManager::DisableComponents()
 {
-	// 移動を停止
-	if (GetCharacterMovement())
-	{
-		GetCharacterMovement()->StopMovementImmediately();
-		GetCharacterMovement()->DisableMovement();
-	}
-
 	// カプセルのコリジョンを無効化
-	if (GetCapsuleComponent())
-	{
-		//GetCapsuleComponent()->SetCollisionEnabled(ECC_NoCollision);
-	}
+	//GetCapsuleComponent()->SetCollisionEnabled(ECC_NoCollision);
 
-	// Tickを停止
+	//移動を停止.
+	if (auto cmp = GetCharacterMovement()) {
+		cmp->StopMovementImmediately();
+		cmp->DisableMovement();
+	}
+	//銃を無効に.
+	if (RevolverGun) {
+		RevolverGun->Destroy(); //kari.
+	}
+	//Tickを停止.
 	SetActorTickEnabled(false);
 }
 #pragma endregion
@@ -155,37 +155,17 @@ void AEnemyManager::DisableComponents()
 /// </summary>
 void AEnemyManager::ShotBullet()
 {
-	GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, TEXT("ugoita"));
+	//プレイヤー取得.
+	ACharacter* player = UGameplayStatics::GetPlayerCharacter(GetWorld(), 0);
+	FVector plyPos = player->GetActorLocation();
 
-	const FVector pos     = GetActorLocation();
-	const FVector forward = GetActorForwardVector();
-
-	//目標地点を計算(仮)
-	const FVector TargetPosition = pos + forward * shotStartDist + forward * shotTargetDist;
-
-	//弾の設定 - ①スポーン位置.
-	FVector SpawnLocation;
-	{
-		if (RevolverGun && RevolverGun->Muzzle) {
-			SpawnLocation = RevolverGun->Muzzle->GetComponentLocation();
-		}
-	}
-
-	//弾の設定 - ②発射方向.
-	FRotator BulletRotation;
-	{
-		FVector dir = TargetPosition - SpawnLocation;
-		dir.Normalize();
-		BulletRotation = dir.Rotation();
-	}
-
-	//弾の設定 - ③スポーンパラメーター.
-	FActorSpawnParameters SpawnParams;
-	{
-		SpawnParams.Owner = this;
-		SpawnParams.Instigator = GetInstigator();
-	}
-
-	ShotBulletExe(SpawnLocation, BulletRotation, TargetPosition, SpawnParams);
+	//目標地点を計算.
+	const FVector TargetPosition = FVector(
+		plyPos.X + FMath::FRandRange(-shotPosRandom, shotPosRandom),
+		plyPos.Y + FMath::FRandRange(-shotPosRandom, shotPosRandom),
+		plyPos.Z + FMath::FRandRange(-shotPosRandom, shotPosRandom)
+	);
+	//弾を発射.
+	ShotBulletExe(this, TargetPosition);
 }
 #pragma endregion

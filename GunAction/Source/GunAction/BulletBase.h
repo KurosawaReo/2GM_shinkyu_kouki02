@@ -44,6 +44,8 @@ private:
 	FVector vec;     //進行方向.
 	float   counter; //経過時間.
 
+	AActor* user;    //誰が撃った弾か.
+
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = MyProperty)
 	float   speed      = 1;  //速度.
@@ -69,10 +71,8 @@ protected:
 	);
 
 public:	
+	//set.
+	virtual void SetUser(AActor* user);
 	//常に実行.
 	virtual void Tick(float DeltaTime) override;
-
-	//発射処理.
-	virtual void ShotForward(FVector forward);
-	virtual void ShotPos    (FVector position);
 };
