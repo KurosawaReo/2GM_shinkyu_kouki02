@@ -48,14 +48,32 @@ void ABulletBase::OnOverlapBegin(
 ){   
     //FString name = OtherActor->GetName();                   //名前取得.
     //FString msg  = FString::Printf(TEXT("Hit: %s"), *name); //変数組み込み.
-    //
     //GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, msg); //表示.
 
-    //敵に当たったなら.(AActor型をAEnemyManager型にキャスト)
-    if (AEnemyManager* enm = Cast<AEnemyManager>(OtherActor)) {
-        enm->OnBulletHit(); //敵の死亡処理.
-        Destroy();          //弾消滅.
+    //撃った人がプレイヤー.
+    if (Cast<APlayerManager>(user)) {
+        //敵に当たった.
+        if (auto enm = Cast<AEnemyManager>(OtherActor)) {
+            enm->OnBulletHit(); //被弾処理.
+            Destroy();          //弾消滅.
+        }
     }
+    //撃った人が敵.
+    if (Cast<AEnemyManager>(user)) {
+        //プレイヤーに当たった.
+        if (auto ply = Cast<APlayerManager>(OtherActor)) {
+            ply->OnBulletHit(); //被弾処理.
+            Destroy();          //弾消滅.
+        }
+    }
+}
+
+/// <summary>
+/// set.
+/// </summary>
+/// <param name="user">撃った人のクラス</param>
+void ABulletBase::SetUser(AActor* _user) {
+    user = _user; //銃を撃った人を登録.
 }
 
 /// <summary>
@@ -90,25 +108,4 @@ void ABulletBase::Tick(float DeltaTime)
     if (counter >= deleteTime) {
         Destroy();
     }
-}
-
-/// <summary>
-/// 発射処理 | 進行方向を指定(未使用)
-/// </summary>
-/// <param name="forward">進行方向</param>
-void ABulletBase::ShotForward(FVector forward) {
-	this->vec = forward; //進行方向を記録.
-}
-/// <summary>
-/// 発射処理 | 目標地点を指定(未使用)
-/// </summary>
-/// <param name="position">目標座標</param>
-void ABulletBase::ShotPos(FVector position) {
-
-    //距離差を求める.
-    FVector dist = position - GetActorLocation();
-    //正規化(単位ベクターにする)
-    dist.Normalize();
-
-    this->vec = dist; //進行方向を記録.
 }

@@ -4,7 +4,7 @@
 
    [クラス構成]
    CharacterBase
-   └PlayerManager ←ここ
+   └PlayerManager ←今ここ
    └EnemyManager
 */
 #pragma once
@@ -43,17 +43,17 @@ public:
 	class UCameraComponent* FollowCamera;
 
 	// マズルソケットの名前
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Gun|Muzzle")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Player|Gun|Muzzle")
 	FName MuzzleSocketName = FName("Muzzle"); // スケルタルメッシュ内のソケット名
 
 	//プレイヤーの腕処理.
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|IK")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Player|IK")
 	bool bEnbLeArmIK = true;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|IK")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Player|IK")
 	FVector RightHandIKTarget = FVector::ZeroVector;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|IK")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Player|IK")
 	float RightHandIKAlpha = 0.0f;
 
 	//▼ ===== 関数 ===== ▼.
@@ -109,10 +109,6 @@ private:
 
 	UFUNCTION(BlueprintCallable, Category = "Camera")
 	FRotator GetCameraRotation() const;
-
-	//カメラ前方の目標地点を計算する関数.
-//	UFUNCTION(BlueprintCallable, Category = "Bullet")
-//	FVector GetTargetPos(float Distance) const;
 #pragma endregion
 
 #pragma region "UI"
@@ -122,5 +118,11 @@ private:
 #pragma region "射撃"
 	void ShotBullet() override; //override
 	void SaveConfig();
+#pragma endregion
+
+public:
+#pragma region "ダメージ処理"
+	void OnBulletHit() override; //弾が当たったら実行される.
+	void Die()         override; //死亡処理.
 #pragma endregion
 };
