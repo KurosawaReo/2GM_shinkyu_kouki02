@@ -43,17 +43,17 @@ public:
 	class UCameraComponent* FollowCamera;
 
 	// マズルソケットの名前
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Gun|Muzzle")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Player|Gun|Muzzle")
 	FName MuzzleSocketName = FName("Muzzle"); // スケルタルメッシュ内のソケット名
 
 	//プレイヤーの腕処理.
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|IK")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Player|IK")
 	bool bEnbLeArmIK = true;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|IK")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Player|IK")
 	FVector RightHandIKTarget = FVector::ZeroVector;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|IK")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Player|IK")
 	float RightHandIKAlpha = 0.0f;
 
 	//▼ ===== 関数 ===== ▼.
