@@ -189,39 +189,6 @@ void ACharacterBase::UpdateAnimState(float DeltaTime)
 	}
 }
 
-/*
-　【注意】PlayAnimMontage関数にまとめた。
-
-/// <summary>
-/// 射撃アニメーション.
-/// </summary>
-void ACharacterBase::PlayFireAnimMontage()
-{
-	if (ShotAnimMontage == nullptr)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("ShotAnimMontage is not set!"));
-		return;
-	}
-
-	if (GetMesh() == nullptr)
-	{
-		UE_LOG(LogTemp, Error, TEXT("Mesh is invalid!"));
-		return;
-	}
-
-	// アニメーションインスタンスを取得
-	class UAnimInstance* FireAnimInstance = GetMesh()->GetAnimInstance();
-	if (FireAnimInstance == nullptr)
-	{
-		UE_LOG(LogTemp, Error, TEXT("AnimInstance is null!"));
-		return;
-	}
-
-	UE_LOG(LogTemp, Warning, TEXT("Playing player fire montage: %s"), *ShotAnimMontage->GetName());
-	FireAnimInstance->Montage_Play(ShotAnimMontage, 1.0f);
-}
-*/
-
 /// <summary>
 /// 移動, ジャンプ, 射撃などのアニメーション切り替え.
 /// </summary>
@@ -310,6 +277,12 @@ bool ACharacterBase::ShotBulletExe(AActor* user, FVector targetPos)
 		FVector dir = targetPos - SpawnLocation;
 		dir.Normalize();
 		BulletRotation = dir.Rotation();
+		//ランダムで少しずらす.
+		BulletRotation += FRotator(
+			FMath::FRandRange(-shotPosRandom, shotPosRandom),
+			FMath::FRandRange(-shotPosRandom, shotPosRandom),
+			FMath::FRandRange(-shotPosRandom, shotPosRandom)
+		);
 	}
 	//弾の設定 - ③スポーンパラメーター.
 	FActorSpawnParameters SpawnParams;

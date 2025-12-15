@@ -38,12 +38,11 @@ public:
 
 	//射撃用タイマー.
 	FTimerHandle tmShot;
+	//射撃リロードタイマー.
+	FTimerHandle tmShotReload; //TODO: リロード作る<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 	//射撃間隔.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Enemy|Shot")
 	float shotTime = 1.0f;
-	//射撃の正確さ(どれだけずらすか)
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Enemy|Shot")
-	float shotPosRandom = 1.0f;
 
 //▼ ===== 関数 ===== ▼.
 public:

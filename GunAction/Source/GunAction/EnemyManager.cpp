@@ -155,17 +155,14 @@ void AEnemyManager::DisableComponents()
 /// </summary>
 void AEnemyManager::ShotBullet()
 {
-	//プレイヤー取得.
-	ACharacter* player = UGameplayStatics::GetPlayerCharacter(GetWorld(), 0);
-	FVector plyPos = player->GetActorLocation();
-
-	//目標地点を計算.
-	const FVector TargetPosition = FVector(
-		plyPos.X + FMath::FRandRange(-shotPosRandom, shotPosRandom),
-		plyPos.Y + FMath::FRandRange(-shotPosRandom, shotPosRandom),
-		plyPos.Z + FMath::FRandRange(-shotPosRandom, shotPosRandom)
-	);
-	//弾を発射.
-	ShotBulletExe(this, TargetPosition);
+	//弾が残っていれば.
+	if (CurrentAmmoCount > 0) {
+		//プレイヤー取得.
+		ACharacter* player = UGameplayStatics::GetPlayerCharacter(GetWorld(), 0);
+		//目標地点を計算.
+		const FVector TargetPosition = player->GetActorLocation();
+		//弾を発射.
+		ShotBulletExe(this, TargetPosition);
+	}
 }
 #pragma endregion

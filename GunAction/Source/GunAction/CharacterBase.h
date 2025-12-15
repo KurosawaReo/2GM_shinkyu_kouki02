@@ -78,7 +78,6 @@ class GUNACTION_API ACharacterBase : public ACharacter
 
 //▼ ===== 変数 ===== ▼.
 public:
-
 #pragma region "Gun"
 	//銃クラスの参照.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Base|Gun")
@@ -86,6 +85,26 @@ public:
 
 	UPROPERTY(BlueprintReadOnly, Category = "MyProperty|Base|Gun")
 	ASteam_Revolver* RevolverGun;
+
+
+	//弾関連.
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Base|Gun|Ammunition")
+	int32 MaxAmmoPerMagazine = 6;		//連続で弾を撃てる数.
+
+	UPROPERTY(BlueprintReadOnly, Category = "MyProperty|Base|Gun|Ammunition")
+	int32 CurrentAmmoCount = 6;			//弾の残り数.
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Base|Gun|Ammunition")
+	float ReloadDuration = 2.5f;		//リロード時間(秒)
+
+	UPROPERTY(BlueprintReadOnly, Category = "MyProperty|Base|Gun|Ammunition")
+	bool  bIsReloading = false;			//リロードしているか.
+
+	UPROPERTY(BlueprintReadOnly, Category = "MyProperty|Base|Gun|Ammunition")
+	float ReloadTimerElapsed = 0.0f;	//リロード経過時間計測用.
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Base|Gun|Ammunition")
+	float shotPosRandom = 1.0f;			//射撃の正確さ(どれだけずらすか)
 #pragma endregion
 
 #pragma region "Bullet"
@@ -109,9 +128,6 @@ public:
 	//アニメーション関係.
 	float shotAnimTimer;
 	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Base|Animation|Time")
-	float initShotAnimTime; //射撃アニメーション時間.
-
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Base|Animation")
 	EAnimationState CurrentAnimationState; //現在のアニメーション状態.
 
@@ -136,6 +152,8 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Base|Animation")
 	class UAnimMontage* ShotAnimMontage;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Base|Animation|Time")
+	float initShotAnimTime; //射撃アニメーション時間.
 #pragma endregion
 
 #pragma region "Movement"
@@ -168,24 +186,6 @@ public:
 	double CurrentSpeed;
 #pragma endregion
 
-#pragma region "Ammunition"
-	// 弾薬関連
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Base|Ammunition")
-	int32 MaxAmmoPerMagazine = 6;
-
-	UPROPERTY(BlueprintReadOnly, Category = "MyProperty|Base|Ammunition")
-	int32 CurrentAmmoCount = 6;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Base|Ammunition")
-	float ReloadDuration = 2.5f; // リロード時間（秒）
-
-	UPROPERTY(BlueprintReadOnly, Category = "MyProperty|Base|Ammunition")
-	bool bIsReloading = false;
-
-	UPROPERTY(BlueprintReadOnly, Category = "MyProperty|Base|Ammunition")
-	float ReloadTimerElapsed = 0.0f;
-#pragma endregion
-
 //▼ ===== 関数 ===== ▼.
 public:
 #pragma region "コンストラクタ"
@@ -209,7 +209,7 @@ protected:
 
 #pragma region "射撃"
 	//[仮想関数] 弾発射処理.
-	virtual void ShotBullet(){} 
+	virtual void ShotBullet(){}
 	//弾を発射する.
 	bool ShotBulletExe(AActor* user, FVector targetPos);
 
