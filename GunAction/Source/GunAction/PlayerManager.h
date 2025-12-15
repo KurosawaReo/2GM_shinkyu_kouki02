@@ -11,6 +11,7 @@
 
 #include "CoreMinimal.h"
 #include "CharacterBase.h" //親クラス.
+#include "Steam_Revolver.h"
 #include "PlayerManager.generated.h"
 
 class UCrosshairWidget;
@@ -22,10 +23,10 @@ class UCameraComponent;
 /// </summary>
 UCLASS()
 class GUNACTION_API APlayerManager : public ACharacterBase
-{
+{ 
 	GENERATED_BODY()
 
-//▼ ===== 変数 ===== ▼.
+	//▼ ===== 変数 ===== ▼.
 public:
 	//クロスヘア.
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "MyProperty|Player|UI")
@@ -45,9 +46,17 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Gun|Muzzle")
 	FName MuzzleSocketName = FName("Muzzle"); // スケルタルメッシュ内のソケット名
 
-	
+	//プレイヤーの腕処理.
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|IK")
+	bool bEnbLeArmIK = true;
 
-//▼ ===== 関数 ===== ▼.
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|IK")
+	FVector RightHandIKTarget = FVector::ZeroVector;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|IK")
+	float RightHandIKAlpha = 0.0f;
+
+	//▼ ===== 関数 ===== ▼.
 protected:
 	//コンストラクタ.
 	APlayerManager();
@@ -75,14 +84,19 @@ protected:
 
 #pragma region "銃システム"
 private:
-	
+
 	// マズル位置を取得する関数
 	FVector GetMuzzleLocation() const;
 
 	// マズル方向を取得する関数
 	FRotator GetMuzzleRotation() const;
 
-	
+	//インデックス初期化.
+	void InitializeArmIK();
+
+	//クロスヘアと高さ.
+	void UpdateArmIK();
+
 
 #pragma endregion
 
@@ -104,8 +118,9 @@ private:
 #pragma region "UI"
 	void InitializeUI();
 #pragma endregion
-
+	
 #pragma region "射撃"
 	void ShotBullet() override; //override
+	void SaveConfig();
 #pragma endregion
 };

@@ -61,6 +61,7 @@ public:
 	TSubclassOf<AActor> BulletClass;
 
 	//腕のボーンインデックスをキャッシュ.
+	//腕のボーンインデックスをキャッシュ.
 	UPROPERTY(VisibleAnywhere, Category = "Animation")
 	int32 RightArmBoneIndex = INDEX_NONE;
 

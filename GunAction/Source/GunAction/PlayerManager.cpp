@@ -42,6 +42,8 @@ void APlayerManager::BeginPlay() {
 	//クロスヘアUIを初期化.
 	InitializeUI();
 
+	InitializeArmIK();
+
 	//アニメーション状態の初期化.
 	CurrentAnimationState = EAnimationState::Idle;
 }
@@ -50,6 +52,14 @@ void APlayerManager::BeginPlay() {
 void APlayerManager::Tick(float DeltaTime) {
 
 	ACharacterBase::Tick(DeltaTime); //親クラスのTick()を呼び出す.
+
+	// 腕のIKを毎フレーム更新
+	UpdateArmIK();
+	// 銃のアタッチメント位置を毎フレーム更新
+	if (RevolverGun != nullptr)
+	{
+		RevolverGun->UpdateComponentTransforms();
+	}
 }
 
 #pragma region "入力処理"
@@ -186,20 +196,16 @@ FVector APlayerManager::GetMuzzleLocation() const
 
 	USkeletalMeshComponent* GunMesh = Cast<USkeletalMeshComponent>(RevolverGun->GetRootComponent());
 
-	if (GunMesh == nullptr)
+
+	// 銃ActorのMuzzleコンポーネントを直接取得
+	if (RevolverGun->Muzzle != nullptr)
 	{
-		//UE_LOG(LogTemp, Warning, TEXT("Gun mesh component is not valid!"));
-		return RevolverGun->GetActorLocation();
+		return RevolverGun->Muzzle->GetComponentLocation();
 	}
 
-	//マズルソケットが存在するか確認.
-	if (!GunMesh->DoesSocketExist(MuzzleSocketName))
-	{
-		return GetActorLocation();
-	}
+	// Muzzleが見つからない場合は銃の位置を返す
+	return RevolverGun->GetActorLocation();
 
-	// マズルソケットのワールド座標を取得
-	return GunMesh->GetSocketLocation(MuzzleSocketName);
 }
 
 /// <summary>
@@ -228,7 +234,69 @@ FRotator APlayerManager::GetMuzzleRotation() const
 
 	return GunMesh->GetSocketRotation(MuzzleSocketName);
 }
+void APlayerManager::InitializeArmIK()
+{
+	if (!GetMesh())
+	{
+		UE_LOG(LogTemp, Error, TEXT("Mesh is NULL!"));
+		return;
+	}
 
+	// 右腕のボーン名（スケルトンに合わせて変更してください）
+	FName RightArmBoneName = FName(TEXT("arm_r"));      // 上腕
+	FName RightForearmBoneName = FName(TEXT("forearm_r")); // 前腕
+
+	// ボーンインデックスを取得
+	RightArmBoneIndex = GetMesh()->GetBoneIndex(RightArmBoneName);
+	RightForearmBoneIndex = GetMesh()->GetBoneIndex(RightForearmBoneName);
+
+	if (RightArmBoneIndex != INDEX_NONE)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Right Arm Bone found at index: %d"), RightArmBoneIndex);
+	}
+	else
+	{
+		UE_LOG(LogTemp, Error, TEXT("Right Arm Bone '%s' not found!"), *RightArmBoneName.ToString());
+	}
+
+	if (RightForearmBoneIndex != INDEX_NONE)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Right Forearm Bone found at index: %d"), RightForearmBoneIndex);
+	}
+	else
+	{
+		UE_LOG(LogTemp, Error, TEXT("Right Forearm Bone '%s' not found!"), *RightForearmBoneName.ToString());
+	}
+}
+
+void APlayerManager::UpdateArmIK()
+{
+	if (!bEnbLeArmIK || !RevolverGun || !FollowCamera)
+	{
+		return;
+	}
+	// スクリーン座標をワールド座標に変換
+	FVector CrosshairWorldLocation = FVector::ZeroVector;
+	FVector CrosshairWorldDirection = FVector::ZeroVector;
+	
+
+	// 銃のマズルから目標位置への方向を計算
+	FVector MuzzleLocation = FVector::ZeroVector;
+	if (RevolverGun && RevolverGun->Muzzle)
+	{
+		MuzzleLocation = RevolverGun->Muzzle->GetComponentLocation();
+	}
+	else
+	{
+		MuzzleLocation = FollowCamera->GetComponentLocation() + (FollowCamera->GetForwardVector() * 100.0f);
+	}
+	const FVector TargetPosition = CrosshairWorldLocation + (CrosshairWorldDirection * BulletTargetDistance);
+
+	// IKターゲット位置を設定（クロスヘアの方向に向ける）
+	RightHandIKTarget = TargetPosition;
+	RightHandIKAlpha = 1.0f;
+
+}
 #pragma endregion
 
 
@@ -326,6 +394,10 @@ void APlayerManager::InitializeUI()
 #pragma endregion
 
 #pragma region "射撃"
+/// <summary>
+/// ShotBullet() - 発射操作をした時に実行する.
+/// [プレイヤー専用]
+/// </summary>
 /// <summary>
 /// ShotBullet() - 発射操作をした時に実行する.
 /// [プレイヤー専用]
@@ -435,4 +507,5 @@ void APlayerManager::ShotBullet()
 	//プレイヤーアニメーション.
 	PlayFireAnimMontage();
 }
+
 #pragma endregion
