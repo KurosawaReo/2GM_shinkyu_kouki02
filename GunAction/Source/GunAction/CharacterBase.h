@@ -167,6 +167,7 @@ protected:
 #pragma endregion
 
 #pragma region "ËŒ‚"
+
 	//’e”­Ëˆ—[‰¼‘zŠÖ”]
 	virtual void ShotBullet(){} 
 	//’e‚ğ”­Ë‚·‚é.
