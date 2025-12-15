@@ -1,11 +1,11 @@
-/*
+ï»¿/*
    - PlayerManager -
-   ‹¤’Ê‚ÌCharacterƒNƒ‰ƒX‚©‚ç”h¶‚µ‚½ƒvƒŒƒCƒ„[ƒNƒ‰ƒX.
+   å…±é€šã®Characterã‚¯ãƒ©ã‚¹ã‹ã‚‰æ´¾ç”Ÿã—ãŸãƒ—ãƒ¬ã‚¤ãƒ¤ãƒ¼ã‚¯ãƒ©ã‚¹.
 
-   [ƒNƒ‰ƒX\¬]
+   [ã‚¯ãƒ©ã‚¹æ§‹æˆ]
    CharacterBase
-   „¤PlayerManager ©‚±‚±
-   „¤EnemyManager
+   â””PlayerManager â†ã“ã“
+   â””EnemyManager
 */
 #include "PlayerManager.h"
 
@@ -18,97 +18,106 @@
 #include "Components/AudioComponent.h"
 #include "Components/BoxComponent.h"
 #include "Particles/ParticleSystemComponent.h"
-
-//ƒRƒ“ƒXƒgƒ‰ƒNƒ^.
+//ã‚³ãƒ³ã‚¹ãƒˆãƒ©ã‚¯ã‚¿.
 APlayerManager::APlayerManager() {
 
-	//ƒXƒvƒŠƒ“ƒOƒA[ƒ€(ƒJƒƒ‰ƒu[ƒ€)‚Ìì¬.
+	//ã‚¹ãƒ—ãƒªãƒ³ã‚°ã‚¢ãƒ¼ãƒ (ã‚«ãƒ¡ãƒ©ãƒ–ãƒ¼ãƒ )ã®ä½œæˆ.
 	CameraBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
 	CameraBoom->SetupAttachment(RootComponent);
 	CameraBoom->TargetArmLength = 300.0f;
 	CameraBoom->bUsePawnControlRotation = true;
 	CameraBoom->SocketOffset = FVector(0.0f, 0.0f, 50.0f);
 
-	//ƒJƒƒ‰‚Ìì¬.
+	//ã‚«ãƒ¡ãƒ©ã®ä½œæˆ.
 	FollowCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FollowCamera"));
 	FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName);
 	FollowCamera->bUsePawnControlRotation = false;
 }
 
-//¢Š«‚µ‚½uŠÔ.
+//å¬å–šã—ãŸç¬é–“.
 void APlayerManager::BeginPlay() {
 
-	ACharacterBase::BeginPlay(); //eƒNƒ‰ƒX‚ÌBeginPlay()‚ğŒÄ‚Ño‚·.
+	ACharacterBase::BeginPlay(); //è¦ªã‚¯ãƒ©ã‚¹ã®BeginPlay()ã‚’å‘¼ã³å‡ºã™.
 
-	//ƒNƒƒXƒwƒAUI‚ğ‰Šú‰».
+	//ã‚¯ãƒ­ã‚¹ãƒ˜ã‚¢UIã‚’åˆæœŸåŒ–.
 	InitializeUI();
 
-	//ƒAƒjƒ[ƒVƒ‡ƒ“ó‘Ô‚Ì‰Šú‰».
+	InitializeArmIK();
+
+	//ã‚¢ãƒ‹ãƒ¡ãƒ¼ã‚·ãƒ§ãƒ³çŠ¶æ…‹ã®åˆæœŸåŒ–.
 	CurrentAnimationState = EAnimationState::Idle;
 }
 
-//í‚ÉÀs.
+//å¸¸ã«å®Ÿè¡Œ.
 void APlayerManager::Tick(float DeltaTime) {
 
-	ACharacterBase::Tick(DeltaTime); //eƒNƒ‰ƒX‚ÌTick()‚ğŒÄ‚Ño‚·.
+	ACharacterBase::Tick(DeltaTime); //è¦ªã‚¯ãƒ©ã‚¹ã®Tick()ã‚’å‘¼ã³å‡ºã™.
+
+	// è…•ã®IKã‚’æ¯ãƒ•ãƒ¬ãƒ¼ãƒ æ›´æ–°
+	UpdateArmIK();
+	// éŠƒã®ã‚¢ã‚¿ãƒƒãƒãƒ¡ãƒ³ãƒˆä½ç½®ã‚’æ¯ãƒ•ãƒ¬ãƒ¼ãƒ æ›´æ–°
+	if (RevolverGun != nullptr)
+	{
+		RevolverGun->UpdateComponentTransforms();
+	}
 }
 
-#pragma region "“ü—Íˆ—"
+#pragma region "å…¥åŠ›å‡¦ç†"
 /// <summary>
-/// SetupPlayerInputComponent - ƒvƒŒƒCƒ„[“ü—Í‚Ìİ’è.
-/// ƒL[ƒ{[ƒhAƒ}ƒEƒX‚È‚Ç‚Ì“ü—Í‚ğŠeƒAƒNƒVƒ‡ƒ“‚ÉƒoƒCƒ“ƒh‚·‚é.
+/// SetupPlayerInputComponent - ãƒ—ãƒ¬ã‚¤ãƒ¤ãƒ¼å…¥åŠ›ã®è¨­å®š.
+/// ã‚­ãƒ¼ãƒœãƒ¼ãƒ‰ã€ãƒã‚¦ã‚¹ãªã©ã®å…¥åŠ›ã‚’å„ã‚¢ã‚¯ã‚·ãƒ§ãƒ³ã«ãƒã‚¤ãƒ³ãƒ‰ã™ã‚‹.
 /// </summary>
-/// <param name="PlayerInputComponent">ƒvƒŒƒCƒ„[“ü—ÍƒRƒ“ƒ|[ƒlƒ“ƒg</param>
+/// <param name="PlayerInputComponent">ãƒ—ãƒ¬ã‚¤ãƒ¤ãƒ¼å…¥åŠ›ã‚³ãƒ³ãƒãƒ¼ãƒãƒ³ãƒˆ</param>
 void APlayerManager::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	Input(PlayerInputComponent);
 }
 /// <summary>
-/// Input - ˆÚ“®ˆ—‚¨‚æ‚Ñ“ü—ÍƒoƒCƒ“ƒh.
-/// ƒLƒƒƒ‰ƒNƒ^[‚ÌˆÚ“®AƒJƒƒ‰‘€ìAƒWƒƒƒ“ƒvAƒXƒvƒŠƒ“ƒgAËŒ‚‚È‚Ç‚Ì“ü—Í‚ğƒZƒbƒgƒAƒbƒv‚·‚é.
+/// Input - ç§»å‹•å‡¦ç†ãŠã‚ˆã³å…¥åŠ›ãƒã‚¤ãƒ³ãƒ‰.
+/// ã‚­ãƒ£ãƒ©ã‚¯ã‚¿ãƒ¼ã®ç§»å‹•ã€ã‚«ãƒ¡ãƒ©æ“ä½œã€ã‚¸ãƒ£ãƒ³ãƒ—ã€ã‚¹ãƒ—ãƒªãƒ³ãƒˆã€å°„æ’ƒãªã©ã®å…¥åŠ›ã‚’ã‚»ãƒƒãƒˆã‚¢ãƒƒãƒ—ã™ã‚‹.
 /// </summary>
-/// <param name="PlayerInputComponent">ƒvƒŒƒCƒ„[“ü—ÍƒRƒ“ƒ|[ƒlƒ“ƒg</param>
+/// <param name="PlayerInputComponent">ãƒ—ãƒ¬ã‚¤ãƒ¤ãƒ¼å…¥åŠ›ã‚³ãƒ³ãƒãƒ¼ãƒãƒ³ãƒˆ</param>
 void APlayerManager::Input(UInputComponent* PlayerInputComponent)
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 
-	//ˆÚ“®“ü—Í.
+	//ç§»å‹•å…¥åŠ›.
 	PlayerInputComponent->BindAxis("MoveForward", this, &APlayerManager::MoveForward);
 	PlayerInputComponent->BindAxis("MoveRight", this, &APlayerManager::MoveRight);
 
-	//ƒJƒƒ‰“ü—Í.
+	//ã‚«ãƒ¡ãƒ©å…¥åŠ›.
 	PlayerInputComponent->BindAxis("Turn", this, &APawn::AddControllerYawInput);
 	PlayerInputComponent->BindAxis("LookUp", this, &APawn::AddControllerPitchInput);
 	PlayerInputComponent->BindAxis("TurnRate", this, &APlayerManager::TurnAtRate);
 	PlayerInputComponent->BindAxis("LookUpRate", this, &APlayerManager::LookUpAtRate);
 
-	//ƒWƒƒƒ“ƒv“ü—Í.
+	//ã‚¸ãƒ£ãƒ³ãƒ—å…¥åŠ›.
 	PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &ACharacter::Jump);
 	PlayerInputComponent->BindAction("Jump", IE_Released, this, &ACharacter::StopJumping);
 
-	//ƒXƒvƒŠƒ“ƒg“ü—Í.
+	//ã‚¹ãƒ—ãƒªãƒ³ãƒˆå…¥åŠ›.
 	PlayerInputComponent->BindAction("Sprint", IE_Pressed, this, &APlayerManager::StartSprint);
 	PlayerInputComponent->BindAction("Sprint", IE_Released, this, &APlayerManager::StopSprint);
 
-	//’e”­Ë“ü—Í.
+	//å¼¾ç™ºå°„å…¥åŠ›.
 	PlayerInputComponent->BindAction("Fire", IE_Pressed, this, &APlayerManager::ShotBullet);
 
-	//ƒŠƒ[ƒh“ü—Í.
+	//ãƒªãƒ­ãƒ¼ãƒ‰å…¥åŠ›.
 	PlayerInputComponent->BindAction("Reload", IE_Pressed, this, &APlayerManager::StartReload);
 }
 #pragma endregion
 
-#pragma region "ˆÚ“®"
+#pragma region "ç§»å‹•"
 /// <summary>
-/// MoveForward - ‘OŒã•ûŒü‚ÌˆÚ“®ˆ—.
-/// ƒRƒ“ƒgƒ[ƒ‰[‚Ì“ü—Í‚É‰‚¶‚ÄƒLƒƒƒ‰ƒNƒ^[‚ğ‘OŒã‚ÉˆÚ“®‚³‚¹‚é.
+/// MoveForward - å‰å¾Œæ–¹å‘ã®ç§»å‹•å‡¦ç†.
+/// ã‚³ãƒ³ãƒˆãƒ­ãƒ¼ãƒ©ãƒ¼ã®å…¥åŠ›ã«å¿œã˜ã¦ã‚­ãƒ£ãƒ©ã‚¯ã‚¿ãƒ¼ã‚’å‰å¾Œã«ç§»å‹•ã•ã›ã‚‹.
 /// </summary>
-/// <param name="Value">“ü—Í’li-1.0 ` 1.0j</param>
+/// <param name="Value">å…¥åŠ›å€¤ï¼ˆ-1.0 ï½ 1.0ï¼‰</param>
 void APlayerManager::MoveForward(float Value)
 {
 	if ((Controller != nullptr) && (Value != 0.0f))
 	{
-		//ƒJƒƒ‰‚Ì‘O•ûŒü‚ğæ“¾.
+		//ã‚«ãƒ¡ãƒ©ã®å‰æ–¹å‘ã‚’å–å¾—.
 		const FRotator Rotation = Controller->GetControlRotation();
 		const FRotator YawRotation(0, Rotation.Yaw, 0);
 		const FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
@@ -116,15 +125,15 @@ void APlayerManager::MoveForward(float Value)
 	}
 }
 /// <summary>
-/// MoveRight - ¶‰E•ûŒü‚ÌˆÚ“®ˆ—.
-/// ƒRƒ“ƒgƒ[ƒ‰[‚Ì“ü—Í‚É‰‚¶‚ÄƒLƒƒƒ‰ƒNƒ^[‚ğ¶‰E‚ÉˆÚ“®‚³‚¹‚é.
+/// MoveRight - å·¦å³æ–¹å‘ã®ç§»å‹•å‡¦ç†.
+/// ã‚³ãƒ³ãƒˆãƒ­ãƒ¼ãƒ©ãƒ¼ã®å…¥åŠ›ã«å¿œã˜ã¦ã‚­ãƒ£ãƒ©ã‚¯ã‚¿ãƒ¼ã‚’å·¦å³ã«ç§»å‹•ã•ã›ã‚‹.
 /// </summary>
-/// <param name="Value">“ü—Í’li-1.0 ` 1.0j</param>
+/// <param name="Value">å…¥åŠ›å€¤ï¼ˆ-1.0 ï½ 1.0ï¼‰</param>
 void APlayerManager::MoveRight(float Value)
 {
 	if ((Controller != nullptr) && (Value != 0.0f))
 	{
-		//ƒJƒƒ‰‚Ì‰E•ûŒü‚ğæ“¾.
+		//ã‚«ãƒ¡ãƒ©ã®å³æ–¹å‘ã‚’å–å¾—.
 		const FRotator Rotation = Controller->GetControlRotation();
 		const FRotator YawRotation(0, Rotation.Yaw, 0);
 		const FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
@@ -132,26 +141,26 @@ void APlayerManager::MoveRight(float Value)
 	}
 }
 /// <summary>
-/// TurnAtRate - ‹“_‚Ì…•½‰ñ“]ˆ—iRate“ü—Íj
-/// ƒ}ƒEƒX‚Ì…•½ˆÚ“®‚Ü‚½‚ÍƒRƒ“ƒgƒ[ƒ‰[‚ÌƒXƒeƒBƒbƒN“ü—Í‚ÅƒJƒƒ‰‚ğ¶‰E‚É‰ñ“]‚³‚¹‚é.
+/// TurnAtRate - è¦–ç‚¹ã®æ°´å¹³å›è»¢å‡¦ç†ï¼ˆRateå…¥åŠ›ï¼‰
+/// ãƒã‚¦ã‚¹ã®æ°´å¹³ç§»å‹•ã¾ãŸã¯ã‚³ãƒ³ãƒˆãƒ­ãƒ¼ãƒ©ãƒ¼ã®ã‚¹ãƒ†ã‚£ãƒƒã‚¯å…¥åŠ›ã§ã‚«ãƒ¡ãƒ©ã‚’å·¦å³ã«å›è»¢ã•ã›ã‚‹.
 /// </summary>
-/// <param name="Rate">‰ñ“]‘¬“xi“ü—Í’lj</param>
+/// <param name="Rate">å›è»¢é€Ÿåº¦ï¼ˆå…¥åŠ›å€¤ï¼‰</param>
 void APlayerManager::TurnAtRate(float Rate)
 {
 	AddControllerYawInput(Rate * BaseLookUpRate * GetWorld()->GetDeltaSeconds());
 }
 /// <summary>
-/// LookUpAtRate - ‹“_‚Ì‚’¼‰ñ“]ˆ—iRate“ü—Íj
-/// ƒ}ƒEƒX‚Ì‚’¼ˆÚ“®‚Ü‚½‚ÍƒRƒ“ƒgƒ[ƒ‰[‚ÌƒXƒeƒBƒbƒN“ü—Í‚ÅƒJƒƒ‰‚ğã‰º‚É‰ñ“]‚³‚¹‚é.
+/// LookUpAtRate - è¦–ç‚¹ã®å‚ç›´å›è»¢å‡¦ç†ï¼ˆRateå…¥åŠ›ï¼‰
+/// ãƒã‚¦ã‚¹ã®å‚ç›´ç§»å‹•ã¾ãŸã¯ã‚³ãƒ³ãƒˆãƒ­ãƒ¼ãƒ©ãƒ¼ã®ã‚¹ãƒ†ã‚£ãƒƒã‚¯å…¥åŠ›ã§ã‚«ãƒ¡ãƒ©ã‚’ä¸Šä¸‹ã«å›è»¢ã•ã›ã‚‹.
 /// </summary>
-/// <param name="Rate">‰ñ“]‘¬“xi“ü—Í’lj</param>
+/// <param name="Rate">å›è»¢é€Ÿåº¦ï¼ˆå…¥åŠ›å€¤ï¼‰</param>
 void APlayerManager::LookUpAtRate(float Rate)
 {
 	AddControllerPitchInput(Rate * BaseLookUpRate * GetWorld()->GetDeltaSeconds());
 }
 /// <summary>
-/// StartSprint - ƒXƒvƒŠƒ“ƒgŠJnˆ—.
-/// ƒLƒƒƒ‰ƒNƒ^[‚ÌˆÚ“®‘¬“x‚ğWalkSpeed‚©‚çRunSpeed‚É•ÏX‚·‚é.
+/// StartSprint - ã‚¹ãƒ—ãƒªãƒ³ãƒˆé–‹å§‹å‡¦ç†.
+/// ã‚­ãƒ£ãƒ©ã‚¯ã‚¿ãƒ¼ã®ç§»å‹•é€Ÿåº¦ã‚’WalkSpeedã‹ã‚‰RunSpeedã«å¤‰æ›´ã™ã‚‹.
 /// </summary>
 void APlayerManager::StartSprint()
 {
@@ -159,8 +168,8 @@ void APlayerManager::StartSprint()
 	GetCharacterMovement()->MaxWalkSpeed = RunSpeed;
 }
 /// <summary>
-/// StopSprint - ƒXƒvƒŠƒ“ƒgI—¹ˆ—.
-/// ƒLƒƒƒ‰ƒNƒ^[‚ÌˆÚ“®‘¬“x‚ğRunSpeed‚©‚çWalkSpeed‚É–ß‚·.
+/// StopSprint - ã‚¹ãƒ—ãƒªãƒ³ãƒˆçµ‚äº†å‡¦ç†.
+/// ã‚­ãƒ£ãƒ©ã‚¯ã‚¿ãƒ¼ã®ç§»å‹•é€Ÿåº¦ã‚’RunSpeedã‹ã‚‰WalkSpeedã«æˆ»ã™.
 /// </summary>
 void APlayerManager::StopSprint()
 {
@@ -169,43 +178,165 @@ void APlayerManager::StopSprint()
 }
 #pragma endregion
 
-#pragma region "ƒJƒƒ‰"
+
+#pragma region "éŠƒã‚·ã‚¹ãƒ†ãƒ "
+
 /// <summary>
-/// GetCameraVector - ƒJƒƒ‰‚©‚ç‚Ì•ûŒüƒxƒNƒgƒ‹‚ğæ“¾.
-/// (’e‚Ì”­Ë•ûŒü‚È‚Ç‚ÌŒvZ‚Ég—p)
+/// GetMuzzleLocation - ãƒã‚ºãƒ«ä½ç½®ã®å–å¾—.
+/// ã‚¹ã‚±ãƒ«ã‚¿ãƒ«ãƒ¡ãƒƒã‚·ãƒ¥ã®"Muzzle"ã‚½ã‚±ãƒƒãƒˆã‹ã‚‰ç¾åœ¨ã®æ­£ç¢ºãªä½ç½®ã‚’å–å¾—ã™ã‚‹.
 /// </summary>
-/// <param name="dir">"Forward", "Right", "up" ‚Ì‚Ç‚ê‚©</param>
-/// <returns>ƒxƒNƒgƒ‹</returns>
+/// <returns>ãƒã‚ºãƒ«ã®ãƒ¯ãƒ¼ãƒ«ãƒ‰åº§æ¨™</returns>
+FVector APlayerManager::GetMuzzleLocation() const
+{
+	if (RevolverGun == nullptr)
+	{
+		//UE_LOG(LogTemp, Warning, TEXT("GunMeshComponent is not valid!"));
+		return GetActorLocation(); // ãƒ•ã‚©ãƒ¼ãƒ«ãƒãƒƒã‚¯
+	}
+
+	USkeletalMeshComponent* GunMesh = Cast<USkeletalMeshComponent>(RevolverGun->GetRootComponent());
+
+
+	// éŠƒActorã®Muzzleã‚³ãƒ³ãƒãƒ¼ãƒãƒ³ãƒˆã‚’ç›´æ¥å–å¾—
+	if (RevolverGun->Muzzle != nullptr)
+	{
+		return RevolverGun->Muzzle->GetComponentLocation();
+	}
+
+	// MuzzleãŒè¦‹ã¤ã‹ã‚‰ãªã„å ´åˆã¯éŠƒã®ä½ç½®ã‚’è¿”ã™
+	return RevolverGun->GetActorLocation();
+
+}
+
+/// <summary>
+/// GetMuzzleRotation - ãƒã‚ºãƒ«æ–¹å‘ã®å–å¾—.
+/// ã‚¹ã‚±ãƒ«ã‚¿ãƒ«ãƒ¡ãƒƒã‚·ãƒ¥ã®"Muzzle"ã‚½ã‚±ãƒƒãƒˆã‹ã‚‰ç¾åœ¨ã®å‘ãã‚’å–å¾—ã™ã‚‹.
+/// </summary>
+/// <returns>ãƒã‚ºãƒ«ã®å›è»¢æƒ…å ±</returns>
+FRotator APlayerManager::GetMuzzleRotation() const
+{
+	if (RevolverGun == nullptr)
+	{
+		return RevolverGun->GetActorRotation();
+	}
+	USkeletalMeshComponent* GunMesh = Cast<USkeletalMeshComponent>(RevolverGun->GetRootComponent());
+
+	if (GunMesh == nullptr)
+	{
+		return RevolverGun->GetActorRotation();
+	}
+
+	if (GunMesh->DoesSocketExist(MuzzleSocketName))
+	{
+	
+		return RevolverGun->GetActorRotation();
+	}
+
+	return GunMesh->GetSocketRotation(MuzzleSocketName);
+}
+void APlayerManager::InitializeArmIK()
+{
+	if (!GetMesh())
+	{
+		UE_LOG(LogTemp, Error, TEXT("Mesh is NULL!"));
+		return;
+	}
+
+	// å³è…•ã®ãƒœãƒ¼ãƒ³åï¼ˆã‚¹ã‚±ãƒ«ãƒˆãƒ³ã«åˆã‚ã›ã¦å¤‰æ›´ã—ã¦ãã ã•ã„ï¼‰
+	FName RightArmBoneName = FName(TEXT("arm_r"));      // ä¸Šè…•
+	FName RightForearmBoneName = FName(TEXT("forearm_r")); // å‰è…•
+
+	// ãƒœãƒ¼ãƒ³ã‚¤ãƒ³ãƒ‡ãƒƒã‚¯ã‚¹ã‚’å–å¾—
+	RightArmBoneIndex = GetMesh()->GetBoneIndex(RightArmBoneName);
+	RightForearmBoneIndex = GetMesh()->GetBoneIndex(RightForearmBoneName);
+
+	if (RightArmBoneIndex != INDEX_NONE)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Right Arm Bone found at index: %d"), RightArmBoneIndex);
+	}
+	else
+	{
+		UE_LOG(LogTemp, Error, TEXT("Right Arm Bone '%s' not found!"), *RightArmBoneName.ToString());
+	}
+
+	if (RightForearmBoneIndex != INDEX_NONE)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Right Forearm Bone found at index: %d"), RightForearmBoneIndex);
+	}
+	else
+	{
+		UE_LOG(LogTemp, Error, TEXT("Right Forearm Bone '%s' not found!"), *RightForearmBoneName.ToString());
+	}
+}
+
+void APlayerManager::UpdateArmIK()
+{
+	if (!bEnbLeArmIK || !RevolverGun || !FollowCamera)
+	{
+		return;
+	}
+	// ã‚¹ã‚¯ãƒªãƒ¼ãƒ³åº§æ¨™ã‚’ãƒ¯ãƒ¼ãƒ«ãƒ‰åº§æ¨™ã«å¤‰æ›
+	FVector CrosshairWorldLocation = FVector::ZeroVector;
+	FVector CrosshairWorldDirection = FVector::ZeroVector;
+	
+
+	// éŠƒã®ãƒã‚ºãƒ«ã‹ã‚‰ç›®æ¨™ä½ç½®ã¸ã®æ–¹å‘ã‚’è¨ˆç®—
+	FVector MuzzleLocation = FVector::ZeroVector;
+	if (RevolverGun && RevolverGun->Muzzle)
+	{
+		MuzzleLocation = RevolverGun->Muzzle->GetComponentLocation();
+	}
+	else
+	{
+		MuzzleLocation = FollowCamera->GetComponentLocation() + (FollowCamera->GetForwardVector() * 100.0f);
+	}
+	const FVector TargetPosition = CrosshairWorldLocation + (CrosshairWorldDirection * BulletTargetDistance);
+
+	// IKã‚¿ãƒ¼ã‚²ãƒƒãƒˆä½ç½®ã‚’è¨­å®šï¼ˆã‚¯ãƒ­ã‚¹ãƒ˜ã‚¢ã®æ–¹å‘ã«å‘ã‘ã‚‹ï¼‰
+	RightHandIKTarget = TargetPosition;
+	RightHandIKAlpha = 1.0f;
+
+}
+#pragma endregion
+
+
+#pragma region "ã‚«ãƒ¡ãƒ©"
+/// <summary>
+/// GetCameraVector - ã‚«ãƒ¡ãƒ©ã‹ã‚‰ã®æ–¹å‘ãƒ™ã‚¯ãƒˆãƒ«ã‚’å–å¾—.
+/// (å¼¾ã®ç™ºå°„æ–¹å‘ãªã©ã®è¨ˆç®—ã«ä½¿ç”¨)
+/// </summary>
+/// <param name="dir">"Forward", "Right", "up" ã®ã©ã‚Œã‹</param>
+/// <returns>ãƒ™ã‚¯ãƒˆãƒ«</returns>
 FVector APlayerManager::GetCameraVector(FString dir) const
 {
-	//ƒJƒƒ‰‚ª‚È‚¢‚ÍZeroVector‚ğ•Ô‚·.
+	//ã‚«ãƒ¡ãƒ©ãŒãªã„æ™‚ã¯ZeroVectorã‚’è¿”ã™.
 	if (FollowCamera == nullptr) {
 		return FVector::ZeroVector;
 	}
 
-	//‘O•ûŒü.
+	//å‰æ–¹å‘.
 	if (dir == "Forward") {
 		return FollowCamera->GetForwardVector();
 	}
-	//‰E•ûŒü.
+	//å³æ–¹å‘.
 	else if (dir == "Right") {
 		return FollowCamera->GetRightVector();
 	}
-	//ã•ûŒü.
+	//ä¸Šæ–¹å‘.
 	else if (dir == "Up") {
 		return FollowCamera->GetUpVector();
 	}
-	//•s³‚Èw’è.
+	//ä¸æ­£ãªæŒ‡å®š.
 	else {
-		GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, TEXT("GetCameraVector‚É¸”s"));
+		GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, TEXT("GetCameraVectorã«å¤±æ•—"));
 		return FVector::ZeroVector;
 	}
 }
 /// <summary>
-/// GetCameraLocation - ƒJƒƒ‰‚Ìƒ[ƒ‹ƒhÀ•W‚ğæ“¾.
-/// ’e‚Ì”­ËˆÊ’u‚È‚Ç‚ÌŒvZ‚Ég—p‚³‚ê‚é.
+/// GetCameraLocation - ã‚«ãƒ¡ãƒ©ã®ãƒ¯ãƒ¼ãƒ«ãƒ‰åº§æ¨™ã‚’å–å¾—.
+/// å¼¾ã®ç™ºå°„ä½ç½®ãªã©ã®è¨ˆç®—ã«ä½¿ç”¨ã•ã‚Œã‚‹.
 /// </summary>
-/// <returns>ƒJƒƒ‰‚Ìƒ[ƒ‹ƒhÀ•WBƒJƒƒ‰‚ª‚È‚¢ê‡‚ÍZeroVector</returns>
+/// <returns>ã‚«ãƒ¡ãƒ©ã®ãƒ¯ãƒ¼ãƒ«ãƒ‰åº§æ¨™ã€‚ã‚«ãƒ¡ãƒ©ãŒãªã„å ´åˆã¯ZeroVector</returns>
 FVector APlayerManager::GetCameraLocation() const
 {
 	if (FollowCamera == nullptr)
@@ -215,9 +346,9 @@ FVector APlayerManager::GetCameraLocation() const
 	return FollowCamera->GetComponentLocation();
 }
 /// <summary>
-/// GetCameraRotation - ƒJƒƒ‰‚Ì‰ñ“]‚ğæ“¾.
+/// GetCameraRotation - ã‚«ãƒ¡ãƒ©ã®å›è»¢ã‚’å–å¾—.
 /// </summary>
-/// <returns>ƒJƒƒ‰‚Ì‰ñ“]BƒJƒƒ‰‚ª‚È‚¢ê‡‚ÍZeroRotator</returns>
+/// <returns>ã‚«ãƒ¡ãƒ©ã®å›è»¢ã€‚ã‚«ãƒ¡ãƒ©ãŒãªã„å ´åˆã¯ZeroRotator</returns>
 FRotator APlayerManager::GetCameraRotation() const
 {
 	if (FollowCamera == nullptr)
@@ -230,9 +361,9 @@ FRotator APlayerManager::GetCameraRotation() const
 
 #pragma region UI
 /// <summary>
-/// InitializeUI - UI‰Šú‰»ˆ—.
-/// ƒNƒƒXƒwƒAƒEƒBƒWƒFƒbƒg‚ğƒrƒ…[ƒ|[ƒg‚É’Ç‰Á‚µ‚Ä•\¦‚·‚é.
-/// BeginPlay‚ÉŒÄ‚Î‚ê‚é.
+/// InitializeUI - UIåˆæœŸåŒ–å‡¦ç†.
+/// ã‚¯ãƒ­ã‚¹ãƒ˜ã‚¢ã‚¦ã‚£ã‚¸ã‚§ãƒƒãƒˆã‚’ãƒ“ãƒ¥ãƒ¼ãƒãƒ¼ãƒˆã«è¿½åŠ ã—ã¦è¡¨ç¤ºã™ã‚‹.
+/// BeginPlayæ™‚ã«å‘¼ã°ã‚Œã‚‹.
 /// </summary>
 void APlayerManager::InitializeUI()
 {
@@ -262,45 +393,49 @@ void APlayerManager::InitializeUI()
 }
 #pragma endregion
 
-#pragma region "ËŒ‚"
+#pragma region "å°„æ’ƒ"
 /// <summary>
-/// ShotBullet() - ”­Ë‘€ì‚ğ‚µ‚½‚ÉÀs‚·‚é.
-/// [ƒvƒŒƒCƒ„[ê—p]
+/// ShotBullet() - ç™ºå°„æ“ä½œã‚’ã—ãŸæ™‚ã«å®Ÿè¡Œã™ã‚‹.
+/// [ãƒ—ãƒ¬ã‚¤ãƒ¤ãƒ¼å°‚ç”¨]
+/// </summary>
+/// <summary>
+/// ShotBullet() - ç™ºå°„æ“ä½œã‚’ã—ãŸæ™‚ã«å®Ÿè¡Œã™ã‚‹.
+/// [ãƒ—ãƒ¬ã‚¤ãƒ¤ãƒ¼å°‚ç”¨]
 /// </summary>
 void APlayerManager::ShotBullet()
 {
-	//ƒŠƒ[ƒh’†‚ÍËŒ‚•s‰Â.
+	//ãƒªãƒ­ãƒ¼ãƒ‰ä¸­ã¯å°„æ’ƒä¸å¯.
 	if (bIsReloading)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Reloading... Cannot shoot!"));
 		return;
 	}
-	//’e–ò‚ª‚È‚¢ê‡‚ÍƒŠƒ[ƒhŠJn.
+	//å¼¾è–¬ãŒãªã„å ´åˆã¯ãƒªãƒ­ãƒ¼ãƒ‰é–‹å§‹.
 	if (CurrentAmmoCount <= 0)
 	{
 		StartReload();
 		return;
 	}
-	//BulletClass‚Ìnullƒ`ƒFƒbƒN.
+	//BulletClassã®nullãƒã‚§ãƒƒã‚¯.
 	if (BulletClass == nullptr)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("BulletClass is not set! Please set it in Blueprint."));
 		return;
 	}
-	//nullƒ`ƒFƒbƒN.
+	//nullãƒã‚§ãƒƒã‚¯.
 	if (FollowCamera == nullptr || GetWorld() == nullptr)
 	{
 		return;
 	}
 
-	//ƒNƒƒXƒwƒA‚Ì’†SÀ•W‚ğ‰æ–ÊÀ•W‚ÅŒvZ.
+	//ã‚¯ãƒ­ã‚¹ãƒ˜ã‚¢ã®ä¸­å¿ƒåº§æ¨™ã‚’ç”»é¢åº§æ¨™ã§è¨ˆç®—.
 	const FVector2D ViewportSize = FVector2D(GEngine->GameViewport->Viewport->GetSizeXY());
-	const FVector2D CrosshairScreenLocation = ViewportSize / 2.0f; // ‰æ–Ê’†‰›.
+	const FVector2D CrosshairScreenLocation = ViewportSize / 2.0f; // ç”»é¢ä¸­å¤®.
 
-	//ƒXƒNƒŠ[ƒ“À•W‚ğƒ[ƒ‹ƒhÀ•W‚É•ÏŠ·.
-	FVector CrosshairWorldLocation  = FVector::ZeroVector;
+	//ã‚¹ã‚¯ãƒªãƒ¼ãƒ³åº§æ¨™ã‚’ãƒ¯ãƒ¼ãƒ«ãƒ‰åº§æ¨™ã«å¤‰æ›.
+	FVector CrosshairWorldLocation = FVector::ZeroVector;
 	FVector CrosshairWorldDirection = FVector::ZeroVector;
-	//ª‚ğæ“¾‚·‚é.
+	//â†‘ã‚’å–å¾—ã™ã‚‹.
 	APlayerController* PlayerController = Cast<APlayerController>(Controller);
 	if (PlayerController)
 	{
@@ -312,27 +447,25 @@ void APlayerManager::ShotBullet()
 		);
 	}
 
-	//–Ú•W’n“_‚ğŒvZ.
+	//ç›®æ¨™åœ°ç‚¹ã‚’è¨ˆç®—.
 	const FVector TargetPosition = CrosshairWorldLocation + (CrosshairWorldDirection * BulletTargetDistance);
-
-	//’e‚ğ”­Ë.
+	//å¼¾ã‚’ç™ºå°„.
 	bool ret = ShotBulletExe(this, TargetPosition);
-	//”­Ë‚É¬Œ÷‚µ‚½‚ç.
 	if (ret) {
-		//ƒVƒ‡ƒbƒg‚ÉƒNƒƒXƒwƒA‚ÌƒGƒtƒFƒNƒg‚ğÀs
+		//ã‚·ãƒ§ãƒƒãƒˆæ™‚ã«ã‚¯ãƒ­ã‚¹ãƒ˜ã‚¢ã®ã‚¨ãƒ•ã‚§ã‚¯ãƒˆã‚’å®Ÿè¡Œ
 		if (CrosshairWidget)
 		{
 			CrosshairWidget->OnShotEffect();
 		}
 	}
 
-	// ƒvƒŒƒCƒ„[‚Ì‰ñ“]‚ğƒNƒƒXƒwƒA•ûŒü‚ÉŒü‚©‚¹‚é
+	// ãƒ—ãƒ¬ã‚¤ãƒ¤ãƒ¼ã®å›è»¢ã‚’ã‚¯ãƒ­ã‚¹ãƒ˜ã‚¢æ–¹å‘ã«å‘ã‹ã›ã‚‹
 	{
 		FVector DirectionToTarget = TargetPosition - GetActorLocation();
 		DirectionToTarget.Normalize();
 		FRotator TargetRotation = DirectionToTarget.Rotation();
 
-		// Y²iYawj‚Ì‚İ‰ñ“]‚³‚¹‚éiã‰º‚Í•Ï‚í‚ç‚È‚¢j
+		// Yè»¸ï¼ˆYawï¼‰ã®ã¿å›è»¢ã•ã›ã‚‹ï¼ˆä¸Šä¸‹ã¯å¤‰ã‚ã‚‰ãªã„ï¼‰
 		FRotator NewRotation = GetActorRotation();
 		NewRotation.Yaw = TargetRotation.Yaw;
 		NewRotation.Pitch = TargetRotation.Pitch;
@@ -341,14 +474,14 @@ void APlayerManager::ShotBullet()
 }
 #pragma endregion
 
-#pragma region "ƒ_ƒ[ƒWˆ—"
-//’e‚ª“–‚½‚Á‚½‚çÀs‚³‚ê‚é.
+#pragma region "ãƒ€ãƒ¡ãƒ¼ã‚¸å‡¦ç†"
+//å¼¾ãŒå½“ãŸã£ãŸã‚‰å®Ÿè¡Œã•ã‚Œã‚‹.
 void APlayerManager::OnBulletHit() {
 
 	GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, TEXT("hit player"));
 	//TODO
 }
-//€–Sˆ—.
+//æ­»äº¡å‡¦ç†.
 void APlayerManager::Die() {
 	//TODO
 }
