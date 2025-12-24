@@ -43,22 +43,21 @@
 #include "Steam_Revolver.h"
 #include "CharacterBase.generated.h"
 
-/// <summary>
-/// 敵のstate列挙体.
-/// UEではこういう書き方をするっぽい.
-/// </summary>
-UENUM(BlueprintType)
-enum class EEnemyState : uint8
-{
-	ES_Alive UMETA(DisplayName = "Alive"),
-	ES_Dead  UMETA(DisplayName = "Dead")
-};
-
 //前方宣言.
 class ABulletBase;
 class ASteam_Revolver;
 
-// アニメーション状態の列挙型
+/// <summary>
+/// キャラクターのstate列挙体.
+/// </summary>
+UENUM(BlueprintType)
+enum class ECharaState : uint8
+{
+	Alive    UMETA(DisplayName = "Alive"),
+	Dead     UMETA(DisplayName = "Dead")
+};
+
+//アニメーション状態の列挙型.
 UENUM(BlueprintType)
 enum class EAnimationState : uint8
 {
@@ -156,7 +155,7 @@ public:
 #pragma endregion
 
 #pragma region "Movement"
-	// 移動パラメーター.
+	//移動パラメーター.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Base|Movement")
 	float BaseTurnRate = 45.0f;
 
@@ -164,13 +163,13 @@ public:
 	float BaseLookUpRate = 45.0f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Base|Movement")
-	float WalkSpeed = 400.0f;
+	float WalkSpeed = 200.0f; //歩速, 200くらいがちょうどいい.
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Base|Movement")
-	float RunSpeed = 800.0f;
+	float RunSpeed  = 800.0f; //走速, 800くらい?
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "MyProperty|Base|Movement")
-	bool bIsSprinting;
+	bool bIsDash;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "MyProperty|Base|Movement")
 	bool bIsMoving;
@@ -192,7 +191,7 @@ public:
 #pragma endregion
 
 protected:
-#pragma region "ライフサイクル"
+#pragma region "基本処理"
 	//召喚した瞬間.
 	virtual void BeginPlay() override;
 	//常に実行.
@@ -200,10 +199,8 @@ protected:
 #pragma endregion
 
 #pragma region "移動"
-	//アニメーション更新.
-	void UpdateAnimState(float DeltaTime);
-	//アニメーション再生.
-	void PlayAnimMontage(EAnimationState AnimState);
+	void StartWalk();
+	void StopWalk();
 #pragma endregion
 
 #pragma region "射撃"
@@ -234,5 +231,12 @@ protected:
 	UFUNCTION()
 	virtual void OnBulletHit(){}	//弾が当たったら実行される.[仮想関数]
 	virtual void Die(){}			//死亡処理.                [仮想関数]
+#pragma endregion
+
+#pragma region "アニメーション"
+	//アニメーション更新.
+	void UpdateAnimState(float DeltaTime);
+	//アニメーション再生.
+	void PlayAnimMontage(EAnimationState AnimState);
 #pragma endregion
 };

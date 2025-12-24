@@ -19,11 +19,11 @@
 //他クラスのinclude.
 #include "BulletBase.h"
 
-#pragma region "get"
+#pragma region "Get"
 //死亡状態かどうか.
 bool AEnemyManager::IsDead() const
 {
-	return CurrentState == EEnemyState::ES_Dead;
+	return CurrentState == ECharaState::Dead;
 }
 #pragma endregion
 
@@ -47,9 +47,10 @@ void AEnemyManager::BeginPlay() {
 	ACharacterBase::BeginPlay(); //親クラスのBeginPlay()を呼び出す.
 
 	//初期state.
-	CurrentState = EEnemyState::ES_Alive;
-	//一定時間ごとに弾を発射する.
-	GetWorldTimerManager().SetTimer(tmShot, this, &AEnemyManager::ShotBullet, shotTime, true);
+	CurrentState = ECharaState::Alive;
+	//一定時間ごと.
+	GetWorldTimerManager().SetTimer(tmShot,     this, &AEnemyManager::ShotBullet,    spanShot,     true);
+	GetWorldTimerManager().SetTimer(tmChangeAI, this, &AEnemyManager::ChangeAIState, spanChangeAI, true);
 }
 //常に実行.
 void AEnemyManager::Tick(float DeltaTime) {
@@ -65,13 +66,64 @@ void AEnemyManager::Tick(float DeltaTime) {
 	FVector dis = plyPos - myPos;
 
 	//向きを設定.
-	double ang = atan2(dis.Y, dis.X);
-	FRotator rot(0, ang * 180 / PI, 0);
+	double rad = atan2(dis.Y, dis.X);
+	double deg = rad * 180/PI;
+	FRotator rot(0, deg, 0);
 	SetActorRotation(rot, ETeleportType::None);
 
-	//前方向に進ませる.
-	FVector forward(cos(ang), sin(ang), 0);
-	AddMovementInput(forward, MoveSpeed);
+	FVector forward; //方向設定用.
+	//AI行動別.
+	switch (AIState) 
+	{
+		case EAIState::Goto:
+			forward = {cos(deg * PI/180), sin(rad * PI/180), 0};
+			break;
+		case EAIState::StepL:
+			forward = {cos((deg+90) * PI/180), sin((deg+90) * PI/180), 0};
+			break;
+		case EAIState::StepR:
+			forward = {cos((deg-90) * PI/180), sin((deg-90) * PI/180), 0};
+			break;
+	}
+	//進む.
+	AddMovementInput(forward);
+}
+#pragma endregion
+
+#pragma region "AI"
+/// <summary>
+/// AI行動選択.
+/// </summary>
+void AEnemyManager::ChangeAIState() {
+	//列挙の数.
+	const int max = StaticEnum<EAIState>()->NumEnums();
+	//抽選.
+	const int rnd = FMath::RandRange(0, max-1);
+	//行動変更.
+	AIState = static_cast<EAIState>(rnd);
+}
+#pragma endregion
+
+#pragma region "射撃"
+/// <summary>
+/// ShotBullet() - 発射操作をした時に実行する.
+/// [敵専用]
+/// </summary>
+void AEnemyManager::ShotBullet()
+{
+	//発射していいかチェック.
+	if (!ShotBulletCheck()) {
+		return;
+	}
+	//弾が残っていれば.
+	if (AmmoCount > 0) {
+		//プレイヤー取得.
+		ACharacter* player = UGameplayStatics::GetPlayerCharacter(GetWorld(), 0);
+		//目標地点を計算.
+		const FVector TargetPosition = player->GetActorLocation();
+		//弾を発射.
+		ShotBulletExe(this, TargetPosition);
+	}
 }
 #pragma endregion
 
@@ -88,7 +140,7 @@ void AEnemyManager::Die()
 	//既に死亡している場合は処理しない.
 	if (IsDead()) { return; }
 
-	CurrentState = EEnemyState::ES_Dead;
+	CurrentState = ECharaState::Dead;
 
 	//死亡後の処理.
 	DisableComponents(); //コンポーネントを無効化.
@@ -145,28 +197,5 @@ void AEnemyManager::DisableComponents()
 	}
 	//Tickを停止.
 	SetActorTickEnabled(false);
-}
-#pragma endregion
-
-#pragma region "射撃"
-/// <summary>
-/// ShotBullet() - 発射操作をした時に実行する.
-/// [敵専用]
-/// </summary>
-void AEnemyManager::ShotBullet()
-{
-	//発射していいかチェック.
-	if (!ShotBulletCheck()) {
-		return;
-	}
-	//弾が残っていれば.
-	if (AmmoCount > 0) {
-		//プレイヤー取得.
-		ACharacter* player = UGameplayStatics::GetPlayerCharacter(GetWorld(), 0);
-		//目標地点を計算.
-		const FVector TargetPosition = player->GetActorLocation();
-		//弾を発射.
-		ShotBulletExe(this, TargetPosition);
-	}
 }
 #pragma endregion

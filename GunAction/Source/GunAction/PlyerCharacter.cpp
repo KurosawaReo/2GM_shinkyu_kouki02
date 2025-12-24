@@ -56,7 +56,7 @@ APlyerCharacter::APlyerCharacter()
 	FollowCamera->bUsePawnControlRotation = false;
 
 	//初期状態.
-	bIsSprinting = false;
+	bIsDash = false;
 	AmmoCount = MaxAmmoCount;
 	bIsReloading = false;
 	RevolverGun = nullptr;
@@ -194,8 +194,8 @@ void APlyerCharacter::Input(UInputComponent* PlayerInputComponent)
 	PlayerInputComponent->BindAction("Jump", IE_Released, this, &ACharacter::StopJumping);
 
 	//スプリント入力.
-	PlayerInputComponent->BindAction("Sprint", IE_Pressed, this, &APlyerCharacter::StartSprint);
-	PlayerInputComponent->BindAction("Sprint", IE_Released, this, &APlyerCharacter::StopSprint);
+	PlayerInputComponent->BindAction("Sprint", IE_Pressed, this, &APlyerCharacter::StartWalk);
+	PlayerInputComponent->BindAction("Sprint", IE_Released, this, &APlyerCharacter::StopWalk);
 
 	//弾発射入力.
 	PlayerInputComponent->BindAction("Fire", IE_Pressed, this, &APlyerCharacter::ShotBullet);
@@ -316,21 +316,21 @@ void APlyerCharacter::LookUpAtRate(float Rate)
 	AddControllerPitchInput(Rate * BaseLookUpRate * GetWorld()->GetDeltaSeconds());
 }
 /// <summary>
-/// StartSprint - スプリント開始処理.
+/// StartWalk - スプリント開始処理.
 /// キャラクターの移動速度をWalkSpeedからRunSpeedに変更する.
 /// </summary>
-void APlyerCharacter::StartSprint()
+void APlyerCharacter::StartWalk()
 {
-	bIsSprinting = true;
+	bIsDash = true;
 	GetCharacterMovement()->MaxWalkSpeed = RunSpeed;
 }
 /// <summary>
-/// StopSprint - スプリント終了処理.
+/// StopWalk - スプリント終了処理.
 /// キャラクターの移動速度をRunSpeedからWalkSpeedに戻す.
 /// </summary>
-void APlyerCharacter::StopSprint()
+void APlyerCharacter::StopWalk()
 {
-	bIsSprinting = false;
+	bIsDash = false;
 	GetCharacterMovement()->MaxWalkSpeed = WalkSpeed;
 }
 
@@ -379,7 +379,7 @@ void APlyerCharacter::UpdateAnimState()
 			bIsMoving = true;
 
 			//スプリント中か判定.
-			if (bIsSprinting)
+			if (bIsDash)
 			{
 				NewAnimationState = EAnimationStateTmp::Run;
 			}

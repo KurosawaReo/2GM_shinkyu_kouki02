@@ -69,7 +69,6 @@ void APlayerManager::Tick(float DeltaTime) {
 #pragma region "入力処理"
 /// <summary>
 /// SetupPlayerInputComponent - プレイヤー入力の設定.
-/// キーボード、マウスなどの入力を各アクションにバインドする.
 /// </summary>
 /// <param name="PlayerInputComponent">プレイヤー入力コンポーネント</param>
 void APlayerManager::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -78,43 +77,42 @@ void APlayerManager::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 }
 /// <summary>
 /// Input - 移動処理および入力バインド.
-/// キャラクターの移動、カメラ操作、ジャンプ、スプリント、射撃などの入力をセットアップする.
+/// 移動、カメラ、ジャンプ、ダッシュ、射撃などの操作を登録.
 /// </summary>
 /// <param name="PlayerInputComponent">プレイヤー入力コンポーネント</param>
 void APlayerManager::Input(UInputComponent* PlayerInputComponent)
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 
-	//移動入力.
+	//移動.
 	PlayerInputComponent->BindAxis("MoveForward", this, &APlayerManager::MoveForward);
 	PlayerInputComponent->BindAxis("MoveRight", this, &APlayerManager::MoveRight);
 
-	//カメラ入力.
+	//カメラ.
 	PlayerInputComponent->BindAxis("Turn", this, &APawn::AddControllerYawInput);
 	PlayerInputComponent->BindAxis("LookUp", this, &APawn::AddControllerPitchInput);
 	PlayerInputComponent->BindAxis("TurnRate", this, &APlayerManager::TurnAtRate);
 	PlayerInputComponent->BindAxis("LookUpRate", this, &APlayerManager::LookUpAtRate);
 
-	//ジャンプ入力.
+	//ジャンプ.
 	PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &ACharacter::Jump);
 	PlayerInputComponent->BindAction("Jump", IE_Released, this, &ACharacter::StopJumping);
 
-	//スプリント入力.
-	PlayerInputComponent->BindAction("Sprint", IE_Pressed, this, &APlayerManager::StartSprint);
-	PlayerInputComponent->BindAction("Sprint", IE_Released, this, &APlayerManager::StopSprint);
+	//ダッシュ.
+	PlayerInputComponent->BindAction("Sprint", IE_Pressed, this, &APlayerManager::StartWalk);
+	PlayerInputComponent->BindAction("Sprint", IE_Released, this, &APlayerManager::StopWalk);
 
-	//弾発射入力.
+	//弾発射.
 	PlayerInputComponent->BindAction("Fire", IE_Pressed, this, &APlayerManager::ShotBullet);
 
-	//リロード入力.
+	//リロード.
 	PlayerInputComponent->BindAction("Reload", IE_Pressed, this, &APlayerManager::StartReload);
 }
 #pragma endregion
 
 #pragma region "移動"
 /// <summary>
-/// MoveForward - 前後方向の移動処理.
-/// コントローラーの入力に応じてキャラクターを前後に移動させる.
+/// MoveForward - 前後方向の移動.
 /// </summary>
 /// <param name="Value">入力値（-1.0 ～ 1.0）</param>
 void APlayerManager::MoveForward(float Value)
@@ -125,12 +123,12 @@ void APlayerManager::MoveForward(float Value)
 		const FRotator Rotation = Controller->GetControlRotation();
 		const FRotator YawRotation(0, Rotation.Yaw, 0);
 		const FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
+		//前後に移動.
 		AddMovementInput(Direction, Value);
 	}
 }
 /// <summary>
-/// MoveRight - 左右方向の移動処理.
-/// コントローラーの入力に応じてキャラクターを左右に移動させる.
+/// MoveRight - 左右方向の移動.
 /// </summary>
 /// <param name="Value">入力値（-1.0 ～ 1.0）</param>
 void APlayerManager::MoveRight(float Value)
@@ -141,6 +139,7 @@ void APlayerManager::MoveRight(float Value)
 		const FRotator Rotation = Controller->GetControlRotation();
 		const FRotator YawRotation(0, Rotation.Yaw, 0);
 		const FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
+		//左右に移動.
 		AddMovementInput(Direction, Value);
 	}
 }
@@ -161,24 +160,6 @@ void APlayerManager::TurnAtRate(float Rate)
 void APlayerManager::LookUpAtRate(float Rate)
 {
 	AddControllerPitchInput(Rate * BaseLookUpRate * GetWorld()->GetDeltaSeconds());
-}
-/// <summary>
-/// StartSprint - スプリント開始処理.
-/// キャラクターの移動速度をWalkSpeedからRunSpeedに変更する.
-/// </summary>
-void APlayerManager::StartSprint()
-{
-	bIsSprinting = true;
-	GetCharacterMovement()->MaxWalkSpeed = RunSpeed;
-}
-/// <summary>
-/// StopSprint - スプリント終了処理.
-/// キャラクターの移動速度をRunSpeedからWalkSpeedに戻す.
-/// </summary>
-void APlayerManager::StopSprint()
-{
-	bIsSprinting = false;
-	GetCharacterMovement()->MaxWalkSpeed = WalkSpeed;
 }
 #pragma endregion
 

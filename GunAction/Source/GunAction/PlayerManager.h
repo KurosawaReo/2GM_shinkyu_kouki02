@@ -29,7 +29,7 @@ class GUNACTION_API APlayerManager : public ACharacterBase
 { 
 	GENERATED_BODY()
 
-	//▼ ===== 変数 ===== ▼.
+//▼ ===== 変数 ===== ▼.
 public:
 	//クロスヘア.
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "MyProperty|Player|UI")
@@ -59,12 +59,12 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Player|IK")
 	float RightHandIKAlpha = 0.0f;
 
-	//▼ ===== 関数 ===== ▼.
+//▼ ===== 関数 ===== ▼.
 protected:
 	//コンストラクタ.
 	APlayerManager();
 
-#pragma region "ライフサイクル"
+#pragma region "基本処理"
 	//召喚した瞬間.
 	void BeginPlay() override;
 	//常に実行.
@@ -81,8 +81,6 @@ protected:
 	void MoveRight(float Value);
 	void TurnAtRate(float Rate);
 	void LookUpAtRate(float Rate);
-	void StartSprint();
-	void StopSprint();
 #pragma endregion
 
 #pragma region "銃システム"
@@ -120,7 +118,7 @@ private:
 	
 #pragma region "射撃"
 	void ShotBullet() override; //override
-	void SaveConfig();
+//	void SaveConfig();
 #pragma endregion
 
 public:

@@ -138,7 +138,7 @@ public:
 
 	//インスペクターに表示する方法.
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Movement)
-	bool bIsSprinting;
+	bool bIsDash;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Movement)
 	bool bIsMoving;
@@ -192,8 +192,8 @@ protected:
 	void MoveRight(float Value);
 	void TurnAtRate(float Rate);
 	void LookUpAtRate(float Rate);
-	void StartSprint();
-	void StopSprint();
+	void StartWalk();
+	void StopWalk();
 	//アニメーションを更新.
 	void UpdateAnimState();
 

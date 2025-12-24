@@ -92,16 +92,27 @@ void ABulletBase::Tick(float DeltaTime)
     }
     const FVector nowPos = GetActorLocation();              //移動後の座標.
      
+    FColor color;
+
+    //撃った人がプレイヤー.
+    if (Cast<APlayerManager>(user)) {
+        color = FColor(0, 255, 255);
+    }
+    //撃った人が敵.
+    if (Cast<AEnemyManager>(user)) {
+        color = FColor(255, 0, 0);
+    }
+
     //弾の軌道.
     DrawDebugLine(
         GetWorld(),
         befPos,
         nowPos,
-        FColor(255, 0, 0), // 線の色
-        false,             // 永続かどうか
-        1.0f,              // 表示時間
+        color,  //線の色.
+        false,  //永続かどうか.
+        1.0f,   //表示時間.
         0,
-        1.0f               // 太さ
+        1.0f    //太さ.
     );
 
     //カウンター.
