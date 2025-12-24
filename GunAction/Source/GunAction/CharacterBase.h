@@ -86,13 +86,12 @@ public:
 	UPROPERTY(BlueprintReadOnly, Category = "MyProperty|Base|Gun")
 	ASteam_Revolver* RevolverGun;
 
-
 	//弾関連.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Base|Gun|Ammunition")
-	int32 MaxAmmoPerMagazine = 6;		//連続で弾を撃てる数.
+	int32 MaxAmmoCount = 6;				//連続で弾を撃てる数.
 
 	UPROPERTY(BlueprintReadOnly, Category = "MyProperty|Base|Gun|Ammunition")
-	int32 CurrentAmmoCount = 6;			//弾の残り数.
+	int32 AmmoCount = 6;				//弾の残数.
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Base|Gun|Ammunition")
 	float ReloadDuration = 2.5f;		//リロード時間(秒)
@@ -165,7 +164,7 @@ public:
 	float BaseLookUpRate = 45.0f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Base|Movement")
-	float WalkSpeed = 600.0f;
+	float WalkSpeed = 400.0f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Base|Movement")
 	float RunSpeed = 800.0f;
@@ -208,8 +207,10 @@ protected:
 #pragma endregion
 
 #pragma region "射撃"
-	//[仮想関数] 弾発射処理.
+	//発射処理.[仮想関数]
 	virtual void ShotBullet(){}
+	//発射チェック.
+	bool ShotBulletCheck();
 	//弾を発射する.
 	bool ShotBulletExe(AActor* user, FVector targetPos);
 
@@ -231,7 +232,7 @@ protected:
 
 #pragma region "ダメージ処理"
 	UFUNCTION()
-	virtual void OnBulletHit(){}	//[仮想関数] 弾が当たったら実行される.
-	virtual void Die(){}			//[仮想関数] 死亡処理.
+	virtual void OnBulletHit(){}	//弾が当たったら実行される.[仮想関数]
+	virtual void Die(){}			//死亡処理.                [仮想関数]
 #pragma endregion
 };

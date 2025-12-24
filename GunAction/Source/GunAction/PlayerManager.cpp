@@ -18,6 +18,10 @@
 #include "Components/AudioComponent.h"
 #include "Components/BoxComponent.h"
 #include "Particles/ParticleSystemComponent.h"
+
+//他class.
+//#include "Steam_Revolver.h"
+
 //コンストラクタ.
 APlayerManager::APlayerManager() {
 
@@ -398,33 +402,14 @@ void APlayerManager::InitializeUI()
 /// ShotBullet() - 発射操作をした時に実行する.
 /// [プレイヤー専用]
 /// </summary>
-/// <summary>
-/// ShotBullet() - 発射操作をした時に実行する.
-/// [プレイヤー専用]
-/// </summary>
 void APlayerManager::ShotBullet()
 {
-	//リロード中は射撃不可.
-	if (bIsReloading)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("Reloading... Cannot shoot!"));
-		return;
-	}
-	//弾薬がない場合はリロード開始.
-	if (CurrentAmmoCount <= 0)
-	{
-		StartReload();
-		return;
-	}
-	//BulletClassのnullチェック.
-	if (BulletClass == nullptr)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("BulletClass is not set! Please set it in Blueprint."));
+	//発射していいかチェック.
+	if (!ShotBulletCheck()) {
 		return;
 	}
 	//nullチェック.
-	if (FollowCamera == nullptr || GetWorld() == nullptr)
-	{
+	if (FollowCamera == nullptr) {
 		return;
 	}
 
@@ -433,7 +418,7 @@ void APlayerManager::ShotBullet()
 	const FVector2D CrosshairScreenLocation = ViewportSize / 2.0f; // 画面中央.
 
 	//スクリーン座標をワールド座標に変換.
-	FVector CrosshairWorldLocation = FVector::ZeroVector;
+	FVector CrosshairWorldLocation  = FVector::ZeroVector;
 	FVector CrosshairWorldDirection = FVector::ZeroVector;
 	//↑を取得する.
 	APlayerController* PlayerController = Cast<APlayerController>(Controller);
@@ -452,7 +437,7 @@ void APlayerManager::ShotBullet()
 	//弾を発射.
 	bool ret = ShotBulletExe(this, TargetPosition);
 	if (ret) {
-		//ショット時にクロスヘアのエフェクトを実行
+		//ショット時にクロスヘアのエフェクトを実行.
 		if (CrosshairWidget)
 		{
 			CrosshairWidget->OnShotEffect();
@@ -478,7 +463,7 @@ void APlayerManager::ShotBullet()
 //弾が当たったら実行される.
 void APlayerManager::OnBulletHit() {
 
-	GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, TEXT("hit player"));
+//	GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, TEXT("hit player"));
 	//TODO
 }
 //死亡処理.

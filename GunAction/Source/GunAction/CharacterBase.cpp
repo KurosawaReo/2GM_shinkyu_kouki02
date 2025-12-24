@@ -14,11 +14,11 @@
 #include "Components/AudioComponent.h"
 #include "Components/BoxComponent.h"
 #include "Particles/ParticleSystemComponent.h"
+#include "EngineUtils.h"
 
-//他クラスのinclude.
+//他class.
 #include "BulletBase.h"
 #include "Steam_Revolver.h"
-#include "EngineUtils.h" //←これは何?
 
 #pragma region "コンストラクタ"
 /// <summary>
@@ -47,7 +47,7 @@ ACharacterBase::ACharacterBase()
 
 	//初期状態.
 	bIsSprinting = false;
-	CurrentAmmoCount = MaxAmmoPerMagazine;
+	AmmoCount = MaxAmmoCount;
 	bIsReloading = false;
 	RevolverGun = nullptr;
 }
@@ -257,6 +257,34 @@ void ACharacterBase::PlayAnimMontage(EAnimationState AnimState)
 #pragma region "射撃"
 
 /// <summary>
+/// 発射チェック.
+/// </summary>
+/// <returns>問題ないならtrue</returns>
+bool ACharacterBase::ShotBulletCheck() {
+
+	//nullチェック.
+	if (GetWorld() == nullptr) {
+		return false;
+	}
+	if (BulletClass == nullptr) {
+		return false;
+	}
+	//弾薬がないならリロード開始.
+	if (AmmoCount <= 0) {
+		StartReload();
+//		GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, TEXT("start reload"));
+		return false;
+	}
+	//リロード中は射撃不可.
+	if (bIsReloading) {
+//		GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, TEXT("reload now"));
+		return false;
+	}
+
+	return true; //問題なし.
+}
+
+/// <summary>
 /// 弾を発射する.
 /// </summary>
 /// <param name="targetPos">目標座標</param>
@@ -299,10 +327,10 @@ bool ACharacterBase::ShotBulletExe(AActor* user, FVector targetPos)
 	{
 		Bullet->SetUser(user); //撃った人を登録.
 
-		// 弾薬を消費
-		CurrentAmmoCount--;
+		//弾薬を消費.
+		AmmoCount--;
 
-		UE_LOG(LogTemp, Warning, TEXT("Shot! Remaining Ammo: %d"), CurrentAmmoCount);
+		UE_LOG(LogTemp, Warning, TEXT("Shot! Remaining Ammo: %d"), AmmoCount);
 
 		// マズルフラッシュエフェクトを再生
 		if (RevolverGun && RevolverGun->PS_Muzzleflash_Revolver)
@@ -345,12 +373,12 @@ void ACharacterBase::InitializeBoneIndices()
 		return;
 	}
 
-	// 右腕のボーン名（スケルトンに合わせて変更してください）
-	FName RightArmBoneName = FName(TEXT("arm_r"));      // 上腕
-	FName RightForearmBoneName = FName(TEXT("forearm_r")); // 前腕
+	//右腕のボーン名.
+	FName RightArmBoneName     = FName(TEXT("arm_r"));     //上腕.
+	FName RightForearmBoneName = FName(TEXT("forearm_r")); //前腕.
 
-	// ボーンインデックスを取得
-	RightArmBoneIndex = GetMesh()->GetBoneIndex(RightArmBoneName);
+	//ボーンインデックスを取得.
+	RightArmBoneIndex     = GetMesh()->GetBoneIndex(RightArmBoneName);
 	RightForearmBoneIndex = GetMesh()->GetBoneIndex(RightForearmBoneName);
 
 	if (RightArmBoneIndex != INDEX_NONE)
@@ -378,15 +406,11 @@ void ACharacterBase::InitializeBoneIndices()
 /// </summary>
 void ACharacterBase::StartReload()
 {
-	if (bIsReloading)
-	{
-		return;
+	if (bIsReloading) { 
+		return; //リロード中は処理しない.
 	}
-
-	// 既に満タンの場合はリロード不要
-	if (CurrentAmmoCount >= MaxAmmoPerMagazine)
-	{
-		return;
+	if (AmmoCount >= MaxAmmoCount) {
+		return; //弾を使ってないならリロード不要.
 	}
 
 	bIsReloading = true;
@@ -413,22 +437,21 @@ void ACharacterBase::StartReload()
 /// <param name="DeltaTime">フレームの経過時間</param>
 void ACharacterBase::UpdateReloadTimer(float DeltaTime)
 {
-	if (!bIsReloading)
-	{
-		return;
+	if (!bIsReloading) {
+		return; //リロードしてないなら処理しない.
 	}
 
-	ReloadTimerElapsed += DeltaTime;
+	ReloadTimerElapsed += DeltaTime; //リロード時間経過.
 
 	if (ReloadTimerElapsed >= ReloadDuration)
 	{
-		// リロード完了
+		//リロード完了.
 		bIsReloading = false;
-		CurrentAmmoCount = MaxAmmoPerMagazine;
+		AmmoCount = MaxAmmoCount; //弾の数復活.
 
-		UE_LOG(LogTemp, Warning, TEXT("Reload Complete! Ammo: %d"), CurrentAmmoCount);
+		UE_LOG(LogTemp, Warning, TEXT("Reload Complete! Ammo: %d"), AmmoCount);
 
-		// 銃のシリンダーを閉じるアニメーション・音声を再生
+		//銃のシリンダーを閉じるアニメーション・音声を再生.
 		if (RevolverGun)
 		{
 			if (RevolverGun->S_Revolver_Cylinder_Chamber_Close_Cue)
@@ -476,7 +499,7 @@ void ACharacterBase::EquipGun()
 		}
 
 		UE_LOG(LogTemp, Warning, TEXT("Gun equipped successfully!"));
-		CurrentAmmoCount = MaxAmmoPerMagazine;
+		AmmoCount = MaxAmmoCount; //弾の残数を設定.
 	}
 	else
 	{

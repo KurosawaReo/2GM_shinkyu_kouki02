@@ -70,8 +70,8 @@ void AEnemyManager::Tick(float DeltaTime) {
 	SetActorRotation(rot, ETeleportType::None);
 
 	//前方向に進ませる.
-	//FVector forward(cos(ang), sin(ang), 0);
-	//SetActorLocation(GetActorLocation() + forward * SPEED);
+	FVector forward(cos(ang), sin(ang), 0);
+	AddMovementInput(forward, MoveSpeed);
 }
 #pragma endregion
 
@@ -79,7 +79,7 @@ void AEnemyManager::Tick(float DeltaTime) {
 //弾が当たったら実行される.
 void AEnemyManager::OnBulletHit() 
 {
-	GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, TEXT("hit enemy"));
+//	GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, TEXT("hit enemy"));
 	Die(); //死亡処理.
 }
 //死亡処理.
@@ -139,9 +139,9 @@ void AEnemyManager::DisableComponents()
 		cmp->StopMovementImmediately();
 		cmp->DisableMovement();
 	}
-	//銃を無効に.
+	//銃を消滅.
 	if (RevolverGun) {
-		RevolverGun->Destroy(); //kari.
+		RevolverGun->Destroy();
 	}
 	//Tickを停止.
 	SetActorTickEnabled(false);
@@ -155,8 +155,12 @@ void AEnemyManager::DisableComponents()
 /// </summary>
 void AEnemyManager::ShotBullet()
 {
+	//発射していいかチェック.
+	if (!ShotBulletCheck()) {
+		return;
+	}
 	//弾が残っていれば.
-	if (CurrentAmmoCount > 0) {
+	if (AmmoCount > 0) {
 		//プレイヤー取得.
 		ACharacter* player = UGameplayStatics::GetPlayerCharacter(GetWorld(), 0);
 		//目標地点を計算.

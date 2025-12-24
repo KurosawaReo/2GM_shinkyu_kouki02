@@ -50,8 +50,6 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = MyProperty)
 	float   speed      = 1;  //ë¨ìx.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = MyProperty)
-	float   gravity    = 1;  //èdóÕ.
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = MyProperty)
 	float   deleteTime = 50; //è¡ñ≈Ç‹Ç≈ÇÃéûä‘.
 
 //Å• ===== ä÷êî ===== Å•.

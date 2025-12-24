@@ -57,7 +57,7 @@ APlyerCharacter::APlyerCharacter()
 
 	//初期状態.
 	bIsSprinting = false;
-	CurrentAmmoCount = MaxAmmoPerMagazine;
+	AmmoCount = MaxAmmoCount;
 	bIsReloading = false;
 	RevolverGun = nullptr;
 }
@@ -491,7 +491,7 @@ void APlyerCharacter::EquipGun()
 		}
 
 		UE_LOG(LogTemp, Warning, TEXT("Gun equipped successfully!"));
-		CurrentAmmoCount = MaxAmmoPerMagazine;
+		AmmoCount = MaxAmmoCount;
 	}
 	else
 	{
@@ -514,7 +514,7 @@ void APlyerCharacter::CalculateAndShot()
 	}
 
 	// 弾薬がない場合はリロード開始
-	if (CurrentAmmoCount <= 0)
+	if (AmmoCount <= 0)
 	{
 		StartReload();
 		return;
@@ -612,9 +612,9 @@ void APlyerCharacter::CalculateAndShot()
 		}
 
 		// 弾薬を消費
-		CurrentAmmoCount--;
+		AmmoCount--;
 
-		UE_LOG(LogTemp, Warning, TEXT("Shot! Remaining Ammo: %d"), CurrentAmmoCount);
+		UE_LOG(LogTemp, Warning, TEXT("Shot! Remaining Ammo: %d"), AmmoCount);
 
 		// マズルフラッシュエフェクトを再生
 		if (RevolverGun && RevolverGun->PS_Muzzleflash_Revolver)
@@ -687,7 +687,7 @@ void APlyerCharacter::StartReload()
 	}
 
 	// 既に満タンの場合はリロード不要
-	if (CurrentAmmoCount >= MaxAmmoPerMagazine)
+	if (AmmoCount >= MaxAmmoCount)
 	{
 		return;
 	}
@@ -727,9 +727,9 @@ void APlyerCharacter::UpdateReloadTimer(float DeltaTime)
 	{
 		// リロード完了
 		bIsReloading = false;
-		CurrentAmmoCount = MaxAmmoPerMagazine;
+		AmmoCount = MaxAmmoCount;
 
-		UE_LOG(LogTemp, Warning, TEXT("Reload Complete! Ammo: %d"), CurrentAmmoCount);
+		UE_LOG(LogTemp, Warning, TEXT("Reload Complete! Ammo: %d"), AmmoCount);
 
 		// 銃のシリンダーを閉じるアニメーション・音声を再生
 		if (RevolverGun)

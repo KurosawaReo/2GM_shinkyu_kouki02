@@ -5,6 +5,9 @@
    弾の元となる基底クラス.
 */
 #include "BulletBase.h"
+
+//他class.
+#include "PlayerManager.h"
 #include "EnemyManager.h"
 
 /// <summary>
@@ -85,7 +88,6 @@ void ABulletBase::Tick(float DeltaTime)
 
     const FVector befPos = GetActorLocation();              //移動前の座標.
     {   
-        vec.Z -= gravity;                                   //重力.
         SetActorLocation(GetActorLocation() + vec * speed); //前方向に移動.
     }
     const FVector nowPos = GetActorLocation();              //移動後の座標.

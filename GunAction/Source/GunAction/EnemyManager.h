@@ -10,7 +10,6 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "PlayerManager.h"
 #include "CharacterBase.h" //親クラス.
 #include "EnemyManager.generated.h"
 
@@ -31,10 +30,13 @@ public:
 	//死亡時のエフェクト.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Enemy")
 	class UParticleSystem* DeathEffect;
-
 	//死亡時のサウンド.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Enemy")
 	class USoundBase* DeathSound;
+
+	//移動速度.
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Enemy")
+	float MoveSpeed;
 
 	//射撃用タイマー.
 	FTimerHandle tmShot;

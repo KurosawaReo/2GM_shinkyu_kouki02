@@ -10,8 +10,11 @@
 #pragma once
 
 #include "CoreMinimal.h"
+
+//‘¼class.
 #include "CharacterBase.h" //eƒNƒ‰ƒX.
 #include "Steam_Revolver.h"
+
 #include "PlayerManager.generated.h"
 
 class UCrosshairWidget;

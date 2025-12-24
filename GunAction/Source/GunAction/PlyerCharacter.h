@@ -110,10 +110,10 @@ public:
 
 	// 弾薬関連
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ammunition")
-	int32 MaxAmmoPerMagazine = 6;
+	int32 MaxAmmoCount = 6;
 
 	UPROPERTY(BlueprintReadOnly, Category = "Ammunition")
-	int32 CurrentAmmoCount = 6;
+	int32 AmmoCount = 6;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ammunition")
 	float ReloadDuration = 2.5f; // リロード時間（秒）
