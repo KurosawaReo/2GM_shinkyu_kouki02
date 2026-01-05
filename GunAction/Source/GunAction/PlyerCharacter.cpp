@@ -149,13 +149,6 @@ void APlyerCharacter::Tick(float DeltaTime)
 				CrosshairWorldDirection
 			);
 		}
-
-		// IK ターゲット位置を設定
-		RightHandIKLocation = CrosshairWorldLocation + (CrosshairWorldDirection * 500.0f);
-		RightHandIKAlpha = 1.0f;
-
-	        UE_LOG(LogTemp, Warning, TEXT("IK Location: X=%.2f, Y=%.2f, Z=%.2f"),
-			RightHandIKLocation.X, RightHandIKLocation.Y, RightHandIKLocation.Z);
 	}
 }
 #pragma endregion
