@@ -350,25 +350,24 @@ void ACharacterBase::EquipGun()
 		return;
 	}
 
-	// 銃をスポーン
 	FActorSpawnParameters SpawnParams;
 	SpawnParams.Owner = this;
 	SpawnParams.Instigator = GetInstigator();
 
+	//銃をスポーン.
 	RevolverGun = GetWorld()->SpawnActor<ASteam_Revolver>(RevolverGunClass, FVector::ZeroVector, FRotator::ZeroRotator, SpawnParams);
 
 	if (RevolverGun)
 	{
-		// 銃をメッシュにアタッチ（ソケット: "hand_r" 右手に装備）
-		RevolverGun->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetIncludingScale, TEXT("hand_r"));
+		//銃を装備(ソケットにアタッチする)
+		RevolverGun->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetIncludingScale, GunAttachSocketName);
 
-		// 銃のコリジョンを無効化（プレイヤーに装備されるため不要）
+		//銃のコリジョンは不要なため無効化.
 		if (RevolverGun->Box)
 		{
 			RevolverGun->Box->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 		}
-
-		// スケルタルメッシュのコリジョンも無効化
+		//スケルタルメッシュのコリジョンも無効化.
 		if (RevolverGun->Steam_Revolver)
 		{
 			RevolverGun->Steam_Revolver->SetCollisionEnabled(ECollisionEnabled::NoCollision);

@@ -85,6 +85,10 @@ public:
 	UPROPERTY(BlueprintReadOnly, Category = "MyProperty|Base|Gun")
 	ASteam_Revolver* RevolverGun;
 
+	//銃をアタッチするソケット名.
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Base|Gun")
+	FName GunAttachSocketName = TEXT("hand_r");
+
 	//弾関連.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Base|Gun|Ammunition")
 	int32 MaxAmmoCount = 6;				//連続で弾を撃てる数.
@@ -114,6 +118,7 @@ public:
 	float BulletTargetDistance = 10000.0f;
 #pragma endregion
 
+//アニメーション関係.
 #pragma region "Animation"
 
 	//腕のボーンインデックスをキャッシュ.
@@ -123,7 +128,6 @@ public:
 	UPROPERTY(VisibleAnywhere, Category = "MyProperty|Base|Animation")
 	int32 RightForearmBoneIndex = INDEX_NONE;
 
-	//アニメーション関係.
 	float shotAnimTimer;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Base|Animation")
