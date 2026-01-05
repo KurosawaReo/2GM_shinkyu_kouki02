@@ -18,10 +18,8 @@ class GUNACTION_API ASteam_Revolver : public AActor
 {
 	GENERATED_BODY()
 	
+//▼ ===== 変数 ===== ▼.
 public:	
-	// Sets default values for this actor's properties
-	ASteam_Revolver();
-
 	/** ルートシーンコンポーネント */
 	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "Components")
 	TObjectPtr<USceneComponent> DefaultSceneRoot;
@@ -118,32 +116,38 @@ public:
 	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "Components|Audio|Shots")
 	TObjectPtr<UAudioComponent> S_Revolver_Shot_01_Cue;
 	
-	public:
-		/** 銃の射撃アニメーション */
-		UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
-		class UAnimMontage* FireAnimMontage;
+	/** 銃の射撃アニメーション */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
+	class UAnimMontage* FireAnimMontage;
 
-		/** 銃のリロードアニメーション */
-		UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
-		class UAnimMontage* ReloadAnimMontage;
+	/** 銃のリロードアニメーション */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
+	class UAnimMontage* ReloadAnimMontage;
 
-		/** 射撃アニメーションを再生 */
-		UFUNCTION(BlueprintCallable, Category = "Gun")
-		void PlayFireAnimation();
-
-		/** リロードアニメーションを再生 */
-		UFUNCTION(BlueprintCallable, Category = "Gun")
-		void PlayReloadAnimation();
-
+//▼ ===== 関数 ===== ▼.
 private:
-			/** 全てのコンポーネントのコリジョンを無効化 */
-			void DisableAllCollisions();
+	/* 全てのコンポーネントのコリジョンを無効化 */
+	void DisableAllCollisions();
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
 public:	
+	// Sets default values for this actor's properties
+	ASteam_Revolver();
+
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
+	/* 銃のメッシュを無効化 */
+	void DisableGunMesh();
+
+	/* 射撃アニメーションを再生 */
+	UFUNCTION(BlueprintCallable, Category = "Gun")
+	void PlayFireAnimation();
+
+	/* リロードアニメーションを再生 */
+	UFUNCTION(BlueprintCallable, Category = "Gun")
+	void PlayReloadAnimation();
 };

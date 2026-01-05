@@ -50,31 +50,31 @@ ASteam_Revolver::ASteam_Revolver()
 
 	// 弾丸とシェルコンポーネント
 	Bullet_4 = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Bullet_4"));
-	Bullet_4->SetupAttachment(Steam_Revolver);
+	Bullet_4->SetupAttachment(DefaultSceneRoot);
 
 	Shell_4 = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Shell_4"));
 	Shell_4->SetupAttachment(Bullet_4);
 
 	Bullet_5 = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Bullet_5"));
-	Bullet_5->SetupAttachment(Steam_Revolver);
+	Bullet_5->SetupAttachment(DefaultSceneRoot);
 
 	Shell_5 = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Shell_5"));
 	Shell_5->SetupAttachment(Bullet_5);
 
 	Bullet_1 = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Bullet_1"));
-	Bullet_1->SetupAttachment(Steam_Revolver);
+	Bullet_1->SetupAttachment(DefaultSceneRoot);
 
 	Shell_1 = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Shell_1"));
 	Shell_1->SetupAttachment(Bullet_1);
 
 	Bullet_2 = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Bullet_2"));
-	Bullet_2->SetupAttachment(Steam_Revolver);
+	Bullet_2->SetupAttachment(DefaultSceneRoot);
 
 	Shell_2 = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Shell_2"));
 	Shell_2->SetupAttachment(Bullet_2);
 
 	Bullet_3 = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Bullet_3"));
-	Bullet_3->SetupAttachment(Steam_Revolver);
+	Bullet_3->SetupAttachment(DefaultSceneRoot);
 
 	Shell_3 = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Shell_3"));
 	Shell_3->SetupAttachment(Bullet_3);
@@ -137,31 +137,7 @@ void ASteam_Revolver::Tick(float DeltaTime)
 
 }
 
-void ASteam_Revolver::PlayFireAnimation()
-{
-	if (FireAnimMontage == nullptr)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("FireAnimMontage is not set!"));
-		return;
-	}
-
-	if (Steam_Revolver == nullptr)
-	{
-		UE_LOG(LogTemp, Error, TEXT("Steam_Revolver mesh is invalid!"));
-		return;
-	}
-
-	UAnimInstance* AnimInstance = Steam_Revolver->GetAnimInstance();
-	if (AnimInstance == nullptr)
-	{
-		UE_LOG(LogTemp, Error, TEXT("AnimInstance is null!"));
-		return;
-	}
-
-	UE_LOG(LogTemp, Warning, TEXT("Playing gun fire animation: %s"), *FireAnimMontage->GetName());
-	AnimInstance->Montage_Play(FireAnimMontage, 1.0f);
-}
-
+//全てのコンポーネントのコリジョンを無効化.
 void ASteam_Revolver::DisableAllCollisions()
 {
 	//コリジョンは無効か.
@@ -190,6 +166,39 @@ void ASteam_Revolver::DisableAllCollisions()
 	UE_LOG(LogTemp, Warning, TEXT("All gun collisions disabled!"));
 }
 
+//銃のメッシュを無効化.
+//キャラクターが銃を使わずに射撃のみ行いたい時用.
+void ASteam_Revolver::DisableGunMesh() {
+	GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, TEXT("aaaaaaaaaaa")); //表示.
+	Steam_Revolver->Deactivate(); //無効に.
+}
+
+//射撃アニメーションを再生.
+void ASteam_Revolver::PlayFireAnimation()
+{
+	if (FireAnimMontage == nullptr)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("FireAnimMontage is not set!"));
+		return;
+	}
+
+	if (Steam_Revolver == nullptr)
+	{
+		UE_LOG(LogTemp, Error, TEXT("Steam_Revolver mesh is invalid!"));
+		return;
+	}
+
+	UAnimInstance* AnimInstance = Steam_Revolver->GetAnimInstance();
+	if (AnimInstance == nullptr)
+	{
+		UE_LOG(LogTemp, Error, TEXT("AnimInstance is null!"));
+		return;
+	}
+
+	UE_LOG(LogTemp, Warning, TEXT("Playing gun fire animation: %s"), *FireAnimMontage->GetName());
+	AnimInstance->Montage_Play(FireAnimMontage, 1.0f);
+}
+//リロードアニメーションを再生.
 void ASteam_Revolver::PlayReloadAnimation()
 {
 	if (ReloadAnimMontage == nullptr)

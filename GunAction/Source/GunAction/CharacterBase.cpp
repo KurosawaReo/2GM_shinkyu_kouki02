@@ -369,6 +369,11 @@ void ACharacterBase::EquipGun()
 		//銃を装備(ソケットにアタッチする)
 		RevolverGun->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetIncludingScale, GunAttachSocketName);
 
+		//銃の見た目設定.
+		if (!IsHaveGun) {
+			RevolverGun->DisableGunMesh();
+		}
+
 		//銃のコリジョンは不要なため無効化.
 		if (RevolverGun->Box)
 		{
