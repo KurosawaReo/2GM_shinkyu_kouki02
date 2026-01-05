@@ -46,8 +46,8 @@ public:
 	class UCameraComponent* FollowCamera;
 
 	// マズルソケットの名前
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Player|Gun|Muzzle")
-	FName MuzzleSocketName = FName("Muzzle"); // スケルタルメッシュ内のソケット名
+//	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Player|Gun|Muzzle")
+//	FName MuzzleSocketName = FName("Muzzle"); // スケルタルメッシュ内のソケット名
 
 	//プレイヤーの腕処理.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Player|IK")
@@ -86,18 +86,18 @@ protected:
 #pragma region "銃システム"
 private:
 
+	/*
 	// マズル位置を取得する関数
 	FVector GetMuzzleLocation() const;
 
 	// マズル方向を取得する関数
 	FRotator GetMuzzleRotation() const;
-
+	*/
 	//インデックス初期化.
 	void InitializeArmIK();
 
 	//クロスヘアと高さ.
 	void UpdateArmIK();
-
 
 #pragma endregion
 

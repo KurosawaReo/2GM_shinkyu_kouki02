@@ -166,6 +166,8 @@ void APlayerManager::LookUpAtRate(float Rate)
 
 #pragma region "銃システム"
 
+/*
+
 /// <summary>
 /// GetMuzzleLocation - マズル位置の取得.
 /// スケルタルメッシュの"Muzzle"ソケットから現在の正確な位置を取得する.
@@ -190,7 +192,6 @@ FVector APlayerManager::GetMuzzleLocation() const
 
 	// Muzzleが見つからない場合は銃の位置を返す
 	return RevolverGun->GetActorLocation();
-
 }
 
 /// <summary>
@@ -213,12 +214,13 @@ FRotator APlayerManager::GetMuzzleRotation() const
 
 	if (GunMesh->DoesSocketExist(MuzzleSocketName))
 	{
-	
 		return RevolverGun->GetActorRotation();
 	}
 
 	return GunMesh->GetSocketRotation(MuzzleSocketName);
 }
+*/
+
 void APlayerManager::InitializeArmIK()
 {
 	if (!GetMesh())
@@ -290,7 +292,7 @@ void APlayerManager::UpdateArmIK()
 /// GetCameraVector - カメラからの方向ベクトルを取得.
 /// (弾の発射方向などの計算に使用)
 /// </summary>
-/// <param name="dir">"Forward", "Right", "up" のどれか</param>
+/// <param name="dir">"Forward", "Right", "Up" のどれか</param>
 /// <returns>ベクトル</returns>
 FVector APlayerManager::GetCameraVector(FString dir) const
 {

@@ -78,16 +78,25 @@ class GUNACTION_API ACharacterBase : public ACharacter
 //▼ ===== 変数 ===== ▼.
 public:
 #pragma region "Gun"
-	//銃クラスの参照.
+
+	//銃を持つか.
+	//trueなら銃を召喚して持たせる, falseなら射撃のみ行う.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Base|Gun")
-	TSubclassOf<ASteam_Revolver> RevolverGunClass;
+	bool IsHaveGun;
 
-	UPROPERTY(BlueprintReadOnly, Category = "MyProperty|Base|Gun")
-	ASteam_Revolver* RevolverGun;
-
-	//銃をアタッチするソケット名.
+	//[IsHaveGun = true]  銃をアタッチするソケット名.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Base|Gun")
 	FName GunAttachSocketName = TEXT("hand_r");
+	//[IsHaveGun = false] 発射口となるソケット名.
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Base|Gun")
+	FName MuzzleSocketName = TEXT("hand_r");
+
+	//銃.
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Base|Gun")
+	TSubclassOf<ASteam_Revolver> RevolverGunClass;
+	//スポーンした銃を入れる用.
+	UPROPERTY(BlueprintReadOnly, Category = "MyProperty|Base|Gun")
+	ASteam_Revolver* RevolverGun;
 
 	//弾関連.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Base|Gun|Ammunition")
@@ -106,7 +115,7 @@ public:
 	float ReloadTimerElapsed = 0.0f;	//リロード経過時間計測用.
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Base|Gun|Ammunition")
-	float shotPosRandom = 1.0f;			//射撃の正確さ(どれだけずらすか)
+	float shotPosRandom = 0.0f;			//射撃の正確さ(どれだけずらすか)
 #pragma endregion
 
 #pragma region "Bullet"

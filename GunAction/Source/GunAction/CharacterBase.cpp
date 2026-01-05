@@ -170,9 +170,17 @@ bool ACharacterBase::ShotBulletExe(AActor* user, FVector targetPos)
 	//弾の設定 - ①スポーン位置.
 	FVector SpawnLocation;
 	{
-		//TODO: マズルがあること前提の処理, 銃を撃たない敵はどうするか.
-		if (RevolverGun && RevolverGun->Muzzle) {
-			SpawnLocation = RevolverGun->Muzzle->GetComponentLocation();
+		//銃を持ってる場合.
+		if (IsHaveGun) {
+			if (RevolverGun && RevolverGun->Muzzle) {
+				SpawnLocation = RevolverGun->Muzzle->GetComponentLocation();
+			}
+		}
+		//銃を持ってない場合.
+		else {
+			//ソケットの座標取得.
+			FVector loc = GetMesh()->GetSocketLocation(MuzzleSocketName);
+			SpawnLocation = loc;
 		}
 	}
 	//弾の設定 - ②発射方向.
@@ -243,8 +251,7 @@ bool ACharacterBase::ShotBulletExe(AActor* user, FVector targetPos)
 /// </summary>
 void ACharacterBase::InitializeBoneIndices()
 {
-	if (!GetMesh())
-	{
+	if (!GetMesh()) {
 		UE_LOG(LogTemp, Error, TEXT("Mesh is NULL!"));
 		return;
 	}

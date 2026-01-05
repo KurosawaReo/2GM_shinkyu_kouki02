@@ -71,7 +71,7 @@ void AEnemyManager::Tick(float DeltaTime) {
 	FRotator rot(0, deg, 0);
 	SetActorRotation(rot, ETeleportType::None);
 
-	FVector forward; //•ûŒüİ’è—p.
+	FVector forward = FVector(); //•ûŒüİ’è—p.
 	//AIs“®•Ê.
 	switch (AIState) 
 	{
