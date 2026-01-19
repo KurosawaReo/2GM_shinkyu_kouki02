@@ -166,11 +166,27 @@ void ASteam_Revolver::DisableAllCollisions()
 	UE_LOG(LogTemp, Warning, TEXT("All gun collisions disabled!"));
 }
 
+void SetMeshActive(TObjectPtr<UStaticMeshComponent> Mesh, bool bActive)
+{
+	Mesh->SetVisibility(bActive);
+	Mesh->SetCollisionEnabled(
+		bActive ? ECollisionEnabled::QueryAndPhysics : ECollisionEnabled::NoCollision
+	);
+	Mesh->SetComponentTickEnabled(bActive);
+}
+
 //銃のメッシュを無効化.
 //キャラクターが銃を使わずに射撃のみ行いたい時用.
 void ASteam_Revolver::DisableGunMesh() {
-	GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, TEXT("aaaaaaaaaaa")); //表示.
-	Steam_Revolver->Deactivate(); //無効に.
+
+	//TODO <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+	//どうしたら銃のメッシュを消去できる?
+
+	// TODO
+	//原因不明だが、ビルドして反映させるとクラッシュする. 最近変更したどこかが原因かも.
+
+	//SetMeshActive(Muzzle, false);
+	//GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, TEXT("DisableGunMesh()")); //表示.
 }
 
 //射撃アニメーションを再生.

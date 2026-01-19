@@ -44,7 +44,8 @@ private:
 	FVector vec;     //進行方向.
 	float   counter; //経過時間.
 
-	AActor* user;    //誰が撃った弾か.
+	UPROPERTY()
+	TObjectPtr<AActor> user; //誰が撃った弾か.
 
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = MyProperty)

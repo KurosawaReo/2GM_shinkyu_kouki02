@@ -18,8 +18,10 @@ ABulletBase::ABulletBase()
 	PrimaryActorTick.bCanEverTick = true;
 
     //初期化.
-    speed = 0;
-    vec   = FVector();
+    speed   = 0;
+    vec     = FVector::ZeroVector;
+    counter = 0.0f;
+    user    = nullptr; //最初はポインタなし.
     
     //コンポーネント作成.
     cmpSphere = CreateDefaultSubobject<USphereComponent>(TEXT("SphereComponent"));
@@ -53,6 +55,10 @@ void ABulletBase::OnOverlapBegin(
     //FString msg  = FString::Printf(TEXT("Hit: %s"), *name); //変数組み込み.
     //GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, msg); //表示.
 
+    if (!IsValid(user)) return;
+    if (!IsValid(OtherActor)) return;
+    if (OtherActor == this) return;
+
     //撃った人がプレイヤー.
     if (Cast<APlayerManager>(user)) {
         //敵に当たった.
@@ -85,6 +91,8 @@ void ABulletBase::SetUser(AActor* _user) {
 void ABulletBase::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+
+    if (!IsValid(user)) return;
 
     const FVector befPos = GetActorLocation();              //移動前の座標.
     {   
