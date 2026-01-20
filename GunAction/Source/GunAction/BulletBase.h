@@ -71,7 +71,7 @@ protected:
 
 public:	
 	//set.
-	virtual void SetUser(AActor* user);
+	virtual void SetUser(TObjectPtr<AActor> user);
 	//èÌÇ…é¿çs.
 	virtual void Tick(float DeltaTime) override;
 };

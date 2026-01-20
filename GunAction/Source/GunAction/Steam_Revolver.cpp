@@ -166,6 +166,7 @@ void ASteam_Revolver::DisableAllCollisions()
 	UE_LOG(LogTemp, Warning, TEXT("All gun collisions disabled!"));
 }
 
+//test
 void SetMeshActive(TObjectPtr<UStaticMeshComponent> Mesh, bool bActive)
 {
 	Mesh->SetVisibility(bActive);

@@ -81,7 +81,7 @@ void ABulletBase::OnOverlapBegin(
 /// set.
 /// </summary>
 /// <param name="user">撃った人のクラス</param>
-void ABulletBase::SetUser(AActor* _user) {
+void ABulletBase::SetUser(TObjectPtr<AActor> _user) {
     user = _user; //銃を撃った人を登録.
 }
 
