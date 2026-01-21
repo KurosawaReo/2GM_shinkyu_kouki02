@@ -375,14 +375,14 @@ void ACharacterBase::EquipGun()
 		}
 
 		//銃のコリジョンは不要なため無効化.
-		if (RevolverGun->Box)
+		if (RevolverGun->BoxCollision)
 		{
-			RevolverGun->Box->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+			RevolverGun->BoxCollision->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 		}
 		//スケルタルメッシュのコリジョンも無効化.
-		if (RevolverGun->Steam_Revolver)
+		if (RevolverGun->RevolverMain)
 		{
-			RevolverGun->Steam_Revolver->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+			RevolverGun->RevolverMain->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 		}
 
 		UE_LOG(LogTemp, Warning, TEXT("Gun equipped successfully!"));

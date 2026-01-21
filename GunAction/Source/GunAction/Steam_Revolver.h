@@ -1,5 +1,25 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+/*
+   - ASteam_Revolver -
+   銃の設定をするクラス.
 
+   [銃の主なコンポーネント]
+   Root
+   └RevolverMain
+	 └Muzzle
+   　└Bullet_1
+   　　└Shell_1
+   　└Bullet_2
+   　　└Shell_2
+   　└Bullet_3
+   　　└Shell_3
+   　└Bullet_4
+   　　└Shell_4
+   　└Bullet_5
+   　　└Shell_5
+   　└Bullet_6
+   　　└Shell_6
+   └BoxCollision
+*/
 #pragma once
 
 #include "CoreMinimal.h"
@@ -24,9 +44,15 @@ public:
 	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "Components")
 	TObjectPtr<USceneComponent> DefaultSceneRoot;
 
-	/** リボルバーの本体スケルタルメッシュ */
+	/** リボルバー本体のメッシュ */
 	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "Components")
-	TObjectPtr<USkeletalMeshComponent> Steam_Revolver;
+	TObjectPtr<USkeletalMeshComponent> RevolverMain;
+	/** マズル(銃口)のメッシュ */
+	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "Components|Muzzle")
+	TObjectPtr<UStaticMeshComponent> Muzzle;
+	/** 当たり判定(box) */
+	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "Components")
+	TObjectPtr<UBoxComponent> BoxCollision;
 
 	/** 弾丸 & シェル */
 	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "Components|Ammunition")
@@ -58,14 +84,6 @@ public:
 	TObjectPtr<UStaticMeshComponent> Bullet_6;
 	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "Components|Ammunition")
 	TObjectPtr<UStaticMeshComponent> Shell_6;
-
-	/** マズル（銃口）スタティックメッシュ */
-	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "Components|Muzzle")
-	TObjectPtr<UStaticMeshComponent> Muzzle;
-
-	/** コリジョン用ボックス */
-	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "Components")
-	TObjectPtr<UBoxComponent> Box;
 
 	/** シリンダーチャンバー開放音声 */
 	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "Components|Audio")

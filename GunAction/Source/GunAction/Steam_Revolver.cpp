@@ -18,48 +18,46 @@ ASteam_Revolver::ASteam_Revolver()
 	DefaultSceneRoot = CreateDefaultSubobject<USceneComponent>(TEXT("DefaultSceneRoot"));
 	RootComponent = DefaultSceneRoot;
 
-	// スケルタルメッシュ（リボルバーの本体）
-	Steam_Revolver = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("Steam_Revolver"));
-	Steam_Revolver->SetupAttachment(DefaultSceneRoot);
+	// リボルバー本体(メッシュ)
+	RevolverMain = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("Steam_Revolver"));
+	RevolverMain->SetupAttachment(DefaultSceneRoot);
+	// マズル
+	Muzzle = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Muzzle"));
+	Muzzle->SetupAttachment(RevolverMain);
+	// 当たり判定
+	BoxCollision = CreateDefaultSubobject<UBoxComponent>(TEXT("Box"));
+	BoxCollision->SetupAttachment(DefaultSceneRoot);
 
 	// 弾丸とシェルコンポーネント
 	Bullet_1 = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Bullet_1"));
-	Bullet_1->SetupAttachment(Steam_Revolver);
+	Bullet_1->SetupAttachment(RevolverMain);
 	Shell_1 = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Shell_1"));
 	Shell_1->SetupAttachment(Bullet_1);
 
 	Bullet_2 = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Bullet_2"));
-	Bullet_2->SetupAttachment(Steam_Revolver);
+	Bullet_2->SetupAttachment(RevolverMain);
 	Shell_2 = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Shell_2"));
 	Shell_2->SetupAttachment(Bullet_2);
 
 	Bullet_3 = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Bullet_3"));
-	Bullet_3->SetupAttachment(Steam_Revolver);
+	Bullet_3->SetupAttachment(RevolverMain);
 	Shell_3 = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Shell_3"));
 	Shell_3->SetupAttachment(Bullet_3);
 
 	Bullet_4 = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Bullet_4"));
-	Bullet_4->SetupAttachment(Steam_Revolver);
+	Bullet_4->SetupAttachment(RevolverMain);
 	Shell_4 = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Shell_4"));
 	Shell_4->SetupAttachment(Bullet_4);
 
 	Bullet_5 = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Bullet_5"));
-	Bullet_5->SetupAttachment(Steam_Revolver);
+	Bullet_5->SetupAttachment(RevolverMain);
 	Shell_5 = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Shell_5"));
 	Shell_5->SetupAttachment(Bullet_5);
 
 	Bullet_6 = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Bullet_6"));
-	Bullet_6->SetupAttachment(Steam_Revolver);
+	Bullet_6->SetupAttachment(RevolverMain);
 	Shell_6 = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Shell_6"));
 	Shell_6->SetupAttachment(Bullet_6);
-
-	// マズル
-	Muzzle = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Muzzle"));
-	Muzzle->SetupAttachment(Steam_Revolver);
-
-	// ボックスコリジョン
-	Box = CreateDefaultSubobject<UBoxComponent>(TEXT("Box"));
-	Box->SetupAttachment(DefaultSceneRoot);
 
 	// シリンダーチャンバー音声
 	S_Revolver_Cylinder_Chamber_Open_Cue = CreateDefaultSubobject<UAudioComponent>(TEXT("S_Revolver_Cylinder_Chamber_Open_Cue"));
@@ -193,13 +191,13 @@ void ASteam_Revolver::PlayFireAnimation()
 		return;
 	}
 
-	if (Steam_Revolver == nullptr)
+	if (RevolverMain == nullptr)
 	{
 		UE_LOG(LogTemp, Error, TEXT("Steam_Revolver mesh is invalid!"));
 		return;
 	}
 
-	UAnimInstance* AnimInstance = Steam_Revolver->GetAnimInstance();
+	UAnimInstance* AnimInstance = RevolverMain->GetAnimInstance();
 	if (AnimInstance == nullptr)
 	{
 		UE_LOG(LogTemp, Error, TEXT("AnimInstance is null!"));
@@ -218,13 +216,13 @@ void ASteam_Revolver::PlayReloadAnimation()
 		return;
 	}
 
-	if (Steam_Revolver == nullptr)
+	if (RevolverMain == nullptr)
 	{
 		UE_LOG(LogTemp, Error, TEXT("Steam_Revolver mesh is invalid!"));
 		return;
 	}
 
-	UAnimInstance* AnimInstance = Steam_Revolver->GetAnimInstance();
+	UAnimInstance* AnimInstance = RevolverMain->GetAnimInstance();
 	if (AnimInstance == nullptr)
 	{
 		UE_LOG(LogTemp, Error, TEXT("AnimInstance is null!"));
