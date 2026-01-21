@@ -24,83 +24,46 @@ public:
 	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "Components")
 	TObjectPtr<USceneComponent> DefaultSceneRoot;
 
-	/** 発砲音声 - ショット03 */
-	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "Components|Audio")
-	TObjectPtr<UAudioComponent> S_Revolver_Shot_03_Cue;
-
-	/** 発砲音声 - ショット04 */
-	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "Components|Audio")
-	TObjectPtr<UAudioComponent> S_Revolver_Shot_04_Cue;
-
-	/** 発砲音声 - ショット02 */
-	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "Components|Audio")
-	TObjectPtr<UAudioComponent> S_Revolver_Shot_02_Cue;
-
-	/** 発砲音声 - ショット05 */
-	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "Components|Audio")
-	TObjectPtr<UAudioComponent> S_Revolver_Shot_05_Cue;
-
-	/** マズルフラッシュパーティクルシステム */
-	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "Components|Muzzle")
-	TObjectPtr<UParticleSystemComponent> PS_Muzzleflash_Revolver;
-
 	/** リボルバーの本体スケルタルメッシュ */
 	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "Components")
 	TObjectPtr<USkeletalMeshComponent> Steam_Revolver;
 
-	/** 弾丸4 */
-	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "Components|Ammunition")
-	TObjectPtr<UStaticMeshComponent> Bullet_4;
-
-	/** シェル4（薬莢） */
-	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "Components|Ammunition")
-	TObjectPtr<UStaticMeshComponent> Shell_4;
-
-	/** 弾丸5 */
-	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "Components|Ammunition")
-	TObjectPtr<UStaticMeshComponent> Bullet_5;
-
-	/** シェル5（薬莢） */
-	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "Components|Ammunition")
-	TObjectPtr<UStaticMeshComponent> Shell_5;
-
-	/** 弾丸1 */
+	/** 弾丸 & シェル */
 	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "Components|Ammunition")
 	TObjectPtr<UStaticMeshComponent> Bullet_1;
-
-	/** シェル1（薬莢） */
 	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "Components|Ammunition")
 	TObjectPtr<UStaticMeshComponent> Shell_1;
 
-	/** 弾丸2 */
 	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "Components|Ammunition")
 	TObjectPtr<UStaticMeshComponent> Bullet_2;
-
-	/** シェル2（薬莢） */
 	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "Components|Ammunition")
 	TObjectPtr<UStaticMeshComponent> Shell_2;
 
-	/** 弾丸3 */
 	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "Components|Ammunition")
 	TObjectPtr<UStaticMeshComponent> Bullet_3;
-
-	/** シェル3（薬莢） */
 	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "Components|Ammunition")
 	TObjectPtr<UStaticMeshComponent> Shell_3;
+
+	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "Components|Ammunition")
+	TObjectPtr<UStaticMeshComponent> Bullet_4;
+	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "Components|Ammunition")
+	TObjectPtr<UStaticMeshComponent> Shell_4;
+
+	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "Components|Ammunition")
+	TObjectPtr<UStaticMeshComponent> Bullet_5;
+	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "Components|Ammunition")
+	TObjectPtr<UStaticMeshComponent> Shell_5;
+
+	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "Components|Ammunition")
+	TObjectPtr<UStaticMeshComponent> Bullet_6;
+	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "Components|Ammunition")
+	TObjectPtr<UStaticMeshComponent> Shell_6;
 
 	/** マズル（銃口）スタティックメッシュ */
 	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "Components|Muzzle")
 	TObjectPtr<UStaticMeshComponent> Muzzle;
 
-	/** 弾丸6 */
-	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "Components|Ammunition")
-	TObjectPtr<UStaticMeshComponent> Bullet_6;
-
-	/** シェル6（薬莢） */
-	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "Components|Ammunition")
-	TObjectPtr<UStaticMeshComponent> Shell_6;
-
-	/** コリジョン用ボックスコンポーネント */
+	/** コリジョン用ボックス */
 	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "Components")
 	TObjectPtr<UBoxComponent> Box;
 
@@ -112,9 +75,25 @@ public:
 	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "Components|Audio")
 	TObjectPtr<UAudioComponent> S_Revolver_Cylinder_Chamber_Close_Cue;
 
-	/** ショット1発砲音声 */
-	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "Components|Audio|Shots")
+	/** 発砲音声 */
+	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "Components|Audio")
 	TObjectPtr<UAudioComponent> S_Revolver_Shot_01_Cue;
+
+	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "Components|Audio")
+	TObjectPtr<UAudioComponent> S_Revolver_Shot_02_Cue;
+
+	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "Components|Audio")
+	TObjectPtr<UAudioComponent> S_Revolver_Shot_03_Cue;
+
+	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "Components|Audio")
+	TObjectPtr<UAudioComponent> S_Revolver_Shot_04_Cue;
+
+	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "Components|Audio")
+	TObjectPtr<UAudioComponent> S_Revolver_Shot_05_Cue;
+
+	/** マズルフラッシュ */
+	UPROPERTY(BlueprintReadOnly, VisibleAnywhere, Category = "Components|Muzzle")
+	TObjectPtr<UParticleSystemComponent> PS_Muzzleflash_Revolver;
 	
 	/** 銃の射撃アニメーション */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")

@@ -18,6 +18,10 @@ ASteam_Revolver::ASteam_Revolver()
 	DefaultSceneRoot = CreateDefaultSubobject<USceneComponent>(TEXT("DefaultSceneRoot"));
 	RootComponent = DefaultSceneRoot;
 
+	// スケルタルメッシュ（リボルバーの本体）
+	Steam_Revolver = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("Steam_Revolver"));
+	Steam_Revolver->SetupAttachment(DefaultSceneRoot);
+
 	// 弾丸とシェルコンポーネント
 	Bullet_1 = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Bullet_1"));
 	Bullet_1->SetupAttachment(Steam_Revolver);
@@ -67,23 +71,18 @@ ASteam_Revolver::ASteam_Revolver()
 	S_Revolver_Cylinder_Chamber_Close_Cue->SetupAttachment(DefaultSceneRoot);
 	S_Revolver_Cylinder_Chamber_Close_Cue->bAutoActivate = false;
 	S_Revolver_Cylinder_Chamber_Close_Cue->SetVolumeMultiplier(1.0f);
-
-	// ショット1発砲音声
+	
+	// ショット発砲音声
 	S_Revolver_Shot_01_Cue = CreateDefaultSubobject<UAudioComponent>(TEXT("S_Revolver_Shot_01_Cue"));
 	S_Revolver_Shot_01_Cue->SetupAttachment(Muzzle);
 	S_Revolver_Shot_01_Cue->bAutoActivate = false;
 	S_Revolver_Shot_01_Cue->SetVolumeMultiplier(1.0f);
 
-	// マズルフラッシュパーティクル
-	PS_Muzzleflash_Revolver = CreateDefaultSubobject<UParticleSystemComponent>(TEXT("PS_Muzzleflash_Revolver"));
-	PS_Muzzleflash_Revolver->SetupAttachment(DefaultSceneRoot);
-	PS_Muzzleflash_Revolver->bAutoActivate = false;
+	S_Revolver_Shot_02_Cue = CreateDefaultSubobject<UAudioComponent>(TEXT("S_Revolver_Shot_02_Cue"));
+	S_Revolver_Shot_02_Cue->SetupAttachment(DefaultSceneRoot);
+	S_Revolver_Shot_02_Cue->bAutoActivate = false;
+	S_Revolver_Shot_02_Cue->SetVolumeMultiplier(1.0f);
 
-	// スケルタルメッシュ（リボルバーの本体）
-	Steam_Revolver = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("Steam_Revolver"));
-	Steam_Revolver->SetupAttachment(DefaultSceneRoot);
-
-	// 発砲音声コンポーネント
 	S_Revolver_Shot_03_Cue = CreateDefaultSubobject<UAudioComponent>(TEXT("S_Revolver_Shot_03_Cue"));
 	S_Revolver_Shot_03_Cue->SetupAttachment(DefaultSceneRoot);
 	S_Revolver_Shot_03_Cue->bAutoActivate = false;
@@ -94,15 +93,15 @@ ASteam_Revolver::ASteam_Revolver()
 	S_Revolver_Shot_04_Cue->bAutoActivate = false;
 	S_Revolver_Shot_04_Cue->SetVolumeMultiplier(1.0f);
 
-	S_Revolver_Shot_02_Cue = CreateDefaultSubobject<UAudioComponent>(TEXT("S_Revolver_Shot_02_Cue"));
-	S_Revolver_Shot_02_Cue->SetupAttachment(DefaultSceneRoot);
-	S_Revolver_Shot_02_Cue->bAutoActivate = false;
-	S_Revolver_Shot_02_Cue->SetVolumeMultiplier(1.0f);
-
 	S_Revolver_Shot_05_Cue = CreateDefaultSubobject<UAudioComponent>(TEXT("S_Revolver_Shot_05_Cue"));
 	S_Revolver_Shot_05_Cue->SetupAttachment(DefaultSceneRoot);
 	S_Revolver_Shot_05_Cue->bAutoActivate = false;
 	S_Revolver_Shot_05_Cue->SetVolumeMultiplier(1.0f);
+
+	// マズルフラッシュパーティクル
+	PS_Muzzleflash_Revolver = CreateDefaultSubobject<UParticleSystemComponent>(TEXT("PS_Muzzleflash_Revolver"));
+	PS_Muzzleflash_Revolver->SetupAttachment(DefaultSceneRoot);
+	PS_Muzzleflash_Revolver->bAutoActivate = false;
 }
 
 void ASteam_Revolver::BeginPlay()
