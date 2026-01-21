@@ -162,6 +162,8 @@ private:
 	void EquipSword();
 	//近接攻撃実行.
 	void MeleeAttack();
+
+	void UnequipSword();
 	//近接攻撃がヒットした時の処理.
 	void OnMeleeAttackHit(EMeleeAttackType AtaackType);
 	//コンボシステムの更新.
