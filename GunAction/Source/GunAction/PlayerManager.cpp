@@ -47,7 +47,7 @@ void APlayerManager::BeginPlay() {
 	CurrentAnimationState = EAnimationState::Idle;
 
 	//剣を装備.
-	EquipSword();
+	//EquipSword();
 }
 
 //常に実行.
@@ -111,11 +111,23 @@ void APlayerManager::Input(UInputComponent* PlayerInputComponent)
 
 #pragma region "近接攻撃"
 
+// 剣を消去する関数
+void APlayerManager::UnequipSword()
+{
+	if (EquippedSword)
+	{
+		EquippedSword->Destroy();
+		EquippedSword = nullptr;
+		UE_LOG(LogTemp, Warning, TEXT("Sword unequipped"));
+	}
+}
+
 /// <summary>
 /// OnMeleeAttackHit - 近接攻撃がヒットした時の処理.
 /// 敵にダメージを与える判定を行う.
 /// </summary>
 /// <param name="AttackType">攻撃のタイプ（剣/キック）</param>
+// OnMeleeAttackHit関数（改善版）
 void APlayerManager::OnMeleeAttackHit(EMeleeAttackType AttackType)
 {
 	if (GetWorld() == nullptr)
@@ -123,23 +135,38 @@ void APlayerManager::OnMeleeAttackHit(EMeleeAttackType AttackType)
 		return;
 	}
 
-	// 攻撃の原点（プレイヤー位置）
-	FVector AttackOrigin = GetActorLocation();
+	// 攻撃の原点：剣の先端または手の位置
+	FVector AttackOrigin;
+	if (EquippedSword)
+	{
+		// 剣が装備されている場合は剣の位置から
+		AttackOrigin = EquippedSword->GetActorLocation();
+	}
+	else
+	{
+		// 剣がない場合はプレイヤー位置から
+		AttackOrigin = GetActorLocation();
+	}
+
 	FVector AttackEnd = AttackOrigin + GetActorForwardVector() * MeleeAttackRange;
 
 	// スフィアトレースで敵を検索
 	FHitResult HitResult;
-	FCollisionShape CollisionShape = FCollisionShape::MakeSphere(100.0f); // 半径100cm
+	FCollisionShape CollisionShape = FCollisionShape::MakeSphere(100.0f);
 
 	FCollisionQueryParams QueryParams;
 	QueryParams.AddIgnoredActor(this);
+	if (EquippedSword)
+	{
+		QueryParams.AddIgnoredActor(EquippedSword);  // 剣自体との衝突を除外
+	}
 
 	bool bHit = GetWorld()->SweepSingleByChannel(
 		HitResult,
 		AttackOrigin,
 		AttackEnd,
 		FQuat::Identity,
-		ECC_GameTraceChannel1, // 敵用チャンネル
+		ECC_GameTraceChannel1,  // 敵用チャンネル
 		CollisionShape,
 		QueryParams
 	);
@@ -155,11 +182,11 @@ void APlayerManager::OnMeleeAttackHit(EMeleeAttackType AttackType)
 			Damage *= 1.5f;
 		}
 
-		UE_LOG(LogTemp, Warning, TEXT("Melee Hit! Target: %s, Damage: %f, Type: %s"),
-			*HitActor->GetName(), Damage, AttackType == EMeleeAttackType::SwordSlash ? TEXT("SwordSlash") : TEXT("Kick"));
+		UE_LOG(LogTemp, Warning, TEXT("Melee Hit! Target: %s, Damage: %f"),
+			*HitActor->GetName(), Damage);
 
-		// ダメージを与える処理（EnemyManagerなどが実装すること）
-		// 例: HitActor->TakeDamage(Damage, FDamageEvent(), GetController(), this);
+		// ダメージを与える処理
+		// HitActor->TakeDamage(Damage, FDamageEvent(), GetController(), this);
 	}
 	else
 	{
@@ -206,23 +233,49 @@ void APlayerManager::UpdateMeleeCombo(float DeltaTime)
 /// </summary>
 void APlayerManager::EquipSword()
 {
+	// 既に剣が装備されている場合はスキップ
+	if (EquippedSword != nullptr)
+	{
+		return;
+	}
+
 	if (SwordClass == nullptr)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("SwordClass is not set! Please set it in Blueprint."));
 		return;
 	}
 
-	// 剣をスポーン
+	if (GetWorld() == nullptr)
+	{
+		return;
+	}
+
+	// 剣をスポーン（親はプレイヤー）
 	FActorSpawnParameters SpawnParams;
 	SpawnParams.Owner = this;
 	SpawnParams.Instigator = GetInstigator();
 
-	EquippedSword = GetWorld()->SpawnActor<AActor>(SwordClass, FVector::ZeroVector, FRotator::ZeroRotator, SpawnParams);
+	EquippedSword = GetWorld()->SpawnActor<AActor>(
+		SwordClass,
+		FVector::ZeroVector,
+		FRotator::ZeroRotator,
+		SpawnParams
+	);
 
 	if (EquippedSword)
 	{
-		// 剣を右手にアタッチ
-		EquippedSword->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetIncludingScale, SwordSocketName);
+		// ソケット名を使用してアタッチ（回転と位置をソケットに従う）
+		EquippedSword->AttachToComponent(
+			GetMesh(),
+			FAttachmentTransformRules::SnapToTargetIncludingScale,
+			SwordSocketName  // "hand_l" などのソケット名
+		);
+
+		// 剣のコリジョンを無効化（プレイヤーとの衝突を防ぐ）
+		if (UPrimitiveComponent* RootPrimitive = Cast<UPrimitiveComponent>(EquippedSword->GetRootComponent()))
+		{
+			RootPrimitive->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+		}
 
 		UE_LOG(LogTemp, Warning, TEXT("Sword equipped successfully at socket: %s"), *SwordSocketName.ToString());
 	}
@@ -241,6 +294,12 @@ void APlayerManager::EquipSword()
 
 void APlayerManager::MeleeAttack()
 {
+	// 剣がまだ装備されていなければ装備する
+	if (EquippedSword == nullptr)
+	{
+		EquipSword();
+	}
+
 	UE_LOG(LogTemp, Warning, TEXT("=== MeleeAttack Called ==="));
 	UE_LOG(LogTemp, Warning, TEXT("bCanMeleeAttack: %s"), bCanMeleeAttack ? TEXT("true") : TEXT("false"));
 	UE_LOG(LogTemp, Warning, TEXT("CurrentComboCount: %d"), CurrentComboCount);
