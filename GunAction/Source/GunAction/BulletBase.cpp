@@ -5,6 +5,9 @@
    弾の元となる基底クラス.
 */
 #include "BulletBase.h"
+
+//他class.
+#include "PlayerManager.h"
 #include "EnemyManager.h"
 
 /// <summary>
@@ -15,8 +18,10 @@ ABulletBase::ABulletBase()
 	PrimaryActorTick.bCanEverTick = true;
 
     //初期化.
-    speed = 0;
-    vec   = FVector();
+    speed   = 0;
+    vec     = FVector::ZeroVector;
+    counter = 0.0f;
+    user    = nullptr; //最初はポインタなし.
     
     //コンポーネント作成.
     cmpSphere = CreateDefaultSubobject<USphereComponent>(TEXT("SphereComponent"));
@@ -50,6 +55,10 @@ void ABulletBase::OnOverlapBegin(
     //FString msg  = FString::Printf(TEXT("Hit: %s"), *name); //変数組み込み.
     //GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, msg); //表示.
 
+    if (!IsValid(user)) return;
+    if (!IsValid(OtherActor)) return;
+    if (OtherActor == this) return;
+
     //撃った人がプレイヤー.
     if (Cast<APlayerManager>(user)) {
         //敵に当たった.
@@ -72,7 +81,7 @@ void ABulletBase::OnOverlapBegin(
 /// set.
 /// </summary>
 /// <param name="user">撃った人のクラス</param>
-void ABulletBase::SetUser(AActor* _user) {
+void ABulletBase::SetUser(TObjectPtr<AActor> _user) {
     user = _user; //銃を撃った人を登録.
 }
 
@@ -83,23 +92,35 @@ void ABulletBase::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+    if (!IsValid(user)) return;
+
     const FVector befPos = GetActorLocation();              //移動前の座標.
     {   
-        vec.Z -= gravity;                                   //重力.
         SetActorLocation(GetActorLocation() + vec * speed); //前方向に移動.
     }
     const FVector nowPos = GetActorLocation();              //移動後の座標.
      
+    FColor color;
+
+    //撃った人がプレイヤー.
+    if (Cast<APlayerManager>(user)) {
+        color = FColor(0, 255, 255);
+    }
+    //撃った人が敵.
+    if (Cast<AEnemyManager>(user)) {
+        color = FColor(255, 0, 0);
+    }
+
     //弾の軌道.
     DrawDebugLine(
         GetWorld(),
         befPos,
         nowPos,
-        FColor(255, 0, 0), // 線の色
-        false,             // 永続かどうか
-        1.0f,              // 表示時間
+        color,  //線の色.
+        false,  //永続かどうか.
+        1.0f,   //表示時間.
         0,
-        1.0f               // 太さ
+        1.0f    //太さ.
     );
 
     //カウンター.

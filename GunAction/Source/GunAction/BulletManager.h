@@ -20,5 +20,5 @@ public:
 	virtual void Tick(float DeltaTime) override;
 
 	//ˆê’èŠÔŠu‚²‚Æ‚É”­ŽË.
-	void ShotInterval(); //TODO <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+	void ShotInterval(){} //TODO <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 };

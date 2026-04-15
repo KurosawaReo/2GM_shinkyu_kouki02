@@ -14,17 +14,15 @@
 #include "Components/AudioComponent.h"
 #include "Components/BoxComponent.h"
 #include "Particles/ParticleSystemComponent.h"
+#include "EngineUtils.h"
 
-//他クラスのinclude.
+//他class.
 #include "BulletBase.h"
 #include "Steam_Revolver.h"
-#include "EngineUtils.h" //←これは何?
 
 #pragma region "コンストラクタ"
 /// <summary>
-/// コンストラクタ - ACharacterBase
-/// プレイヤーキャラクターの初期設定を行う.
-/// カプセルコライダー、カメラ、スプリングアームなどの設定を初期化する.
+/// コンストラクタ
 /// </summary>
 ACharacterBase::ACharacterBase()
 {
@@ -46,17 +44,15 @@ ACharacterBase::ACharacterBase()
 	GetCharacterMovement()->MaxWalkSpeed = WalkSpeed;
 
 	//初期状態.
-	bIsSprinting = false;
-	CurrentAmmoCount = MaxAmmoPerMagazine;
 	bIsReloading = false;
 	RevolverGun = nullptr;
+	AmmoCount = MaxAmmoCount;
 }
 #pragma endregion
 
-#pragma region "ライフサイクル"
+#pragma region "基本処理"
 /// <summary>
-/// BeginPlay - ゲーム開始時またはアクタースポーン時に呼ばれる.
-/// UI（クロスヘア）の初期化を行う.
+/// BeginPlay - ゲーム開始時またはスポーン時に呼ばれる.
 /// </summary>
 // CharacterBase.cpp - BeginPlay内のアニメーション確認部分
 
@@ -66,11 +62,10 @@ void ACharacterBase::BeginPlay()
 
 	UE_LOG(LogTemp, Warning, TEXT("===== BeginPlay Start ====="));
 
-	GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, TEXT("ccc"));
-
-
 	//銃を装備.
 	EquipGun();
+	//デフォルトはダッシュ状態.
+	StopWalk();
 
 	//ボーンインデックスを初期化.
 	InitializeBoneIndices();
@@ -123,8 +118,7 @@ void ACharacterBase::BeginPlay()
 }
 
 /// <summary>
-/// Tick - 毎フレーム呼ばれる処理.
-/// アニメーション状態を更新する.
+/// Tick - 毎フレーム呼ばれる.
 /// </summary>
 /// <param name="DeltaTime">前フレームからの経過時間（秒）</param>
 void ACharacterBase::Tick(float DeltaTime)
@@ -139,6 +133,299 @@ void ACharacterBase::Tick(float DeltaTime)
 #pragma endregion
 
 #pragma region "移動"
+
+/// StartWalk - 歩く.
+/// </summary>
+void ACharacterBase::StartWalk()
+{
+	bIsDash = false;
+	GetCharacterMovement()->MaxWalkSpeed = WalkSpeed; //WalkSpeedに戻す.
+}
+/// <summary>
+/// StopWalk - 歩くのをやめる.
+/// </summary>
+void ACharacterBase::StopWalk()
+{
+	bIsDash = true;
+	GetCharacterMovement()->MaxWalkSpeed = RunSpeed;  //RunSpeedに変更.
+}
+
+#pragma endregion
+
+#pragma region "射撃"
+
+/// <summary>
+/// 発射チェック.
+/// </summary>
+/// <returns>問題ないならtrue</returns>
+bool ACharacterBase::ShotBulletCheck() {
+
+	//nullチェック.
+	if (GetWorld() == nullptr) {
+		return false;
+	}
+	if (BulletClass == nullptr) {
+		return false;
+	}
+	//弾薬がないならリロード開始.
+	if (AmmoCount <= 0) {
+		StartReload();
+		return false;
+	}
+	//リロード中は射撃不可.
+	if (bIsReloading) {
+		return false;
+	}
+
+	return true; //問題なし.
+}
+
+/// <summary>
+/// 弾を発射する.
+/// </summary>
+/// <param name="targetPos">目標座標</param>
+/// <returns>発射に成功したか</returns>
+bool ACharacterBase::ShotBulletExe(AActor* user, FVector targetPos)
+{
+	//弾の設定 - ①スポーン位置.
+	FVector SpawnLocation;
+	{
+		//銃を持ってる場合.
+		if (IsHaveGun) {
+			if (RevolverGun && RevolverGun->Muzzle) {
+				SpawnLocation = RevolverGun->Muzzle->GetComponentLocation();
+			}
+		}
+		//銃を持ってない場合.
+		else {
+			//ソケットの座標取得.
+			FVector loc = GetMesh()->GetSocketLocation(MuzzleSocketName);
+			SpawnLocation = loc;
+		}
+	}
+	//弾の設定 - ②発射方向.
+	FRotator BulletRotation;
+	{
+		FVector dir = targetPos - SpawnLocation;
+		dir.Normalize();
+		BulletRotation = dir.Rotation();
+		//ランダムで少しずらす.
+		BulletRotation += FRotator(
+			FMath::FRandRange(-shotPosRandom, shotPosRandom),
+			FMath::FRandRange(-shotPosRandom, shotPosRandom),
+			FMath::FRandRange(-shotPosRandom, shotPosRandom)
+		);
+	}
+	//弾の設定 - ③スポーンパラメーター.
+	FActorSpawnParameters SpawnParams;
+	{
+		SpawnParams.Owner = this;
+		SpawnParams.Instigator = GetInstigator();
+	}
+
+	//弾クラスを生成.
+	ABulletBase* Bullet = GetWorld()->SpawnActor<ABulletBase>(BulletClass, SpawnLocation, BulletRotation, SpawnParams);
+
+	//生成に成功したら.
+	if (Bullet != nullptr)
+	{
+		Bullet->SetUser(user); //撃った人を登録.
+
+		//弾薬を消費.
+		AmmoCount--;
+
+		UE_LOG(LogTemp, Warning, TEXT("Shot! Remaining Ammo: %d"), AmmoCount);
+
+		// マズルフラッシュエフェクトを再生
+		if (RevolverGun && RevolverGun->PS_Muzzleflash_Revolver)
+		{
+			// 古いパーティクルを確実に終了させてから新規に開始
+			RevolverGun->PS_Muzzleflash_Revolver->Deactivate();
+			RevolverGun->PS_Muzzleflash_Revolver->Activate(true);
+		}
+
+		if (RevolverGun && RevolverGun->S_Revolver_Shot_01_Cue)
+		{
+			RevolverGun->S_Revolver_Shot_01_Cue->Play(0.0f);
+			UE_LOG(LogTemp, Warning, TEXT("Shot Sound Played!"));
+		}
+
+		//銃の射撃アニメーションを再生
+		if (RevolverGun)
+		{
+			RevolverGun->PlayFireAnimation();
+		}
+
+		//射撃アニメーション.
+		PlayAnimMontage(EAnimationState::Shot);
+		//しばらくは射撃アニメーションを再生.
+		shotAnimTimer = initShotAnimTime;
+
+		return true; //発射成功.
+	}
+	return false; //発射失敗.
+}
+
+/// <summary>
+/// ボーンインデックスを初期化する関数
+/// </summary>
+void ACharacterBase::InitializeBoneIndices()
+{
+	if (!GetMesh()) {
+		UE_LOG(LogTemp, Error, TEXT("Mesh is NULL!"));
+		return;
+	}
+
+	//右腕のボーン名.
+	FName RightArmBoneName = FName(TEXT("arm_r"));     //上腕.
+	FName RightForearmBoneName = FName(TEXT("forearm_r")); //前腕.
+
+	//ボーンインデックスを取得.
+	RightArmBoneIndex = GetMesh()->GetBoneIndex(RightArmBoneName);
+	RightForearmBoneIndex = GetMesh()->GetBoneIndex(RightForearmBoneName);
+
+	if (RightArmBoneIndex != INDEX_NONE)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Right Arm Bone found at index: %d"), RightArmBoneIndex);
+	}
+	else
+	{
+		UE_LOG(LogTemp, Error, TEXT("Right Arm Bone '%s' not found!"), *RightArmBoneName.ToString());
+	}
+
+	if (RightForearmBoneIndex != INDEX_NONE)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Right Forearm Bone found at index: %d"), RightForearmBoneIndex);
+	}
+	else
+	{
+		UE_LOG(LogTemp, Error, TEXT("Right Forearm Bone '%s' not found!"), *RightForearmBoneName.ToString());
+	}
+}
+
+/// <summary>
+/// StartReload - リロード開始処理.
+/// リロード時間をセットして、弾薬を満タンに戻す.
+/// </summary>
+void ACharacterBase::StartReload()
+{
+	if (bIsReloading) {
+		return; //リロード中は処理しない.
+	}
+	if (AmmoCount >= MaxAmmoCount) {
+		return; //弾を使ってないならリロード不要.
+	}
+
+	bIsReloading = true;
+	ReloadTimerElapsed = 0.0f;
+
+	UE_LOG(LogTemp, Warning, TEXT("Reload Started! Duration: %f seconds"), ReloadDuration);
+
+	// 銃のシリンダーを開くアニメーション・音声を再生
+	if (RevolverGun)
+	{
+		if (RevolverGun->S_Revolver_Cylinder_Chamber_Open_Cue)
+		{
+			RevolverGun->S_Revolver_Cylinder_Chamber_Open_Cue->Activate();
+		}
+		// 銃のリロードアニメーションを再生
+		RevolverGun->PlayReloadAnimation();
+	}
+}
+
+/// <summary>
+/// UpdateReloadTimer - リロード時間の更新.
+/// リロード時間が経過したら弾薬を復旧し、リロード状態を解除する.
+/// </summary>
+/// <param name="DeltaTime">フレームの経過時間</param>
+void ACharacterBase::UpdateReloadTimer(float DeltaTime)
+{
+	if (!bIsReloading) {
+		return; //リロードしてないなら処理しない.
+	}
+
+	ReloadTimerElapsed += DeltaTime; //リロード時間経過.
+
+	if (ReloadTimerElapsed >= ReloadDuration)
+	{
+		//リロード完了.
+		bIsReloading = false;
+		AmmoCount = MaxAmmoCount; //弾の数復活.
+
+		UE_LOG(LogTemp, Warning, TEXT("Reload Complete! Ammo: %d"), AmmoCount);
+
+		//銃のシリンダーを閉じるアニメーション・音声を再生.
+		if (RevolverGun)
+		{
+			if (RevolverGun->S_Revolver_Cylinder_Chamber_Close_Cue)
+			{
+				RevolverGun->S_Revolver_Cylinder_Chamber_Close_Cue->Activate();
+			}
+		}
+	}
+}
+
+/// <summary>
+/// EquipGun - 銃を装備する処理.
+/// RevolverGunClassから銃をスポーンしてプレイヤーに装備させる.
+/// </summary>
+void ACharacterBase::EquipGun()
+{
+	if (RevolverGunClass == nullptr)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("RevolverGunClass is not set! Please set it in Blueprint."));
+		return;
+	}
+
+	FActorSpawnParameters SpawnParams;
+	SpawnParams.Owner = this;
+	SpawnParams.Instigator = GetInstigator();
+
+	//銃をスポーン.
+	RevolverGun = GetWorld()->SpawnActor<ASteam_Revolver>(RevolverGunClass, FVector::ZeroVector, FRotator::ZeroRotator, SpawnParams);
+
+	if (RevolverGun)
+	{
+		//銃を装備(ソケットにアタッチする)
+		RevolverGun->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetIncludingScale, GunAttachSocketName);
+
+		//銃の見た目設定.
+		if (!IsHaveGun) {
+			RevolverGun->DisableGunMesh();
+		}
+
+		//銃のコリジョンは不要なため無効化.
+		if (RevolverGun->BoxCollision)
+		{
+			RevolverGun->BoxCollision->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+		}
+		//スケルタルメッシュのコリジョンも無効化.
+		if (RevolverGun->RevolverMain)
+		{
+			RevolverGun->RevolverMain->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+		}
+
+		UE_LOG(LogTemp, Warning, TEXT("Gun equipped successfully!"));
+		AmmoCount = MaxAmmoCount; //弾の残数を設定.
+	}
+	else
+	{
+		UE_LOG(LogTemp, Error, TEXT("Failed to spawn revolver gun!"));
+	}
+}
+
+/// <summary>
+/// 腕のボーンを回転させる関数
+/// </summary>
+void ACharacterBase::RotateArmBones(const FRotator& TargetRotation)
+{
+	// キャラクター全体の回転で対応
+	// 腕のボーン操作はアニメーションBP側で自動的に追従します
+	UE_LOG(LogTemp, Warning, TEXT("Character rotation - Pitch: %f, Yaw: %f"), TargetRotation.Pitch, TargetRotation.Yaw);
+}
+#pragma endregion
+
+#pragma region "アニメーション"
 
 /// <summary>
 /// アニメーション状態を更新.
@@ -192,7 +479,7 @@ void ACharacterBase::UpdateAnimState(float DeltaTime)
 					bIsMoving = true;
 
 					//スプリント中か判定.
-					if (bIsSprinting)
+					if (bIsDash)
 					{
 						NewAnimationState = EAnimationState::Run;
 					}
@@ -213,39 +500,6 @@ void ACharacterBase::UpdateAnimState(float DeltaTime)
 	}
 }
 
-/*
-　【注意】PlayAnimMontage関数にまとめた。
-
-/// <summary>
-/// 射撃アニメーション.
-/// </summary>
-void ACharacterBase::PlayFireAnimMontage()
-{
-	if (ShotAnimMontage == nullptr)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("ShotAnimMontage is not set!"));
-		return;
-	}
-
-	if (GetMesh() == nullptr)
-	{
-		UE_LOG(LogTemp, Error, TEXT("Mesh is invalid!"));
-		return;
-	}
-
-	// アニメーションインスタンスを取得
-	class UAnimInstance* FireAnimInstance = GetMesh()->GetAnimInstance();
-	if (FireAnimInstance == nullptr)
-	{
-		UE_LOG(LogTemp, Error, TEXT("AnimInstance is null!"));
-		return;
-	}
-
-	UE_LOG(LogTemp, Warning, TEXT("Playing player fire montage: %s"), *ShotAnimMontage->GetName());
-	FireAnimInstance->Montage_Play(ShotAnimMontage, 1.0f);
-}
-*/
-
 /// <summary>
 /// 移動, ジャンプ, 射撃などのアニメーション切り替え.
 /// </summary>
@@ -261,29 +515,29 @@ void ACharacterBase::PlayAnimMontage(EAnimationState AnimState)
 	UAnimMontage* MontageToPlay = nullptr;
 	switch (AnimState)
 	{
-		case EAnimationState::Idle:
-			MontageToPlay = IdleAnimMontage;
-			break;
-		case EAnimationState::Move:
-			MontageToPlay = MoveAnimMontage;
-			break;
-		case EAnimationState::Run:
-			MontageToPlay = SprintAnimMontage;
-			break;
-		case EAnimationState::JumpUp:
-			MontageToPlay = JumpUpAnimMontage;
-			break;
-		case EAnimationState::JumpMid:
-			MontageToPlay = JumpMidAnimMontage;
-			break;
-		case EAnimationState::JumpDown:
-			MontageToPlay = JumpDownAnimMontage;
-			break;
-		case EAnimationState::Shot:
-			MontageToPlay = ShotAnimMontage;
-			break;
+	case EAnimationState::Idle:
+		MontageToPlay = IdleAnimMontage;
+		break;
+	case EAnimationState::Move:
+		MontageToPlay = MoveAnimMontage;
+		break;
+	case EAnimationState::Run:
+		MontageToPlay = SprintAnimMontage;
+		break;
+	case EAnimationState::JumpUp:
+		MontageToPlay = JumpUpAnimMontage;
+		break;
+	case EAnimationState::JumpMid:
+		MontageToPlay = JumpMidAnimMontage;
+		break;
+	case EAnimationState::JumpDown:
+		MontageToPlay = JumpDownAnimMontage;
+		break;
+	case EAnimationState::Shot:
+		MontageToPlay = ShotAnimMontage;
+		break;
 
-		default: break;
+	default: break;
 	}
 
 	//nullチェック.
@@ -308,260 +562,5 @@ void ACharacterBase::PlayAnimMontage(EAnimationState AnimState)
 	//アニメーション再生.
 	UE_LOG(LogTemp, Warning, TEXT("Playing montage: %s for state: %d"), *MontageToPlay->GetName(), (int32)AnimState);
 	AnimInstance->Montage_Play(MontageToPlay, 1.0f);
-
-	BulletUser = this; //←thisを保存.
-	FOnMontageEnded EndDelegate;
-	EndDelegate.BindUObject(this, &ACharacterBase::OnMontageEnded);
-	AnimInstance->Montage_SetEndDelegate(EndDelegate, MontageToPlay);
-}
-#pragma endregion
-
-#pragma region "射撃"
-
-/// <summary>
-/// 弾を発射する.
-/// </summary>
-/// <param name="targetPos">目標座標</param>
-/// <returns>発射に成功したか</returns>
-bool ACharacterBase::ShotBulletExe(AActor* user, FVector targetPos)
-{
-	//弾の設定 - ①スポーン位置.
-	FVector SpawnLocation;
-	{
-		//TODO: マズルがあること前提の処理, 銃を撃たない敵はどうするか.
-		if (RevolverGun && RevolverGun->Muzzle) {
-			SpawnLocation = RevolverGun->Muzzle->GetComponentLocation();
-		}
-	}
-	//弾の設定 - ②発射方向.
-	FRotator BulletRotation;
-	{
-		FVector dir = targetPos - SpawnLocation;
-		dir.Normalize();
-		BulletRotation = dir.Rotation();
-	}
-	//弾の設定 - ③スポーンパラメーター.
-	FActorSpawnParameters SpawnParams;
-	{
-		SpawnParams.Owner = this;
-		SpawnParams.Instigator = GetInstigator();
-	}
-
-	//弾クラスを生成.
-	ABulletBase* Bullet = GetWorld()->SpawnActor<ABulletBase>(BulletClass, SpawnLocation, BulletRotation, SpawnParams);
-
-	//生成に成功したら.
-	if (Bullet != nullptr)
-	{
-		Bullet->SetUser(user); //撃った人を登録.
-
-		// 弾薬を消費
-		CurrentAmmoCount--;
-
-		UE_LOG(LogTemp, Warning, TEXT("Shot! Remaining Ammo: %d"), CurrentAmmoCount);
-
-		// マズルフラッシュエフェクトを再生
-		if (RevolverGun && RevolverGun->PS_Muzzleflash_Revolver)
-		{
-			// 古いパーティクルを確実に終了させてから新規に開始
-			RevolverGun->PS_Muzzleflash_Revolver->Deactivate();
-			RevolverGun->PS_Muzzleflash_Revolver->Activate(true);
-		}
-
-		if (RevolverGun && RevolverGun->S_Revolver_Shot_01_Cue)
-		{
-			RevolverGun->S_Revolver_Shot_01_Cue->Play(0.0f);
-			UE_LOG(LogTemp, Warning, TEXT("Shot Sound Played!"));
-		}
-
-		//銃の射撃アニメーションを再生
-		if (RevolverGun)
-		{
-			RevolverGun->PlayFireAnimation();
-		}
-
-		//射撃アニメーション.
-		PlayAnimMontage(EAnimationState::Shot);
-		//しばらくは射撃アニメーションを再生.
-		shotAnimTimer = initShotAnimTime;
-
-		return true; //発射成功.
-	}
-	return false; //発射失敗.
-}
-
-/// <summary>
-/// ボーンインデックスを初期化する関数
-/// </summary>
-void ACharacterBase::InitializeBoneIndices()
-{
-	if (!GetMesh())
-	{
-		UE_LOG(LogTemp, Error, TEXT("Mesh is NULL!"));
-		return;
-	}
-
-	// 右腕のボーン名（スケルトンに合わせて変更してください）
-	FName RightArmBoneName = FName(TEXT("arm_r"));      // 上腕
-	FName RightForearmBoneName = FName(TEXT("forearm_r")); // 前腕
-
-	// ボーンインデックスを取得
-	RightArmBoneIndex = GetMesh()->GetBoneIndex(RightArmBoneName);
-	RightForearmBoneIndex = GetMesh()->GetBoneIndex(RightForearmBoneName);
-
-	if (RightArmBoneIndex != INDEX_NONE)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("Right Arm Bone found at index: %d"), RightArmBoneIndex);
-	}
-	else
-	{
-		UE_LOG(LogTemp, Error, TEXT("Right Arm Bone '%s' not found!"), *RightArmBoneName.ToString());
-	}
-
-	if (RightForearmBoneIndex != INDEX_NONE)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("Right Forearm Bone found at index: %d"), RightForearmBoneIndex);
-	}
-	else
-	{
-		UE_LOG(LogTemp, Error, TEXT("Right Forearm Bone '%s' not found!"), *RightForearmBoneName.ToString());
-	}
-}
-
-void ACharacterBase::OnMontageEnded(UAnimMontage* Montage, bool bInterrupted)
-{
-	GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, TEXT("aaaa"));
-
-	if (!bInterrupted)
-	{
-		bool ret = ShotBulletExe(BulletUser, BulletTargetPosition);
-		if (ret)
-		{
-			if (CrosshairWidget)
-			{
-				CrosshairWidget->OnShotEffect();
-		    }
-		}
-	}
-}
-/// <summary>
-/// StartReload - リロード開始処理.
-/// リロード時間をセットして、弾薬を満タンに戻す.
-/// </summary>
-void ACharacterBase::StartReload()
-{
-	if (bIsReloading)
-	{
-		return;
-	}
-	// 既に満タンの場合はリロード不要
-	if (CurrentAmmoCount >= MaxAmmoPerMagazine)
-	{
-		return;
-	}
-
-	bIsReloading = true;
-	ReloadTimerElapsed = 0.0f;
-
-	UE_LOG(LogTemp, Warning, TEXT("Reload Started! Duration: %f seconds"), ReloadDuration);
-
-	// 銃のシリンダーを開くアニメーション・音声を再生
-	if (RevolverGun)
-	{
-		if (RevolverGun->S_Revolver_Cylinder_Chamber_Open_Cue)
-		{
-			RevolverGun->S_Revolver_Cylinder_Chamber_Open_Cue->Activate();
-		}
-		// 銃のリロードアニメーションを再生
-		RevolverGun->PlayReloadAnimation();
-	}
-}
-
-/// <summary>
-/// UpdateReloadTimer - リロード時間の更新.
-/// リロード時間が経過したら弾薬を復旧し、リロード状態を解除する.
-/// </summary>
-/// <param name="DeltaTime">フレームの経過時間</param>
-void ACharacterBase::UpdateReloadTimer(float DeltaTime)
-{
-	if (!bIsReloading)
-	{
-		return;
-	}
-
-	ReloadTimerElapsed += DeltaTime;
-
-	if (ReloadTimerElapsed >= ReloadDuration)
-	{
-		// リロード完了
-		bIsReloading = false;
-		CurrentAmmoCount = MaxAmmoPerMagazine;
-
-		UE_LOG(LogTemp, Warning, TEXT("Reload Complete! Ammo: %d"), CurrentAmmoCount);
-
-		// 銃のシリンダーを閉じるアニメーション・音声を再生
-		if (RevolverGun)
-		{
-			if (RevolverGun->S_Revolver_Cylinder_Chamber_Close_Cue)
-			{
-				RevolverGun->S_Revolver_Cylinder_Chamber_Close_Cue->Activate();
-			}
-		}
-	}
-}
-
-/// <summary>
-/// EquipGun - 銃を装備する処理.
-/// RevolverGunClassから銃をスポーンしてプレイヤーに装備させる.
-/// </summary>
-void ACharacterBase::EquipGun()
-{
-	if (RevolverGunClass == nullptr)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("RevolverGunClass is not set! Please set it in Blueprint."));
-		return;
-	}
-
-	// 銃をスポーン
-	FActorSpawnParameters SpawnParams;
-	SpawnParams.Owner = this;
-	SpawnParams.Instigator = GetInstigator();
-
-	RevolverGun = GetWorld()->SpawnActor<ASteam_Revolver>(RevolverGunClass, FVector::ZeroVector, FRotator::ZeroRotator, SpawnParams);
-
-	if (RevolverGun)
-	{
-		// 銃をメッシュにアタッチ（ソケット: "hand_r" 右手に装備）
-		RevolverGun->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetIncludingScale, TEXT("hand_r"));
-
-		// 銃のコリジョンを無効化（プレイヤーに装備されるため不要）
-		if (RevolverGun->Box)
-		{
-			RevolverGun->Box->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-		}
-
-		// スケルタルメッシュのコリジョンも無効化
-		if (RevolverGun->Steam_Revolver)
-		{
-			RevolverGun->Steam_Revolver->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-		}
-
-		UE_LOG(LogTemp, Warning, TEXT("Gun equipped successfully!"));
-		CurrentAmmoCount = MaxAmmoPerMagazine;
-	}
-	else
-	{
-		UE_LOG(LogTemp, Error, TEXT("Failed to spawn revolver gun!"));
-	}
-}
-
-/// <summary>
-/// 腕のボーンを回転させる関数
-/// </summary>
-void ACharacterBase::RotateArmBones(const FRotator& TargetRotation)
-{
-	// キャラクター全体の回転で対応
-	// 腕のボーン操作はアニメーションBP側で自動的に追従します
-	UE_LOG(LogTemp, Warning, TEXT("Character rotation - Pitch: %f, Yaw: %f"), TargetRotation.Pitch, TargetRotation.Yaw);
 }
 #pragma endregion

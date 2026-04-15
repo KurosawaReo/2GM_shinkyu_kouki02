@@ -44,13 +44,12 @@ private:
 	FVector vec;     //進行方向.
 	float   counter; //経過時間.
 
-	AActor* user;    //誰が撃った弾か.
+	UPROPERTY()
+	TObjectPtr<AActor> user; //誰が撃った弾か.
 
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = MyProperty)
 	float   speed      = 1;  //速度.
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = MyProperty)
-	float   gravity    = 1;  //重力.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = MyProperty)
 	float   deleteTime = 50; //消滅までの時間.
 
@@ -72,7 +71,7 @@ protected:
 
 public:	
 	//set.
-	virtual void SetUser(AActor* user);
+	virtual void SetUser(TObjectPtr<AActor> user);
 	//常に実行.
 	virtual void Tick(float DeltaTime) override;
 };
