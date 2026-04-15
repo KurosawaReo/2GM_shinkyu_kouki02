@@ -66,6 +66,9 @@ void ACharacterBase::BeginPlay()
 
 	UE_LOG(LogTemp, Warning, TEXT("===== BeginPlay Start ====="));
 
+	GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, TEXT("ccc"));
+
+
 	//銃を装備.
 	EquipGun();
 
@@ -305,6 +308,11 @@ void ACharacterBase::PlayAnimMontage(EAnimationState AnimState)
 	//アニメーション再生.
 	UE_LOG(LogTemp, Warning, TEXT("Playing montage: %s for state: %d"), *MontageToPlay->GetName(), (int32)AnimState);
 	AnimInstance->Montage_Play(MontageToPlay, 1.0f);
+
+	BulletUser = this; //←thisを保存.
+	FOnMontageEnded EndDelegate;
+	EndDelegate.BindUObject(this, &ACharacterBase::OnMontageEnded);
+	AnimInstance->Montage_SetEndDelegate(EndDelegate, MontageToPlay);
 }
 #pragma endregion
 
@@ -420,6 +428,22 @@ void ACharacterBase::InitializeBoneIndices()
 	}
 }
 
+void ACharacterBase::OnMontageEnded(UAnimMontage* Montage, bool bInterrupted)
+{
+	GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, TEXT("aaaa"));
+
+	if (!bInterrupted)
+	{
+		bool ret = ShotBulletExe(BulletUser, BulletTargetPosition);
+		if (ret)
+		{
+			if (CrosshairWidget)
+			{
+				CrosshairWidget->OnShotEffect();
+		    }
+		}
+	}
+}
 /// <summary>
 /// StartReload - リロード開始処理.
 /// リロード時間をセットして、弾薬を満タンに戻す.
@@ -430,7 +454,6 @@ void ACharacterBase::StartReload()
 	{
 		return;
 	}
-
 	// 既に満タンの場合はリロード不要
 	if (CurrentAmmoCount >= MaxAmmoPerMagazine)
 	{

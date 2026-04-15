@@ -30,11 +30,7 @@ class GUNACTION_API APlayerManager : public ACharacterBase
 	GENERATED_BODY()
 	//▼ ===== 変数 ===== ▼.
 public:
-	//クロスヘア.
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "MyProperty|Player|UI")
-	TSubclassOf<UCrosshairWidget> CrosshairWidgetClass;
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "MyProperty|Player|UI")
-	UCrosshairWidget* CrosshairWidget;
+	
 	//カメラコンポーネント
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "MyProperty|Player|Camera")
 	class USpringArmComponent* CameraBoom;
@@ -71,16 +67,16 @@ public:
 	UAnimMontage* SwordSlashAnimMontage;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Player|MeleeAttack")
-UAnimMontage* SwordDoubleSlashAnimMontage;
+    UAnimMontage* SwordDoubleSlashAnimMontage;
 
-UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Player|MeleeAttack")
-UAnimMontage* SwordWaveAnimMontage;
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Player|MeleeAttack")
+    UAnimMontage* SwordWaveAnimMontage;
 
-UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Player|MeleeAttack")
-UAnimMontage* SwordPowerAttackAnimMontage;
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Player|MeleeAttack")
+    UAnimMontage* SwordPowerAttackAnimMontage;
 
-UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Player|MeleeAttack")
-UAnimMontage* SwordFinalStrikeAnimMontage;
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Player|MeleeAttack")
+    UAnimMontage* SwordFinalStrikeAnimMontage;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Player|MeleeAttack")
 	UAnimMontage* KickAnimMontage;
