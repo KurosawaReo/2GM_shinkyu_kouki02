@@ -19,6 +19,9 @@
 #include "Components/BoxComponent.h"
 #include "Particles/ParticleSystemComponent.h"
 
+//他class.
+//#include "Steam_Revolver.h"
+
 //コンストラクタ.
 APlayerManager::APlayerManager() {
 
@@ -63,7 +66,6 @@ void APlayerManager::Tick(float DeltaTime) {
 #pragma region "入力処理"
 /// <summary>
 /// SetupPlayerInputComponent - プレイヤー入力の設定.
-/// キーボード、マウスなどの入力を各アクションにバインドする.
 /// </summary>
 /// <param name="PlayerInputComponent">プレイヤー入力コンポーネント</param>
 void APlayerManager::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -72,35 +74,35 @@ void APlayerManager::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 }
 /// <summary>
 /// Input - 移動処理および入力バインド.
-/// キャラクターの移動、カメラ操作、ジャンプ、スプリント、射撃などの入力をセットアップする.
+/// 移動、カメラ、ジャンプ、ダッシュ、射撃などの操作を登録.
 /// </summary>
 /// <param name="PlayerInputComponent">プレイヤー入力コンポーネント</param>
 void APlayerManager::Input(UInputComponent* PlayerInputComponent)
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 
-	//移動入力.
+	//移動.
 	PlayerInputComponent->BindAxis("MoveForward", this, &APlayerManager::MoveForward);
 	PlayerInputComponent->BindAxis("MoveRight",   this, &APlayerManager::MoveRight);
 
-	//カメラ入力.
-	PlayerInputComponent->BindAxis("Turn",       this, &APawn::AddControllerYawInput);
-	PlayerInputComponent->BindAxis("LookUp",     this, &APawn::AddControllerPitchInput);
-	PlayerInputComponent->BindAxis("TurnRate",   this, &APlayerManager::TurnAtRate);
+	//カメラ.
+	PlayerInputComponent->BindAxis("Turn", this, &APawn::AddControllerYawInput);
+	PlayerInputComponent->BindAxis("LookUp", this, &APawn::AddControllerPitchInput);
+	PlayerInputComponent->BindAxis("TurnRate", this, &APlayerManager::TurnAtRate);
 	PlayerInputComponent->BindAxis("LookUpRate", this, &APlayerManager::LookUpAtRate);
 
-	//ジャンプ入力.
-	PlayerInputComponent->BindAction("Jump", IE_Pressed,  this, &ACharacter::Jump);
+	//ジャンプ.
+	PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &ACharacter::Jump);
 	PlayerInputComponent->BindAction("Jump", IE_Released, this, &ACharacter::StopJumping);
 
-	//スプリント入力.
-	PlayerInputComponent->BindAction("Sprint", IE_Pressed,  this, &APlayerManager::StartSprint);
-	PlayerInputComponent->BindAction("Sprint", IE_Released, this, &APlayerManager::StopSprint);
+	//ダッシュ.
+	PlayerInputComponent->BindAction("Sprint", IE_Pressed, this, &APlayerManager::StartWalk);
+	PlayerInputComponent->BindAction("Sprint", IE_Released, this, &APlayerManager::StopWalk);
 
-	//弾発射入力.
-	PlayerInputComponent->BindAction("Fire",   IE_Pressed, this, &APlayerManager::ShotBullet);
+	//弾発射.
+	PlayerInputComponent->BindAction("Fire", IE_Pressed, this, &APlayerManager::ShotBullet);
 
-	//リロード入力.
+	//リロード.
 	PlayerInputComponent->BindAction("Reload", IE_Pressed, this, &APlayerManager::StartReload);
 
 	//近接攻撃入力
@@ -471,8 +473,7 @@ void APlayerManager::MeleeAttack()
 
 #pragma region "移動"
 /// <summary>
-/// MoveForward - 前後方向の移動処理.
-/// コントローラーの入力に応じてキャラクターを前後に移動させる.
+/// MoveForward - 前後方向の移動.
 /// </summary>
 /// <param name="Value">入力値（-1.0 ～ 1.0）</param>
 void APlayerManager::MoveForward(float Value)
@@ -483,12 +484,12 @@ void APlayerManager::MoveForward(float Value)
 		const FRotator Rotation = Controller->GetControlRotation();
 		const FRotator YawRotation(0, Rotation.Yaw, 0);
 		const FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
+		//前後に移動.
 		AddMovementInput(Direction, Value);
 	}
 }
 /// <summary>
-/// MoveRight - 左右方向の移動処理.
-/// コントローラーの入力に応じてキャラクターを左右に移動させる.
+/// MoveRight - 左右方向の移動.
 /// </summary>
 /// <param name="Value">入力値（-1.0 ～ 1.0）</param>
 void APlayerManager::MoveRight(float Value)
@@ -499,6 +500,7 @@ void APlayerManager::MoveRight(float Value)
 		const FRotator Rotation = Controller->GetControlRotation();
 		const FRotator YawRotation(0, Rotation.Yaw, 0);
 		const FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
+		//左右に移動.
 		AddMovementInput(Direction, Value);
 	}
 }
@@ -520,28 +522,12 @@ void APlayerManager::LookUpAtRate(float Rate)
 {
 	AddControllerPitchInput(Rate * BaseLookUpRate * GetWorld()->GetDeltaSeconds());
 }
-/// <summary>
-/// StartSprint - スプリント開始処理.
-/// キャラクターの移動速度をWalkSpeedからRunSpeedに変更する.
-/// </summary>
-void APlayerManager::StartSprint()
-{
-	bIsSprinting = true;
-	GetCharacterMovement()->MaxWalkSpeed = RunSpeed;
-}
-/// <summary>
-/// StopSprint - スプリント終了処理.
-/// キャラクターの移動速度をRunSpeedからWalkSpeedに戻す.
-/// </summary>
-void APlayerManager::StopSprint()
-{
-	bIsSprinting = false;
-	GetCharacterMovement()->MaxWalkSpeed = WalkSpeed;
-}
 #pragma endregion
 
 
 #pragma region "銃システム"
+
+/*
 
 /// <summary>
 /// GetMuzzleLocation - マズル位置の取得.
@@ -586,6 +572,16 @@ FRotator APlayerManager::GetMuzzleRotation() const
 }
 
 void APlayerManager::UpdateHandIK()
+	if (GunMesh->DoesSocketExist(MuzzleSocketName))
+	{
+		return RevolverGun->GetActorRotation();
+	}
+
+	return GunMesh->GetSocketRotation(MuzzleSocketName);
+}
+*/
+
+void APlayerManager::InitializeArmIK()
 {
 	if (RevolverGun == nullptr || FollowCamera == nullptr)
 	{
@@ -615,7 +611,7 @@ void APlayerManager::UpdateHandIK()
 /// GetCameraVector - カメラからの方向ベクトルを取得.
 /// (弾の発射方向などの計算に使用)
 /// </summary>
-/// <param name="dir">"Forward", "Right", "up" のどれか</param>
+/// <param name="dir">"Forward", "Right", "Up" のどれか</param>
 /// <returns>ベクトル</returns>
 FVector APlayerManager::GetCameraVector(FString dir) const
 {
@@ -710,27 +706,12 @@ void APlayerManager::InitializeUI()
 /// </summary>
 void APlayerManager::ShotBullet()
 {
-	//リロード中は射撃不可.
-	if (bIsReloading)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("Reloading... Cannot shoot!"));
-		return;
-	}
-	//弾薬がない場合はリロード開始.
-	if (CurrentAmmoCount <= 0)
-	{
-		StartReload();
-		return;
-	}
-	//BulletClassのnullチェック.
-	if (BulletClass == nullptr)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("BulletClass is not set! Please set it in Blueprint."));
+	//発射していいかチェック.
+	if (!ShotBulletCheck()) {
 		return;
 	}
 	//nullチェック.
-	if (FollowCamera == nullptr || GetWorld() == nullptr)
-	{
+	if (FollowCamera == nullptr) {
 		return;
 	}
 
@@ -739,7 +720,7 @@ void APlayerManager::ShotBullet()
 	const FVector2D CrosshairScreenLocation = ViewportSize / 2.0f; // 画面中央.
 
 	//スクリーン座標をワールド座標に変換.
-	FVector CrosshairWorldLocation = FVector::ZeroVector;
+	FVector CrosshairWorldLocation  = FVector::ZeroVector;
 	FVector CrosshairWorldDirection = FVector::ZeroVector;
 
 	APlayerController* PlayerController = Cast<APlayerController>(Controller);
@@ -759,7 +740,7 @@ void APlayerManager::ShotBullet()
 	//弾を発射.
 	bool ret = ShotBulletExe(this, TargetPosition);
 	if (ret) {
-		//ショット時にクロスヘアのエフェクトを実行
+		//ショット時にクロスヘアのエフェクトを実行.
 		if (CrosshairWidget)
 		{
 			CrosshairWidget->OnShotEffect();
@@ -779,8 +760,7 @@ void APlayerManager::ShotBullet()
 		SetActorRotation(NewRotation);
 	}
 
-	//プレイヤーアニメーション.
-	PlayAnimMontage(EAnimationState::Shot);
+//	PlayAnimMontage(EAnimationState::Shot);
 }
 #pragma endregion
 
@@ -788,7 +768,7 @@ void APlayerManager::ShotBullet()
 //弾が当たったら実行される.
 void APlayerManager::OnBulletHit() {
 
-	GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, TEXT("hit player"));
+//	GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, TEXT("hit player"));
 	//TODO
 }
 //死亡処理.

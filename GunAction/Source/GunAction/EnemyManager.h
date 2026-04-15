@@ -10,9 +10,19 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "PlayerManager.h"
 #include "CharacterBase.h" //親クラス.
 #include "EnemyManager.generated.h"
+
+/// <summary>
+/// AI行動のstate.
+/// </summary>
+UENUM(BlueprintType)
+enum class EAIState : uint8
+{
+	Goto  UMETA(DisplayName = "Goto"),  //突っ込む.
+	StepL UMETA(DisplayName = "StepL"), //左に避ける.
+	StepR UMETA(DisplayName = "StepR"), //右に避ける.
+};
 
 /// <summary>
 /// 敵クラス.
@@ -24,30 +34,35 @@ class GUNACTION_API AEnemyManager : public ACharacterBase
 	
 //▼ ===== 変数 ===== ▼.
 public:
-	//敵の今の状態.
+	//キャラクター状態.
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "MyProperty|Enemy")
-	EEnemyState CurrentState;
+	ECharaState CurrentState;
+	//AI行動状態.
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "MyProperty|Enemy")
+	EAIState AIState;
 
 	//死亡時のエフェクト.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Enemy")
 	class UParticleSystem* DeathEffect;
-
 	//死亡時のサウンド.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Enemy")
 	class USoundBase* DeathSound;
 
-	//射撃用タイマー.
-	FTimerHandle tmShot;
 	//射撃間隔.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Enemy|Shot")
-	float shotTime = 1.0f;
-	//射撃の正確さ(どれだけずらすか)
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Enemy|Shot")
-	float shotPosRandom = 1.0f;
+	float spanShot = 0.2f;
+
+	//AI行動選択間隔.
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Enemy|AI")
+	float spanChangeAI = 1.0f;
+
+	//タイマー.
+	FTimerHandle tmShot;	 //射撃間隔.
+	FTimerHandle tmChangeAI; //AI行動選択間隔.
 
 //▼ ===== 関数 ===== ▼.
 public:
-#pragma region "get"
+#pragma region "Get"
 	UFUNCTION(BlueprintCallable, Category = "Enemy")
 	bool IsDead() const;					//死亡状態の取得.
 #pragma endregion
@@ -56,6 +71,14 @@ public:
 	AEnemyManager();						//コンストラクタ.
 	void BeginPlay()           override;	//召喚した瞬間.
 	void Tick(float DeltaTime) override;	//常に実行.
+#pragma endregion
+
+#pragma region "AI"
+	void ChangeAIState();
+#pragma endregion
+
+#pragma region "射撃"
+	void ShotBullet() override; //override
 #pragma endregion
 
 #pragma region "ダメージ処理"
@@ -67,9 +90,5 @@ public:
 	void PlayDeathSound();					//死亡音再生.
 
 	void DisableComponents();				//コンポーネント無効化.
-#pragma endregion
-
-#pragma region "射撃"
-	void ShotBullet() override; //override
 #pragma endregion
 };
