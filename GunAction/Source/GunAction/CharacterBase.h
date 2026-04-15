@@ -137,6 +137,7 @@ public:
 	UPROPERTY(VisibleAnywhere, Category = "MyProperty|Base|Animation")
 	int32 RightForearmBoneIndex = INDEX_NONE;
 
+	//アニメーション関係.
 	float shotAnimTimer;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Base|Animation")

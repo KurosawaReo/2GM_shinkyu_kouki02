@@ -54,6 +54,8 @@ ACharacterBase::ACharacterBase()
 /// <summary>
 /// BeginPlay - ゲーム開始時またはスポーン時に呼ばれる.
 /// </summary>
+// CharacterBase.cpp - BeginPlay内のアニメーション確認部分
+
 void ACharacterBase::BeginPlay()
 {
 	Super::BeginPlay();
@@ -73,6 +75,24 @@ void ACharacterBase::BeginPlay()
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Mesh found: %s"), *GetMesh()->GetName());
 
+		// スケルタルメッシュアセットの確認
+		USkeletalMesh* SkeletalMesh = GetMesh()->GetSkeletalMeshAsset();
+		if (SkeletalMesh)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Skeletal Mesh Asset: %s"), *SkeletalMesh->GetName());
+		}
+
+		// アニメーションBlueprintの確認
+		if (GetMesh()->GetAnimClass())
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Animation Class Set: %s"), *GetMesh()->GetAnimClass()->GetName());
+		}
+		else
+		{
+			UE_LOG(LogTemp, Error, TEXT("ERROR: Animation Class is NOT set in Mesh!"));
+		}
+
+		// AnimInstanceの確認
 		UAnimInstance* AnimInst = GetMesh()->GetAnimInstance();
 		if (AnimInst)
 		{
@@ -80,7 +100,7 @@ void ACharacterBase::BeginPlay()
 		}
 		else
 		{
-			UE_LOG(LogTemp, Error, TEXT("AnimInstance is NULL!"));
+			UE_LOG(LogTemp, Error, TEXT("ERROR: AnimInstance is NULL! Check Animation Blueprint assignment!"));
 		}
 	}
 	else
@@ -92,6 +112,7 @@ void ACharacterBase::BeginPlay()
 	UE_LOG(LogTemp, Warning, TEXT("IdleAnimMontage: %s"), IdleAnimMontage ? TEXT("Set") : TEXT("NULL"));
 	UE_LOG(LogTemp, Warning, TEXT("MoveAnimMontage: %s"), MoveAnimMontage ? TEXT("Set") : TEXT("NULL"));
 	UE_LOG(LogTemp, Warning, TEXT("SprintAnimMontage: %s"), SprintAnimMontage ? TEXT("Set") : TEXT("NULL"));
+	UE_LOG(LogTemp, Warning, TEXT("ShotAnimMontage: %s"), ShotAnimMontage ? TEXT("Set") : TEXT("NULL"));
 
 	UE_LOG(LogTemp, Warning, TEXT("===== BeginPlay End ====="));
 }
@@ -113,7 +134,6 @@ void ACharacterBase::Tick(float DeltaTime)
 
 #pragma region "移動"
 
-/// <summary>
 /// StartWalk - 歩く.
 /// </summary>
 void ACharacterBase::StartWalk()

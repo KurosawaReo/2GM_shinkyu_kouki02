@@ -132,6 +132,7 @@ void AEnemyManager::ShotBullet()
 void AEnemyManager::OnBulletHit() 
 {
 //	GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, TEXT("hit enemy"));
+
 	Die(); //€–Sˆ—.
 }
 //€–Sˆ—.
