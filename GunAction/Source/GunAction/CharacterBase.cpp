@@ -277,11 +277,11 @@ void ACharacterBase::InitializeBoneIndices()
 	}
 
 	//右腕のボーン名.
-	FName RightArmBoneName     = FName(TEXT("arm_r"));     //上腕.
+	FName RightArmBoneName = FName(TEXT("arm_r"));     //上腕.
 	FName RightForearmBoneName = FName(TEXT("forearm_r")); //前腕.
 
 	//ボーンインデックスを取得.
-	RightArmBoneIndex     = GetMesh()->GetBoneIndex(RightArmBoneName);
+	RightArmBoneIndex = GetMesh()->GetBoneIndex(RightArmBoneName);
 	RightForearmBoneIndex = GetMesh()->GetBoneIndex(RightForearmBoneName);
 
 	if (RightArmBoneIndex != INDEX_NONE)
@@ -309,7 +309,7 @@ void ACharacterBase::InitializeBoneIndices()
 /// </summary>
 void ACharacterBase::StartReload()
 {
-	if (bIsReloading) { 
+	if (bIsReloading) {
 		return; //リロード中は処理しない.
 	}
 	if (AmmoCount >= MaxAmmoCount) {
@@ -515,29 +515,29 @@ void ACharacterBase::PlayAnimMontage(EAnimationState AnimState)
 	UAnimMontage* MontageToPlay = nullptr;
 	switch (AnimState)
 	{
-		case EAnimationState::Idle:
-			MontageToPlay = IdleAnimMontage;
-			break;
-		case EAnimationState::Move:
-			MontageToPlay = MoveAnimMontage;
-			break;
-		case EAnimationState::Run:
-			MontageToPlay = SprintAnimMontage;
-			break;
-		case EAnimationState::JumpUp:
-			MontageToPlay = JumpUpAnimMontage;
-			break;
-		case EAnimationState::JumpMid:
-			MontageToPlay = JumpMidAnimMontage;
-			break;
-		case EAnimationState::JumpDown:
-			MontageToPlay = JumpDownAnimMontage;
-			break;
-		case EAnimationState::Shot:
-			MontageToPlay = ShotAnimMontage;
-			break;
+	case EAnimationState::Idle:
+		MontageToPlay = IdleAnimMontage;
+		break;
+	case EAnimationState::Move:
+		MontageToPlay = MoveAnimMontage;
+		break;
+	case EAnimationState::Run:
+		MontageToPlay = SprintAnimMontage;
+		break;
+	case EAnimationState::JumpUp:
+		MontageToPlay = JumpUpAnimMontage;
+		break;
+	case EAnimationState::JumpMid:
+		MontageToPlay = JumpMidAnimMontage;
+		break;
+	case EAnimationState::JumpDown:
+		MontageToPlay = JumpDownAnimMontage;
+		break;
+	case EAnimationState::Shot:
+		MontageToPlay = ShotAnimMontage;
+		break;
 
-		default: break;
+	default: break;
 	}
 
 	//nullチェック.
