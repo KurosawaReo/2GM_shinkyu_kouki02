@@ -50,9 +50,6 @@ public:
 	class USpringArmComponent* CameraBoom;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "MyProperty|Player|Camera")
 	class UCameraComponent* FollowCamera;
-	// マズルソケットの名前
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Player|Gun|Muzzle")
-	FName MuzzleSocketName = FName("Muzzle"); // スケルタルメッシュ内のソケット名
 
 	//▼ ===== IKアニメーション用の変数 ===== ▼
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Player|IK")
@@ -119,9 +116,6 @@ public:
 	float ComboWindowTimer = 0.0f;
 	bool bIsInComboWindow = false;
 
-//	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Player|Gun|Muzzle")
-//	FName MuzzleSocketName = FName("Muzzle"); // スケルタルメッシュ内のソケット名
-
 	//プレイヤーの腕処理.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Player|IK")
 	bool bEnbLeArmIK = true;
@@ -159,20 +153,13 @@ protected:
 #pragma region "銃システム"
 private:
 
-	/*
 	// マズル位置を取得する関数
 	FVector GetMuzzleLocation() const;
 	// マズル方向を取得する関数
 	FRotator GetMuzzleRotation() const;
 
 	void UpdateHandIK();
-	*/
 	
-	//インデックス初期化.
-	void InitializeArmIK();
-	//クロスヘアと高さ.
-	void UpdateArmIK();
-
 #pragma endregion
 
 #pragma region "カメラ"
