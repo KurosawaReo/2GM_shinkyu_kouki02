@@ -41,9 +41,11 @@
 #include "GameFramework/Character.h"
 #include "Animation/AnimMontage.h"
 #include "Steam_Revolver.h"
+#include "CrosshairWidget.h"
 #include "CharacterBase.generated.h"
 
 //前方宣言.
+class UCrosshairWidget;
 class ABulletBase;
 class ASteam_Revolver;
 
@@ -77,6 +79,15 @@ class GUNACTION_API ACharacterBase : public ACharacter
 
 //▼ ===== 変数 ===== ▼.
 public:
+
+#pragma region"クリスヘア"
+	//クロスヘア.
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "MyProperty|Player|UI")
+	TSubclassOf<UCrosshairWidget> CrosshairWidgetClass;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "MyProperty|Player|UI")
+	UCrosshairWidget* CrosshairWidget;
+#pragma endregion
+
 #pragma region "Gun"
 
 	//銃を持つか.
@@ -125,6 +136,11 @@ public:
 	// 弾の発射距離（エディタで調整可能）
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Base|Bullet")
 	float BulletTargetDistance = 10000.0f;
+
+	//TODO:kari.
+	FVector BulletTargetPosition;
+
+	AActor* BulletUser;
 #pragma endregion
 
 //アニメーション関係.
@@ -227,6 +243,8 @@ protected:
 
 	//ボーンインデックスを初期化する関数.
 	void InitializeBoneIndices();
+
+	void OnMontageEnded(UAnimMontage* Montage, bool bInterrupted);
 
 	//リロード開始.
 	void StartReload();

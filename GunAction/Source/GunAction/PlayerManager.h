@@ -40,11 +40,7 @@ class GUNACTION_API APlayerManager : public ACharacterBase
 
 //▼ ===== 変数 ===== ▼.
 public:
-	//クロスヘア.
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "MyProperty|Player|UI")
-	TSubclassOf<UCrosshairWidget> CrosshairWidgetClass;
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "MyProperty|Player|UI")
-	UCrosshairWidget* CrosshairWidget;
+	
 	//カメラコンポーネント
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "MyProperty|Player|Camera")
 	class USpringArmComponent* CameraBoom;
