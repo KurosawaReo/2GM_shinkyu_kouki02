@@ -181,11 +181,6 @@ private:
 #pragma endregion
 
 public:
-#pragma region "ダメージ処理"
-	void OnBulletHit() override; //弾が当たったら実行される.
-	void Die()         override; //死亡処理.
-#pragma endregion
-
 #pragma region "近接攻撃"
 	//剣を装備.
 	void EquipSword();
