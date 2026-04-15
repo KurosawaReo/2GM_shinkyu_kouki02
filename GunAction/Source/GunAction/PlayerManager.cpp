@@ -527,8 +527,6 @@ void APlayerManager::LookUpAtRate(float Rate)
 
 #pragma region "銃システム"
 
-/*
-
 /// <summary>
 /// GetMuzzleLocation - マズル位置の取得.
 /// 銃ActorのMuzzleコンポーネントから現在の正確な位置を取得する.
@@ -571,18 +569,8 @@ FRotator APlayerManager::GetMuzzleRotation() const
 	return RevolverGun->GetActorRotation();
 }
 
-void APlayerManager::UpdateHandIK()
-	if (GunMesh->DoesSocketExist(MuzzleSocketName))
-	{
-		return RevolverGun->GetActorRotation();
-	}
+void APlayerManager::UpdateHandIK() {
 
-	return GunMesh->GetSocketRotation(MuzzleSocketName);
-}
-*/
-
-void APlayerManager::InitializeArmIK()
-{
 	if (RevolverGun == nullptr || FollowCamera == nullptr)
 	{
 		return;

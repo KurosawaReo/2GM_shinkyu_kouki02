@@ -200,25 +200,3 @@ void AEnemyManager::DisableComponents()
 	SetActorTickEnabled(false);
 }
 #pragma endregion
-
-#pragma region "射撃"
-/// <summary>
-/// ShotBullet() - 発射操作をした時に実行する.
-/// [敵専用]
-/// </summary>
-void AEnemyManager::ShotBullet()
-{
-	//プレイヤー取得.
-	ACharacter* player = UGameplayStatics::GetPlayerCharacter(GetWorld(), 0);
-	FVector plyPos = player->GetActorLocation();
-
-	//目標地点を計算.
-	const FVector TargetPosition = FVector(
-		plyPos.X + FMath::FRandRange(-shotPosRandom, shotPosRandom),
-		plyPos.Y + FMath::FRandRange(-shotPosRandom, shotPosRandom),
-		plyPos.Z + FMath::FRandRange(-shotPosRandom, shotPosRandom)
-	);
-	//弾を発射.
-	ShotBulletExe(this, TargetPosition);
-}
-#pragma endregion
