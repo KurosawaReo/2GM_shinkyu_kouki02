@@ -60,7 +60,7 @@ void APlayerManager::Tick(float DeltaTime) {
 
 	UpdateHandIK();
 
-	UpdateMeleeCombo(DeltaTime);
+	//UpdateMeleeCombo(DeltaTime);
 }
 
 #pragma region "入力処理"
@@ -86,389 +86,29 @@ void APlayerManager::Input(UInputComponent* PlayerInputComponent)
 	PlayerInputComponent->BindAxis("MoveRight",   this, &APlayerManager::MoveRight);
 
 	//カメラ.
-	PlayerInputComponent->BindAxis("Turn", this, &APawn::AddControllerYawInput);
-	PlayerInputComponent->BindAxis("LookUp", this, &APawn::AddControllerPitchInput);
-	PlayerInputComponent->BindAxis("TurnRate", this, &APlayerManager::TurnAtRate);
+	PlayerInputComponent->BindAxis("Turn",       this, &APawn::AddControllerYawInput);
+	PlayerInputComponent->BindAxis("LookUp",     this, &APawn::AddControllerPitchInput);
+	PlayerInputComponent->BindAxis("TurnRate",   this, &APlayerManager::TurnAtRate);
 	PlayerInputComponent->BindAxis("LookUpRate", this, &APlayerManager::LookUpAtRate);
 
 	//ジャンプ.
-	PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &ACharacter::Jump);
-	PlayerInputComponent->BindAction("Jump", IE_Released, this, &ACharacter::StopJumping);
+	PlayerInputComponent->BindAction("Jump", IE_Pressed,    this, &ACharacter::Jump);
+	PlayerInputComponent->BindAction("Jump", IE_Released,   this, &ACharacter::StopJumping);
 
 	//ダッシュ.
-	PlayerInputComponent->BindAction("Sprint", IE_Pressed, this, &APlayerManager::StartWalk);
+	PlayerInputComponent->BindAction("Sprint", IE_Pressed,  this, &APlayerManager::StartWalk);
 	PlayerInputComponent->BindAction("Sprint", IE_Released, this, &APlayerManager::StopWalk);
 
 	//弾発射.
-	PlayerInputComponent->BindAction("Fire", IE_Pressed, this, &APlayerManager::ShotBullet);
+	PlayerInputComponent->BindAction("Fire",   IE_Pressed,  this, &APlayerManager::ShotBullet);
 
 	//リロード.
-	PlayerInputComponent->BindAction("Reload", IE_Pressed, this, &APlayerManager::StartReload);
+	PlayerInputComponent->BindAction("Reload", IE_Pressed,  this, &APlayerManager::StartReload);
 
 	//近接攻撃入力
-	PlayerInputComponent->BindAction("MeleeAttack", IE_Pressed, this, &APlayerManager::MeleeAttack);
-	UE_LOG(LogTemp, Warning, TEXT("MeleeAttack input binding setup!"));
+	//PlayerInputComponent->BindAction("MeleeAttack", IE_Pressed, this, &APlayerManager::MeleeAttack);
+	//UE_LOG(LogTemp, Warning, TEXT("MeleeAttack input binding setup!"));
 }
-#pragma endregion
-
-#pragma region "近接攻撃"
-
-// 剣を消去する関数
-void APlayerManager::UnequipSword()
-{
-	if (EquippedSword)
-	{
-		EquippedSword->Destroy();
-		EquippedSword = nullptr;
-		UE_LOG(LogTemp, Warning, TEXT("Sword unequipped"));
-	}
-}
-
-/// <summary>
-/// OnMeleeAttackHit - 近接攻撃がヒットした時の処理.
-/// 敵にダメージを与える判定を行う.
-/// </summary>
-/// <param name="AttackType">攻撃のタイプ（剣/キック）</param>
-// OnMeleeAttackHit関数（改善版）
-void APlayerManager::OnMeleeAttackHit(EMeleeAttackType AttackType)
-{
-	if (GetWorld() == nullptr)
-	{
-		return;
-	}
-
-	// 攻撃の原点：剣の先端または手の位置
-	FVector AttackOrigin;
-	if (EquippedSword)
-	{
-		// 剣が装備されている場合は剣の位置から
-		AttackOrigin = EquippedSword->GetActorLocation();
-	}
-	else
-	{
-		// 剣がない場合はプレイヤー位置から
-		AttackOrigin = GetActorLocation();
-	}
-
-	FVector AttackEnd = AttackOrigin + GetActorForwardVector() * MeleeAttackRange;
-
-	// スフィアトレースで敵を検索
-	FHitResult HitResult;
-	FCollisionShape CollisionShape = FCollisionShape::MakeSphere(100.0f);
-
-	FCollisionQueryParams QueryParams;
-	QueryParams.AddIgnoredActor(this);
-	if (EquippedSword)
-	{
-		QueryParams.AddIgnoredActor(EquippedSword);  // 剣自体との衝突を除外
-	}
-
-	bool bHit = GetWorld()->SweepSingleByChannel(
-		HitResult,
-		AttackOrigin,
-		AttackEnd,
-		FQuat::Identity,
-		ECC_GameTraceChannel1,  // 敵用チャンネル
-		CollisionShape,
-		QueryParams
-	);
-
-	if (bHit && HitResult.GetActor())
-	{
-		AActor* HitActor = HitResult.GetActor();
-		float Damage = MeleeAttackDamage;
-
-		// キックの場合はダメージ増加
-		if (AttackType == EMeleeAttackType::Kick)
-		{
-			Damage *= 1.5f;
-		}
-
-		UE_LOG(LogTemp, Warning, TEXT("Melee Hit! Target: %s, Damage: %f"),
-			*HitActor->GetName(), Damage);
-
-		// ダメージを与える処理
-		// HitActor->TakeDamage(Damage, FDamageEvent(), GetController(), this);
-	}
-	else
-	{
-		UE_LOG(LogTemp, Warning, TEXT("Melee attack - No hits detected in range"));
-	}
-}
-
-/// <summary>
-/// UpdateMeleeCombo - 近接攻撃のコンボシステム更新.
-/// コンボウィンドウのタイマーを管理し、クールダウンを更新する.
-/// Tick内で毎フレーム呼び出される.
-/// </summary>
-/// <param name="DeltaTime">フレームの経過時間</param>
-void APlayerManager::UpdateMeleeCombo(float DeltaTime)
-{
-	// クールダウンタイマーの更新
-	if (!bCanMeleeAttack)
-	{
-		MeleeAttackCooldownTimer -= DeltaTime;
-		if (MeleeAttackCooldownTimer <= 0.0f)
-		{
-			bCanMeleeAttack = true;
-			MeleeAttackCooldownTimer = 0.0f;
-		}
-	}
-
-	// コンボウィンドウの更新
-	if (bIsInComboWindow)
-	{
-		ComboWindowTimer -= DeltaTime;
-		if (ComboWindowTimer <= 0.0f)
-		{
-			bIsInComboWindow = false;
-			CurrentComboCount = 0;
-			UE_LOG(LogTemp, Warning, TEXT("Combo window expired. Resetting combo."));
-		}
-	}
-}
-
-/// <summary>
-/// EquipSword - 剣を装備する処理.
-/// SwordClassからアクターをスポーンしてプレイヤーに装備させる.
-/// BeginPlayで呼び出される.
-/// </summary>
-void APlayerManager::EquipSword()
-{
-	// 既に剣が装備されている場合はスキップ
-	if (EquippedSword != nullptr)
-	{
-		return;
-	}
-
-	if (SwordClass == nullptr)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("SwordClass is not set! Please set it in Blueprint."));
-		return;
-	}
-
-	if (GetWorld() == nullptr)
-	{
-		return;
-	}
-
-	// 剣をスポーン（親はプレイヤー）
-	FActorSpawnParameters SpawnParams;
-	SpawnParams.Owner = this;
-	SpawnParams.Instigator = GetInstigator();
-
-	EquippedSword = GetWorld()->SpawnActor<AActor>(
-		SwordClass,
-		FVector::ZeroVector,
-		FRotator::ZeroRotator,
-		SpawnParams
-	);
-
-	if (EquippedSword)
-	{
-		// ソケット名を使用してアタッチ（回転と位置をソケットに従う）
-		EquippedSword->AttachToComponent(
-			GetMesh(),
-			FAttachmentTransformRules::SnapToTargetIncludingScale,
-			SwordSocketName  // "hand_l" などのソケット名
-		);
-
-		// 剣のコリジョンを無効化（プレイヤーとの衝突を防ぐ）
-		if (UPrimitiveComponent* RootPrimitive = Cast<UPrimitiveComponent>(EquippedSword->GetRootComponent()))
-		{
-			RootPrimitive->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-		}
-
-		UE_LOG(LogTemp, Warning, TEXT("Sword equipped successfully at socket: %s"), *SwordSocketName.ToString());
-	}
-	else
-	{
-		UE_LOG(LogTemp, Error, TEXT("Failed to spawn sword!"));
-	}
-}
-
-/// <summary>
-/// MeleeAttack - 近接攻撃処理.
-/// 剣での攻撃またはキックを実行する（コンボシステム対応）.
-/// 入力の "MeleeAttack" アクションにバインドされる.
-/// </summary>
-// PlayerManager.cpp - MeleeAttack関数（修正版）
-
-void APlayerManager::MeleeAttack()
-{
-	// 剣がまだ装備されていなければ装備する
-	if (EquippedSword == nullptr)
-	{
-		EquipSword();
-	}
-
-	UE_LOG(LogTemp, Warning, TEXT("=== MeleeAttack Called ==="));
-	UE_LOG(LogTemp, Warning, TEXT("bCanMeleeAttack: %s"), bCanMeleeAttack ? TEXT("true") : TEXT("false"));
-	UE_LOG(LogTemp, Warning, TEXT("CurrentComboCount: %d"), CurrentComboCount);
-
-	// クールダウン中は攻撃不可
-	if (!bCanMeleeAttack)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("Still on cooldown! Timer: %f"), MeleeAttackCooldownTimer);
-		return;
-	}
-
-	// コンボウィンドウ外の場合はカウントをリセット
-	if (!bIsInComboWindow)
-	{
-		CurrentComboCount = 0;
-	}
-
-	UAnimMontage* MontageToPlay = nullptr;
-	EMeleeAttackType CurrentAttack = EMeleeAttackType::SwordSlash;
-
-	// 現在のコンボ数に応じて攻撃を実行
-	if (CurrentComboCount == 0)
-	{
-		// 1段目：剣での攻撃
-		UE_LOG(LogTemp, Warning, TEXT(">>> Combo 0: Sword Slash Attack <<<"));
-
-		CurrentAttack = EMeleeAttackType::SwordSlash;
-		MontageToPlay = SwordSlashAnimMontage;
-
-		if (SwordSlashAnimMontage == nullptr)
-		{
-			UE_LOG(LogTemp, Error, TEXT("ERROR: SwordSlashAnimMontage is not set!"));
-			return;
-		}
-
-		CurrentComboCount = 1;  // 次は1段目
-	}
-	else if (CurrentComboCount == 1)
-	{
-		// 2段目：キック攻撃
-		UE_LOG(LogTemp, Warning, TEXT(">>> Combo 1: SwordDoubleSlash <<<"));
-
-		CurrentAttack = EMeleeAttackType::SwordDoubleSlash;
-		MontageToPlay = SwordDoubleSlashAnimMontage;
-
-		if (SwordDoubleSlashAnimMontage == nullptr)
-		{
-			UE_LOG(LogTemp, Error, TEXT("ERROR: KickAnimMontage is not set!"));
-			return;
-		}
-
-		CurrentComboCount = 2;  // コンボ終了
-	}
-	else if (CurrentComboCount == 2)
-	{
-		// 2段目：キック攻撃
-		UE_LOG(LogTemp, Warning, TEXT(">>> Combo : Sword Wave Attack <<<"));
-
-		CurrentAttack = EMeleeAttackType::SwordWave;
-		MontageToPlay = SwordWaveAnimMontage;
-
-		if (SwordWaveAnimMontage == nullptr)
-		{
-			UE_LOG(LogTemp, Error, TEXT("ERROR: KickAnimMontage is not set!"));
-			return;
-		}
-
-		CurrentComboCount = 3;  // コンボ終了
-	}
-	else if (CurrentComboCount == 3)
-	{
-		// 2段目：キック攻撃
-		UE_LOG(LogTemp, Warning, TEXT(">>> SwordPowerAttack <<<"));
-
-		CurrentAttack = EMeleeAttackType::SwordPowerAttack;
-		MontageToPlay = SwordPowerAttackAnimMontage;
-
-		if (SwordWaveAnimMontage == nullptr)
-		{
-			UE_LOG(LogTemp, Error, TEXT("ERROR: KickAnimMontage is not set!"));
-			return;
-		}
-
-		CurrentComboCount = 4;  // コンボ終了
-	}
-	else if (CurrentComboCount == 4)
-	{
-		// 5段目：最終秘奥義
-		UE_LOG(LogTemp, Warning, TEXT(">>> Combo 4: Sword Final Strike - ULTIMATE ATTACK! <<<"));
-		CurrentAttack = EMeleeAttackType::SwordFinalStrike;
-		MontageToPlay = SwordFinalStrikeAnimMontage;
-		if (SwordFinalStrikeAnimMontage == nullptr)
-		{
-			UE_LOG(LogTemp, Error, TEXT("ERROR: SwordFinalStrikeAnimMontage is not set!"));
-			return;
-		}
-		CurrentComboCount = 5;
-	}
-	else if (CurrentComboCount == 5)
-	{
-		// 6段目：キック
-		UE_LOG(LogTemp, Warning, TEXT(">>> Combo 5: Kick Attack <<<"));
-		CurrentAttack = EMeleeAttackType::Kick;
-		MontageToPlay = KickAnimMontage;
-		if (KickAnimMontage == nullptr)
-		{
-			UE_LOG(LogTemp, Error, TEXT("ERROR: KickAnimMontage is not set!"));
-			return;
-		}
-		CurrentComboCount = 6;
-	}
-	else
-	{
-		// コンボ終了、リセット
-		UE_LOG(LogTemp, Warning, TEXT("Combo finished, resetting..."));
-		CurrentComboCount = 0;
-		bIsInComboWindow = false;
-
-		// リセット後に再度呼び出し
-		MeleeAttack();
-		return;
-	}
-
-	// アニメーション再生
-	if (GetMesh() == nullptr)
-	{
-		UE_LOG(LogTemp, Error, TEXT("ERROR: Mesh is null!"));
-		return;
-	}
-
-	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
-	if (AnimInstance == nullptr)
-	{
-		UE_LOG(LogTemp, Error, TEXT("ERROR: AnimInstance is null!"));
-		return;
-	}
-
-	if (MontageToPlay == nullptr)
-	{
-		UE_LOG(LogTemp, Error, TEXT("ERROR: MontageToPlay is null!"));
-		return;
-	}
-
-	UE_LOG(LogTemp, Warning, TEXT("Playing montage: %s"), *MontageToPlay->GetName());
-	AnimInstance->Montage_Play(MontageToPlay, 1.0f);
-
-	// 攻撃判定を実行
-	OnMeleeAttackHit(CurrentAttack);
-
-	// コンボウィンドウを開く
-	bIsInComboWindow = true;
-	ComboWindowTimer = ComboWindowDuration;
-	UE_LOG(LogTemp, Warning, TEXT("Combo window opened: %f seconds"), ComboWindowTimer);
-
-	// クールダウン設定：アニメーションの長さをクールダウン時間として設定
-	bCanMeleeAttack = false;
-	float AnimationLength = MontageToPlay->GetPlayLength();
-	MeleeAttackCooldownTimer = AnimationLength;
-
-	// コンボウィンドウを開く：アニメーション終了後も次の入力を受け付けるように時間を延長
-	bIsInComboWindow = true;
-	ComboWindowTimer = AnimationLength + ComboWindowDuration;
-
-	UE_LOG(LogTemp, Warning, TEXT("Attack executed! Combo: %d, Cooldown: %f seconds"),
-		CurrentComboCount, MeleeAttackCooldownTimer);
-}
-
 #pragma endregion
 
 #pragma region "移動"
@@ -703,12 +343,26 @@ void APlayerManager::ShotBullet()
 		return;
 	}
 
+	PlayAnimMontage(EAnimationState::Idle);
+
+	// 少し遅らせて発射
+	FTimerHandle TimerHandle;
+	GetWorld()->GetTimerManager().SetTimer(
+		TimerHandle,
+		this,
+		&APlayerManager::FireBullet,
+		0.6f, // ←ここ超重要（調整ポイント）
+		false
+	);
+}
+void APlayerManager::FireBullet()
+{
 	//クロスヘアの中心座標を画面座標で計算.
 	const FVector2D ViewportSize = FVector2D(GEngine->GameViewport->Viewport->GetSizeXY());
 	const FVector2D CrosshairScreenLocation = ViewportSize / 2.0f; // 画面中央.
 
 	//スクリーン座標をワールド座標に変換.
-	FVector CrosshairWorldLocation  = FVector::ZeroVector;
+	FVector CrosshairWorldLocation = FVector::ZeroVector;
 	FVector CrosshairWorldDirection = FVector::ZeroVector;
 
 	APlayerController* PlayerController = Cast<APlayerController>(Controller);
@@ -747,8 +401,6 @@ void APlayerManager::ShotBullet()
 		NewRotation.Pitch = TargetRotation.Pitch;
 		SetActorRotation(NewRotation);
 	}
-
-//	PlayAnimMontage(EAnimationState::Shot);
 }
 #pragma endregion
 
@@ -756,8 +408,8 @@ void APlayerManager::ShotBullet()
 //弾が当たったら実行される.
 void APlayerManager::OnBulletHit() {
 
-//	GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, TEXT("hit player"));
-	//TODO
+	//	GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, TEXT("hit player"));
+		//TODO
 }
 //死亡処理.
 void APlayerManager::Die() {
