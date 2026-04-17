@@ -18,7 +18,6 @@ class UCrosshairWidget;
 class USpringArmComponent;
 class UCameraComponent;
 
-
 /// <summary>
 /// プレイヤークラス.
 /// </summary>
@@ -112,10 +111,9 @@ private:
 #pragma endregion
 
 #pragma region "射撃"
-	void ShotBullet() override; //override
 public:
-	void FireBullet();//弾を撃つ
-	//	void SaveConfig();
+	void ShotBullet() override; //射撃開始.
+	void ShotBulletTiming();    //射撃タイミングが来たら実行される.
 #pragma endregion
 
 public:

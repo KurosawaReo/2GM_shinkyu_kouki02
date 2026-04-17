@@ -80,7 +80,7 @@ class GUNACTION_API ACharacterBase : public ACharacter
 //▼ ===== 変数 ===== ▼.
 public:
 
-#pragma region"クリスヘア"
+#pragma region "クロスヘア"
 	//クロスヘア.
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "MyProperty|Player|UI")
 	TSubclassOf<UCrosshairWidget> CrosshairWidgetClass;
@@ -238,13 +238,11 @@ protected:
 	virtual void ShotBullet(){}
 	//発射チェック.
 	bool ShotBulletCheck();
-	//弾を発射する.
-	bool ShotBulletExe(AActor* user, FVector targetPos);
+	//弾を召喚.
+	bool SpawnBullet(AActor* user, FVector targetPos);
 
 	//ボーンインデックスを初期化する関数.
 	void InitializeBoneIndices();
-
-	void OnMontageEnded(UAnimMontage* Montage, bool bInterrupted);
 
 	//リロード開始.
 	void StartReload();
@@ -269,6 +267,6 @@ protected:
 	//アニメーション更新.
 	void UpdateAnimState(float DeltaTime);
 	//アニメーション再生.
-	void PlayAnimMontage(EAnimationState AnimState);
+	void PlayAnim(EAnimationState AnimState);
 #pragma endregion
 };

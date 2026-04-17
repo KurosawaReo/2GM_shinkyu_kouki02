@@ -329,8 +329,7 @@ void APlayerManager::InitializeUI()
 
 #pragma region "射撃"
 /// <summary>
-/// ShotBullet() - 発射操作をした時に実行する.
-/// [プレイヤー専用]
+/// 射撃開始[プレイヤー専用]
 /// </summary>
 void APlayerManager::ShotBullet()
 {
@@ -343,20 +342,30 @@ void APlayerManager::ShotBullet()
 		return;
 	}
 
-	PlayAnimMontage(EAnimationState::Idle);
+	//アニメーション再生.
+	PlayAnim(EAnimationState::Shot);
 
-	// 少し遅らせて発射
+	GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, TEXT("ugoita A"));
+
+	/*
+	//少し遅らせて発射(仮)
 	FTimerHandle TimerHandle;
 	GetWorld()->GetTimerManager().SetTimer(
 		TimerHandle,
 		this,
-		&APlayerManager::FireBullet,
-		0.6f, // ←ここ超重要（調整ポイント）
+		&APlayerManager::ShotBulletTiming,
+		0.6f, //遅延.
 		false
 	);
+	*/
 }
-void APlayerManager::FireBullet()
+/// <summary>
+/// 射撃タイミングが来たら実行される.
+/// </summary>
+void APlayerManager::ShotBulletTiming()
 {
+	GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, TEXT("ugoita C2"));
+
 	//クロスヘアの中心座標を画面座標で計算.
 	const FVector2D ViewportSize = FVector2D(GEngine->GameViewport->Viewport->GetSizeXY());
 	const FVector2D CrosshairScreenLocation = ViewportSize / 2.0f; // 画面中央.
@@ -379,8 +388,8 @@ void APlayerManager::FireBullet()
 	//目標地点を計算.
 	const FVector TargetPosition = CrosshairWorldLocation + (CrosshairWorldDirection * BulletTargetDistance);
 
-	//弾を発射.
-	bool ret = ShotBulletExe(this, TargetPosition);
+	//弾を召喚.
+	bool ret = SpawnBullet(this, TargetPosition);
 	if (ret) {
 		//ショット時にクロスヘアのエフェクトを実行.
 		if (CrosshairWidget)
