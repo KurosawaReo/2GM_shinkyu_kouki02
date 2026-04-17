@@ -256,11 +256,6 @@ bool ACharacterBase::SpawnBullet(AActor* user, FVector targetPos)
 			RevolverGun->PlayFireAnimation();
 		}
 
-		//射撃アニメーション.
-		PlayAnim(EAnimationState::Shot);
-		//しばらくは射撃アニメーションを再生.
-		shotAnimTimer = initShotAnimTime;
-
 		return true; //発射成功.
 	}
 	return false; //発射失敗.
@@ -535,6 +530,8 @@ void ACharacterBase::PlayAnim(EAnimationState AnimState)
 		break;
 	case EAnimationState::Shot:
 		MontageToPlay = ShotAnimMontage;
+		//しばらくは射撃アニメーションを再生.
+		shotAnimTimer = initShotAnimTime;
 		break;
 
 	default: break;

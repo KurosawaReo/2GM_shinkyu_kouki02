@@ -80,7 +80,7 @@ class GUNACTION_API ACharacterBase : public ACharacter
 //▼ ===== 変数 ===== ▼.
 public:
 
-#pragma region"クリスヘア"
+#pragma region "クロスヘア"
 	//クロスヘア.
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "MyProperty|Player|UI")
 	TSubclassOf<UCrosshairWidget> CrosshairWidgetClass;

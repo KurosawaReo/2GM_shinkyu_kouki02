@@ -364,7 +364,7 @@ void APlayerManager::ShotBullet()
 /// </summary>
 void APlayerManager::ShotBulletTiming()
 {
-	GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, TEXT("ugoita B"));
+	GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, TEXT("ugoita C2"));
 
 	//クロスヘアの中心座標を画面座標で計算.
 	const FVector2D ViewportSize = FVector2D(GEngine->GameViewport->Viewport->GetSizeXY());
