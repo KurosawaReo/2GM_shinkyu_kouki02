@@ -122,7 +122,7 @@ void AEnemyManager::ShotBullet()
 		//–Ú•W’n“_‚ðŒvŽZ.
 		const FVector TargetPosition = player->GetActorLocation();
 		//’e‚ð”­ŽË.
-		ShotBulletExe(this, TargetPosition);
+		SpawnBullet(this, TargetPosition);
 	}
 }
 #pragma endregion

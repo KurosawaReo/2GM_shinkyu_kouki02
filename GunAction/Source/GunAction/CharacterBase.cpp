@@ -181,11 +181,11 @@ bool ACharacterBase::ShotBulletCheck() {
 }
 
 /// <summary>
-/// 弾を発射する.
+/// 弾を召喚.
 /// </summary>
 /// <param name="targetPos">目標座標</param>
-/// <returns>発射に成功したか</returns>
-bool ACharacterBase::ShotBulletExe(AActor* user, FVector targetPos)
+/// <returns>召喚に成功したか</returns>
+bool ACharacterBase::SpawnBullet(AActor* user, FVector targetPos)
 {
 	//弾の設定 - ①スポーン位置.
 	FVector SpawnLocation;
@@ -257,7 +257,7 @@ bool ACharacterBase::ShotBulletExe(AActor* user, FVector targetPos)
 		}
 
 		//射撃アニメーション.
-		PlayAnimMontage(EAnimationState::Shot);
+		PlayAnim(EAnimationState::Shot);
 		//しばらくは射撃アニメーションを再生.
 		shotAnimTimer = initShotAnimTime;
 
@@ -496,14 +496,14 @@ void ACharacterBase::UpdateAnimState(float DeltaTime)
 			}
 		}
 		//射撃以外のアニメーション.
-		PlayAnimMontage(NewAnimationState);
+		PlayAnim(NewAnimationState);
 	}
 }
 
 /// <summary>
 /// 移動, ジャンプ, 射撃などのアニメーション切り替え.
 /// </summary>
-void ACharacterBase::PlayAnimMontage(EAnimationState AnimState)
+void ACharacterBase::PlayAnim(EAnimationState AnimState)
 {
 	//アニメーションが同じなら.
 	if (CurrentAnimationState == AnimState) {
