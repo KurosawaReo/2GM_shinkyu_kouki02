@@ -175,9 +175,6 @@ void ASteam_Revolver::DisableGunMesh() {
 	//TODO <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 	//どうしたら銃のメッシュを消去できる?
 
-	// TODO
-	//原因不明だが、ビルドして反映させるとクラッシュする. 最近変更したどこかが原因かも.
-
 	//SetMeshActive(Muzzle, false);
 	//GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, TEXT("DisableGunMesh()")); //表示.
 }
