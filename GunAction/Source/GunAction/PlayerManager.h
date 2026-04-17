@@ -1,6 +1,6 @@
 /*
    - PlayerManager -
-  
+
    [クラス構成]
    CharacterBase
    └PlayerManager ←今ここ
@@ -18,17 +18,6 @@ class UCrosshairWidget;
 class USpringArmComponent;
 class UCameraComponent;
 
-// 近接攻撃のタイプ
-UENUM(BlueprintType)
-enum class EMeleeAttackType : uint8
-{
-	SwordSlash       = 0 UMETA(DisplayName = "Sword_Slash"),
-	SwordDoubleSlash = 1 UMETA(DisplayName = "Sword_Double_Slash"),
-	SwordWave        = 2 UMETA(DisplayName = "Swprd_Wave"),
-	SwordPowerAttack = 3 UMETA(DisplayName = "Sword_Power_Attak"),
-	SwordFinalStrike = 4 UMETA(DisplayName = "Sword_FinalStrike"),
-	Kick = 5 UMETA(DisplayName = "Kick")
-};
 
 /// <summary>
 /// プレイヤークラス.
@@ -38,9 +27,9 @@ class GUNACTION_API APlayerManager : public ACharacterBase
 {
 	GENERATED_BODY()
 
-//▼ ===== 変数 ===== ▼.
+	//▼ ===== 変数 ===== ▼.
 public:
-	
+
 	//カメラコンポーネント
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "MyProperty|Player|Camera")
 	class USpringArmComponent* CameraBoom;
@@ -63,55 +52,6 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Player|IK")
 	float IKDistance = 100.0f;//まずるからの距離.
 
-	//▼ ===== 近接攻撃用の変数 ===== ▼
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Player|MeleeAttack")
-	TSubclassOf<AActor> SwordClass;
-
-	UPROPERTY(BlueprintReadOnly, Category = "MyProperty|Player|MeleeAttack")
-	AActor* EquippedSword;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Player|MeleeAttack")
-	UAnimMontage* SwordSlashAnimMontage;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Player|MeleeAttack")
-	UAnimMontage* SwordDoubleSlashAnimMontage;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Player|MeleeAttack")
-	UAnimMontage* SwordWaveAnimMontage;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Player|MeleeAttack")
-	UAnimMontage* SwordPowerAttackAnimMontage;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Player|MeleeAttack")
-	UAnimMontage* SwordFinalStrikeAnimMontage;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Player|MeleeAttack")
-	UAnimMontage* KickAnimMontage;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Player|MeleeAttack")
-	float MeleeAttackCooldown = 0.5f;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Player|MeleeAttack")
-	float ComboWindowDuration = 1.0f;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Player|MeleeAttack")
-	float MeleeAttackRange = 200.0f;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Player|MeleeAttack")
-	float MeleeAttackDamage = 25.0f;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Player|MeleeAttack")
-	FName SwordSocketName = FName("hand_l");
-
-	// 内部状態
-	bool bCanMeleeAttack = true;
-	float MeleeAttackCooldownTimer = 0.0f;
-
-	// コンボシステム
-	int32 CurrentComboCount = 0;
-	float ComboWindowTimer = 0.0f;
-	bool bIsInComboWindow = false;
-
 	//プレイヤーの腕処理.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Player|IK")
 	bool bEnbLeArmIK = true;
@@ -122,7 +62,7 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Player|IK")
 	float RightHandIKAlpha = 0.0f;
 
-//▼ ===== 関数 ===== ▼.
+	//▼ ===== 関数 ===== ▼.
 protected:
 	//コンストラクタ.
 	APlayerManager();
@@ -155,7 +95,7 @@ private:
 	FRotator GetMuzzleRotation() const;
 
 	void UpdateHandIK();
-	
+
 #pragma endregion
 
 #pragma region "カメラ"
@@ -173,22 +113,9 @@ private:
 
 #pragma region "射撃"
 	void ShotBullet() override; //override
-//	void SaveConfig();
-#pragma endregion
-
 public:
-#pragma region "近接攻撃"
-	//剣を装備.
-	void EquipSword();
-	//近接攻撃実行.
-	void MeleeAttack();
-
-	void UnequipSword();
-	//近接攻撃がヒットした時の処理.
-	void OnMeleeAttackHit(EMeleeAttackType AtaackType);
-	//コンボシステムの更新.
-	void UpdateMeleeCombo(float DeltaTime);
-
+	void FireBullet();//弾を撃つ
+	//	void SaveConfig();
 #pragma endregion
 
 public:
