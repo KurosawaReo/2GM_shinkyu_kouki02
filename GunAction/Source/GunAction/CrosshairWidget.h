@@ -15,8 +15,6 @@ class GUNACTION_API UCrosshairWidget : public UUserWidget
 {
 	GENERATED_BODY()
 	
-
-public :
 public:
 	virtual void NativeConstruct() override;
 
