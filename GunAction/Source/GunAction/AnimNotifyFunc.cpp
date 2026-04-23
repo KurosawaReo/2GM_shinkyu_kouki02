@@ -9,10 +9,15 @@
 void UAnimNotifyFunc::Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation)
 {
 	//エラー対策.
-	if (MeshComp == nullptr) { return; }
+	if (MeshComp == nullptr) { 
+		return; 
+	}
+	if (!MeshComp->GetWorld() || !MeshComp->GetWorld()->IsGameWorld()) {
+		return;
+	}
+
 	//owner取得.
 	AActor* Owner = MeshComp->GetOwner();
-	if (Owner == nullptr) { return; }
 
 	//ownerがプレイヤーActorなら.
 	if (auto* Player = Cast<APlayerManager>(Owner)) {

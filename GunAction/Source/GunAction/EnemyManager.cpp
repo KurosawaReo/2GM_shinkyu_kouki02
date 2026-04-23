@@ -40,6 +40,11 @@ void AEnemyManager::BeginPlay() {
 
 	ACharacterBase::BeginPlay(); //親クラスのBeginPlay()を呼び出す.
 
+	//エラー対策.
+	if (HasAnyFlags(RF_ClassDefaultObject)) {
+		return;
+	}
+
 	//初期state.
 	CurrentState = ECharaState::Alive;
 	//一定時間ごとに実行.

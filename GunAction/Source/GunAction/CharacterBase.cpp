@@ -205,7 +205,7 @@ void ACharacterBase::ShotStart() {
 /// </summary>
 /// <param name="targetPos">目標座標</param>
 /// <returns>召喚に成功したか</returns>
-bool ACharacterBase::SpawnBullet(AActor* user, FVector targetPos)
+bool ACharacterBase::SpawnBullet(TObjectPtr<ACharacterBase> user, FVector targetPos)
 {
 	//弾の設定 - ①スポーン位置.
 	FVector SpawnLocation;

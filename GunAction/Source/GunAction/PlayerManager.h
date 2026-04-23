@@ -15,6 +15,7 @@
 #include "Steam_Revolver.h"
 
 #include "PlayerManager.generated.h"
+
 class UCrosshairWidget;
 class USpringArmComponent;
 class UCameraComponent;
@@ -50,7 +51,7 @@ public:
 	FName RightHandSocketName = FName("upperarm_r");
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Player|IK")
-	float IKDistance = 100.0f;//まずるからの距離.
+	float IKDistance = 100.0f; //マズルからの距離.
 
 	//プレイヤーの腕処理.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Player|IK")

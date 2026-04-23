@@ -119,10 +119,7 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Base|Bullet")
 	float BulletTargetDistance = 10000.0f;
 
-	//TODO:kari.
-	FVector BulletTargetPosition;
-
-	AActor* BulletUser;
+	FVector BulletTargetPosition; //弾の目標地点.
 
 #pragma endregion
 
@@ -258,7 +255,7 @@ public:
 	//射撃実行[仮想関数]
 	virtual void ShotExe(){};
 	//弾を召喚.
-	bool SpawnBullet(AActor* user, FVector targetPos);
+	bool SpawnBullet(TObjectPtr<ACharacterBase> user, FVector targetPos);
 #pragma endregion
 
 #pragma region "ダメージ・死亡"
