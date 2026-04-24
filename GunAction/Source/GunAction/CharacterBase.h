@@ -41,11 +41,9 @@
 #include "GameFramework/Character.h"
 #include "Animation/AnimMontage.h"
 #include "Steam_Revolver.h"
-#include "CrosshairWidget.h"
 #include "CharacterBase.generated.h"
 
 //前方宣言.
-class UCrosshairWidget;
 class ABulletBase;
 class ASteam_Revolver;
 
@@ -80,11 +78,7 @@ class GUNACTION_API ACharacterBase : public ACharacter
 //▼ ===== 変数 ===== ▼.
 public:
 
-#pragma region "Movement"
-	//移動パラメーター.
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Base|Movement")
-	float BaseTurnRate = 45.0f;
-
+#pragma region "移動"
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Base|Movement")
 	float BaseLookUpRate = 45.0f;
 
@@ -104,27 +98,21 @@ public:
 	bool bIsJumping;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "MyProperty|Base|Movement")
-	bool bAWasJumping;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "MyProperty|Base|Movement")
 	double CurrentSpeed;
 #pragma endregion
 
-#pragma region "Bullet"
-
-	// 弾クラスの参照（Blueprintで設定可能）
+#pragma region "弾"
+	//弾クラスの参照.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Base|Bullet")
 	TSubclassOf<AActor> BulletClass;
-	// 弾の発射距離（エディタで調整可能）
+	//弾の発射距離.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Base|Bullet")
 	float BulletTargetDistance = 10000.0f;
 
 	FVector BulletTargetPosition; //弾の目標地点.
-
 #pragma endregion
 
-#pragma region "Gun"
-
+#pragma region "銃"
 	//銃を持つか.
 	//trueなら銃を召喚して持たせる, falseなら射撃のみ行う.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Base|Gun")
@@ -147,25 +135,20 @@ public:
 	//弾関連.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Base|Gun|Ammunition")
 	int32 MaxAmmoCount = 6;				//連続で弾を撃てる数.
-
 	UPROPERTY(BlueprintReadOnly, Category = "MyProperty|Base|Gun|Ammunition")
 	int32 AmmoCount = 6;				//弾の残数.
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Base|Gun|Ammunition")
 	float ReloadDuration = 2.5f;		//リロード時間(秒)
-
 	UPROPERTY(BlueprintReadOnly, Category = "MyProperty|Base|Gun|Ammunition")
 	bool  bIsReloading = false;			//リロードしているか.
-
 	UPROPERTY(BlueprintReadOnly, Category = "MyProperty|Base|Gun|Ammunition")
 	float ReloadTimerElapsed = 0.0f;	//リロード経過時間計測用.
-
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Base|Gun|Ammunition")
 	float shotPosRandom = 0.0f;			//射撃の正確さ(どれだけずらすか)
-
 #pragma endregion
 
-#pragma region "Death"
+#pragma region "死亡"
 	//死亡時のエフェクト.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Base|Death")
 	class UParticleSystem* DeathEffect;
@@ -174,8 +157,7 @@ public:
 	class USoundBase* DeathSound;
 #pragma endregion
 
-#pragma region "Animation"
-
+#pragma region "アニメーション"
 	//腕のボーンインデックスをキャッシュ.
 	UPROPERTY(VisibleAnywhere, Category = "MyProperty|Base|Animation")
 	int32 RightArmBoneIndex = INDEX_NONE;
@@ -191,35 +173,21 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Base|Animation")
 	class UAnimMontage* IdleAnimMontage;
-
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Base|Animation")
 	class UAnimMontage* MoveAnimMontage;
-
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Base|Animation")
 	class UAnimMontage* SprintAnimMontage;
-
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Base|Animation")
 	class UAnimMontage* JumpUpAnimMontage;
-
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Base|Animation")
 	class UAnimMontage* JumpMidAnimMontage;
-
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Base|Animation")
 	class UAnimMontage* JumpDownAnimMontage;
-
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Base|Animation")
 	class UAnimMontage* ShotAnimMontage;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Base|Animation|Time")
 	float initShotAnimTime; //射撃アニメーション時間.
-#pragma endregion
-
-#pragma region "UI"
-	//クロスヘア.
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "MyProperty|Base|UI")
-	TSubclassOf<UCrosshairWidget> CrosshairWidgetClass;
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "MyProperty|Base|UI")
-	UCrosshairWidget* CrosshairWidget;
 #pragma endregion
 
 //▼ ===== 関数 ===== ▼.

@@ -31,37 +31,20 @@ class GUNACTION_API APlayerManager : public ACharacterBase
 //▼ ===== 変数 ===== ▼.
 public:
 
-	//カメラコンポーネント
+#pragma region "カメラ"
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "MyProperty|Player|Camera")
 	class USpringArmComponent* CameraBoom;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "MyProperty|Player|Camera")
 	class UCameraComponent* FollowCamera;
+#pragma endregion
 
-	//▼ ===== IKアニメーション用の変数 ===== ▼
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Player|IK")
-	float IKAlpha = 1.0f; // IKの強度（0.0～1.0）
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "MyProperty|Player|IK")
-	FVector RightHandIKLocation = FVector::ZeroVector; // 右手のIK目標位置（ワールド座標）
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "MyProperty|Player|IK")
-	FVector RightElbowIKLocation = FVector::ZeroVector; // 肘のIK目標位置（オプション）
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Player|IK")
-	FName RightHandSocketName = FName("upperarm_r");
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Player|IK")
-	float IKDistance = 100.0f; //マズルからの距離.
-
-	//プレイヤーの腕処理.
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Player|IK")
-	bool bEnbLeArmIK = true;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Player|IK")
-	FVector RightHandIKTarget = FVector::ZeroVector;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Player|IK")
-	float RightHandIKAlpha = 0.0f;
+#pragma region "UI"
+	//クロスヘア.
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "MyProperty|Base|UI")
+	TSubclassOf<UCrosshairWidget> CrosshairWidgetClass;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "MyProperty|Base|UI")
+	UCrosshairWidget* CrosshairWidget;
+#pragma endregion
 
 //▼ ===== 関数 ===== ▼.
 protected:

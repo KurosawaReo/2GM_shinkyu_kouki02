@@ -34,20 +34,27 @@ class GUNACTION_API AEnemyManager : public ACharacterBase
 	
 //▼ ===== 変数 ===== ▼.
 public:
+
+#pragma region "基本"
 	//キャラクター状態.
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "MyProperty|Enemy")
 	ECharaState CurrentState;
 	//AI行動状態.
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "MyProperty|Enemy")
 	EAIState AIState;
+#pragma region
 
+#pragma region "射撃"
 	//射撃間隔.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Enemy|Shot")
 	float spanShot = 0.2f;
+#pragma region
 
+#pragma region "AI"
 	//AI行動選択間隔.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Enemy|AI")
 	float spanChangeAI = 1.0f;
+#pragma region
 
 	//タイマー.
 	FTimerHandle tmShot;	 //射撃間隔.

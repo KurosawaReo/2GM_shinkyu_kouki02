@@ -114,7 +114,7 @@ void APlayerManager::Input(UInputComponent* PlayerInputComponent)
 /// <summary>
 /// 前後方向の移動.
 /// </summary>
-/// <param name="Value">入力値（-1.0 ～ 1.0）</param>
+/// <param name="Value">入力値(-1.0 ～ 1.0)</param>
 void APlayerManager::OnMoveForward(float Value)
 {
 	if ((Controller != nullptr) && (Value != 0.0f))
@@ -130,7 +130,7 @@ void APlayerManager::OnMoveForward(float Value)
 /// <summary>
 /// 左右方向の移動.
 /// </summary>
-/// <param name="Value">入力値（-1.0 ～ 1.0）</param>
+/// <param name="Value">入力値(-1.0 ～ 1.0)</param>
 void APlayerManager::OnMoveRight(float Value)
 {
 	if ((Controller != nullptr) && (Value != 0.0f))
