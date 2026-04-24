@@ -2,23 +2,30 @@
    - AnimNotifyFunc -
 */
 #include "AnimNotifyFunc.h"
+
 #include "PlayerManager.h"
+#include "EnemyManager.h"
 
 void UAnimNotifyFunc::Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation)
 {
 	//エラー対策.
-	if (MeshComp == nullptr) { return; }
+	if (MeshComp == nullptr) { 
+		return; 
+	}
+	if (!MeshComp->GetWorld() || !MeshComp->GetWorld()->IsGameWorld()) {
+		return;
+	}
 
+	//owner取得.
 	AActor* Owner = MeshComp->GetOwner();
-	if (Owner == nullptr) { return; }
 
-	//プレイヤーに変換.
-	APlayerManager* Player = Cast<APlayerManager>(Owner);
-	if (Player)
-	{
-		GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, TEXT("ugoita C1"));
-
-		//射撃実行.
-		Player->ShotBulletTiming();
+	//ownerがプレイヤーActorなら.
+	if (auto* Player = Cast<APlayerManager>(Owner)) {
+		Player->ShotExe();
+	}
+	//ownerが敵Actorなら
+	if (auto* Enemy = Cast<AEnemyManager>(Owner)) {
+		Enemy->ShotExe();
 	}
 }
+

@@ -14,15 +14,17 @@
 #include "Components/AudioComponent.h"
 #include "Components/BoxComponent.h"
 #include "Particles/ParticleSystemComponent.h"
+#include "Kismet/GameplayStatics.h"
 #include "EngineUtils.h"
 
 //他class.
 #include "BulletBase.h"
 #include "Steam_Revolver.h"
 
-#pragma region "コンストラクタ"
+#pragma region "基本処理"
+
 /// <summary>
-/// コンストラクタ
+/// コンストラクタ.
 /// </summary>
 ACharacterBase::ACharacterBase()
 {
@@ -48,14 +50,10 @@ ACharacterBase::ACharacterBase()
 	RevolverGun = nullptr;
 	AmmoCount = MaxAmmoCount;
 }
-#pragma endregion
 
-#pragma region "基本処理"
 /// <summary>
-/// BeginPlay - ゲーム開始時またはスポーン時に呼ばれる.
+/// ゲーム開始時またはスポーン時に呼ばれる.
 /// </summary>
-// CharacterBase.cpp - BeginPlay内のアニメーション確認部分
-
 void ACharacterBase::BeginPlay()
 {
 	Super::BeginPlay();
@@ -65,10 +63,10 @@ void ACharacterBase::BeginPlay()
 	//銃を装備.
 	EquipGun();
 	//デフォルトはダッシュ状態.
-	StopWalk();
+	OnWalkStop();
 
 	//ボーンインデックスを初期化.
-	InitializeBoneIndices();
+	InitBoneIndices();
 
 	// メッシュの確認
 	if (GetMesh())
@@ -118,7 +116,7 @@ void ACharacterBase::BeginPlay()
 }
 
 /// <summary>
-/// Tick - 毎フレーム呼ばれる.
+/// 毎フレーム呼ばれる.
 /// </summary>
 /// <param name="DeltaTime">前フレームからの経過時間（秒）</param>
 void ACharacterBase::Tick(float DeltaTime)
@@ -130,21 +128,32 @@ void ACharacterBase::Tick(float DeltaTime)
 	//リロード時間の更新.
 	UpdateReloadTimer(DeltaTime);
 }
+
 #pragma endregion
 
 #pragma region "移動"
 
-/// StartWalk - 歩く.
+/// <summary>
+/// 移動処理.
 /// </summary>
-void ACharacterBase::StartWalk()
+/// <param name="WorldDirection">方向</param>
+/// <param name="ScaleValue">移動量</param>
+/// <param name="bForce">?</param>
+void ACharacterBase::Move(FVector WorldDirection, float ScaleValue, bool bForce) {
+	AddMovementInput(WorldDirection, ScaleValue, bForce);
+}
+
+/// 歩く.
+/// </summary>
+void ACharacterBase::OnWalkStart()
 {
 	bIsDash = false;
 	GetCharacterMovement()->MaxWalkSpeed = WalkSpeed; //WalkSpeedに戻す.
 }
 /// <summary>
-/// StopWalk - 歩くのをやめる.
+/// 歩くのをやめる.
 /// </summary>
-void ACharacterBase::StopWalk()
+void ACharacterBase::OnWalkStop()
 {
 	bIsDash = true;
 	GetCharacterMovement()->MaxWalkSpeed = RunSpeed;  //RunSpeedに変更.
@@ -158,7 +167,7 @@ void ACharacterBase::StopWalk()
 /// 発射チェック.
 /// </summary>
 /// <returns>問題ないならtrue</returns>
-bool ACharacterBase::ShotBulletCheck() {
+bool ACharacterBase::IsShotAble() {
 
 	//nullチェック.
 	if (GetWorld() == nullptr) {
@@ -169,7 +178,7 @@ bool ACharacterBase::ShotBulletCheck() {
 	}
 	//弾薬がないならリロード開始.
 	if (AmmoCount <= 0) {
-		StartReload();
+		OnReload();
 		return false;
 	}
 	//リロード中は射撃不可.
@@ -180,12 +189,23 @@ bool ACharacterBase::ShotBulletCheck() {
 	return true; //問題なし.
 }
 
+//射撃開始.
+void ACharacterBase::ShotStart() {
+
+	//射撃可能なら.
+	if (IsShotAble()) {
+		//アニメーション再生.
+		//アニメーション内でNotifyを使って次の処理を行う.
+		PlayAnim(EAnimationState::Shot);
+	}
+}
+
 /// <summary>
 /// 弾を召喚.
 /// </summary>
 /// <param name="targetPos">目標座標</param>
 /// <returns>召喚に成功したか</returns>
-bool ACharacterBase::SpawnBullet(AActor* user, FVector targetPos)
+bool ACharacterBase::SpawnBullet(TObjectPtr<ACharacterBase> user, FVector targetPos)
 {
 	//弾の設定 - ①スポーン位置.
 	FVector SpawnLocation;
@@ -261,48 +281,14 @@ bool ACharacterBase::SpawnBullet(AActor* user, FVector targetPos)
 	return false; //発射失敗.
 }
 
-/// <summary>
-/// ボーンインデックスを初期化する関数
-/// </summary>
-void ACharacterBase::InitializeBoneIndices()
-{
-	if (!GetMesh()) {
-		UE_LOG(LogTemp, Error, TEXT("Mesh is NULL!"));
-		return;
-	}
+#pragma endregion
 
-	//右腕のボーン名.
-	FName RightArmBoneName = FName(TEXT("arm_r"));     //上腕.
-	FName RightForearmBoneName = FName(TEXT("forearm_r")); //前腕.
-
-	//ボーンインデックスを取得.
-	RightArmBoneIndex = GetMesh()->GetBoneIndex(RightArmBoneName);
-	RightForearmBoneIndex = GetMesh()->GetBoneIndex(RightForearmBoneName);
-
-	if (RightArmBoneIndex != INDEX_NONE)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("Right Arm Bone found at index: %d"), RightArmBoneIndex);
-	}
-	else
-	{
-		UE_LOG(LogTemp, Error, TEXT("Right Arm Bone '%s' not found!"), *RightArmBoneName.ToString());
-	}
-
-	if (RightForearmBoneIndex != INDEX_NONE)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("Right Forearm Bone found at index: %d"), RightForearmBoneIndex);
-	}
-	else
-	{
-		UE_LOG(LogTemp, Error, TEXT("Right Forearm Bone '%s' not found!"), *RightForearmBoneName.ToString());
-	}
-}
+#pragma region "銃"
 
 /// <summary>
-/// StartReload - リロード開始処理.
-/// リロード時間をセットして、弾薬を満タンに戻す.
+/// リロード開始処理.
 /// </summary>
-void ACharacterBase::StartReload()
+void ACharacterBase::OnReload()
 {
 	if (bIsReloading) {
 		return; //リロード中は処理しない.
@@ -325,6 +311,43 @@ void ACharacterBase::StartReload()
 		}
 		// 銃のリロードアニメーションを再生
 		RevolverGun->PlayReloadAnimation();
+	}
+}
+
+/// <summary>
+/// ボーンインデックスを初期化する関数
+/// </summary>
+void ACharacterBase::InitBoneIndices()
+{
+	if (!GetMesh()) {
+		UE_LOG(LogTemp, Error, TEXT("Mesh is NULL!"));
+		return;
+	}
+
+	//右腕のボーン名.
+	FName RightArmBoneName     = FName(TEXT("arm_r"));     //上腕.
+	FName RightForearmBoneName = FName(TEXT("forearm_r")); //前腕.
+
+	//ボーンインデックスを取得.
+	RightArmBoneIndex = GetMesh()->GetBoneIndex(RightArmBoneName);
+	RightForearmBoneIndex = GetMesh()->GetBoneIndex(RightForearmBoneName);
+
+	if (RightArmBoneIndex != INDEX_NONE)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Right Arm Bone found at index: %d"), RightArmBoneIndex);
+	}
+	else
+	{
+		UE_LOG(LogTemp, Error, TEXT("Right Arm Bone '%s' not found!"), *RightArmBoneName.ToString());
+	}
+
+	if (RightForearmBoneIndex != INDEX_NONE)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Right Forearm Bone found at index: %d"), RightForearmBoneIndex);
+	}
+	else
+	{
+		UE_LOG(LogTemp, Error, TEXT("Right Forearm Bone '%s' not found!"), *RightForearmBoneName.ToString());
 	}
 }
 
@@ -418,6 +441,68 @@ void ACharacterBase::RotateArmBones(const FRotator& TargetRotation)
 	// 腕のボーン操作はアニメーションBP側で自動的に追従します
 	UE_LOG(LogTemp, Warning, TEXT("Character rotation - Pitch: %f, Yaw: %f"), TargetRotation.Pitch, TargetRotation.Yaw);
 }
+
+#pragma endregion
+
+#pragma region "ダメージ・死亡"
+
+/// <summary>
+/// 死亡アニメーション再生.
+/// </summary>
+void ACharacterBase::PlayDeathAnimation()
+{
+
+}
+
+/// <summary>
+/// 死亡エフェクト再生.
+/// </summary>
+void ACharacterBase::PlayDeathEffect()
+{
+	if (DeathEffect)
+	{
+		UGameplayStatics::SpawnEmitterAtLocation(
+			GetWorld(),
+			DeathEffect,
+			GetActorLocation(),
+			GetActorRotation()
+		);
+	}
+}
+
+/// <summary>
+/// 死亡音再生.
+/// </summary>
+void ACharacterBase::PlayDeathSound()
+{
+	if (DeathSound)
+	{
+		UGameplayStatics::PlaySoundAtLocation(
+			GetWorld(),
+			DeathSound,
+			GetActorLocation()
+		);
+	}
+}
+
+/// <summary>
+/// コンポーネント無効化.
+/// </summary>
+void ACharacterBase::DisableComponents()
+{
+	//移動を停止.
+	if (auto cmp = GetCharacterMovement()) {
+		cmp->StopMovementImmediately();
+		cmp->DisableMovement();
+	}
+	//銃を消滅.
+	if (RevolverGun) {
+		RevolverGun->Destroy();
+	}
+	//Tickを停止.
+	SetActorTickEnabled(false);
+}
+
 #pragma endregion
 
 #pragma region "アニメーション"
