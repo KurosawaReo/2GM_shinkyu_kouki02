@@ -26,6 +26,8 @@
 	3: 何のカテゴリに入れるか(自由名)
 */
 
+class ACharacterBase;
+
 /// <summary>
 /// 弾の基底クラス.
 /// </summary>
@@ -45,7 +47,7 @@ private:
 	float   counter; //経過時間.
 
 	UPROPERTY()
-	TObjectPtr<AActor> user; //誰が撃った弾か.
+	TObjectPtr<ACharacterBase> user; //誰が撃った弾か.
 
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = MyProperty)
@@ -71,7 +73,7 @@ protected:
 
 public:	
 	//set.
-	virtual void SetUser(TObjectPtr<AActor> user);
+	virtual void SetUser(TObjectPtr<ACharacterBase> user);
 	//常に実行.
 	virtual void Tick(float DeltaTime) override;
 };

@@ -9,6 +9,7 @@
 //他class.
 #include "PlayerManager.h"
 #include "EnemyManager.h"
+#include "CharacterBase.h"
 
 /// <summary>
 /// コンストラクタ.
@@ -81,7 +82,7 @@ void ABulletBase::OnOverlapBegin(
 /// set.
 /// </summary>
 /// <param name="user">撃った人のクラス</param>
-void ABulletBase::SetUser(TObjectPtr<AActor> _user) {
+void ABulletBase::SetUser(TObjectPtr<ACharacterBase> _user) {
     user = _user; //銃を撃った人を登録.
 }
 

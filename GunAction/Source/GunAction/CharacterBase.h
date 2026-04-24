@@ -1,7 +1,7 @@
 /*----------------------------------------------------/
    - CharacterBase -
    プレイヤーと敵の親クラス.
-/-----------------------------------------------------/
+
    [クラス構成]
    CharacterBase   ←今ここ
    └PlayerManager
@@ -41,11 +41,9 @@
 #include "GameFramework/Character.h"
 #include "Animation/AnimMontage.h"
 #include "Steam_Revolver.h"
-#include "CrosshairWidget.h"
 #include "CharacterBase.generated.h"
 
 //前方宣言.
-class UCrosshairWidget;
 class ABulletBase;
 class ASteam_Revolver;
 
@@ -80,16 +78,41 @@ class GUNACTION_API ACharacterBase : public ACharacter
 //▼ ===== 変数 ===== ▼.
 public:
 
-#pragma region "クロスヘア"
-	//クロスヘア.
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "MyProperty|Player|UI")
-	TSubclassOf<UCrosshairWidget> CrosshairWidgetClass;
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "MyProperty|Player|UI")
-	UCrosshairWidget* CrosshairWidget;
+#pragma region "移動"
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Base|Movement")
+	float BaseLookUpRate = 45.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Base|Movement")
+	float WalkSpeed = 200.0f; //歩速, 200くらいがちょうどいい.
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Base|Movement")
+	float RunSpeed = 800.0f; //走速, 800くらい?
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "MyProperty|Base|Movement")
+	bool bIsDash;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "MyProperty|Base|Movement")
+	bool bIsMoving;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "MyProperty|Base|Movement")
+	bool bIsJumping;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "MyProperty|Base|Movement")
+	double CurrentSpeed;
 #pragma endregion
 
-#pragma region "Gun"
+#pragma region "弾"
+	//弾クラスの参照.
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Base|Bullet")
+	TSubclassOf<AActor> BulletClass;
+	//弾の発射距離.
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Base|Bullet")
+	float BulletTargetDistance = 10000.0f;
 
+	FVector BulletTargetPosition; //弾の目標地点.
+#pragma endregion
+
+#pragma region "銃"
 	//銃を持つか.
 	//trueなら銃を召喚して持たせる, falseなら射撃のみ行う.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Base|Gun")
@@ -112,40 +135,29 @@ public:
 	//弾関連.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Base|Gun|Ammunition")
 	int32 MaxAmmoCount = 6;				//連続で弾を撃てる数.
-
 	UPROPERTY(BlueprintReadOnly, Category = "MyProperty|Base|Gun|Ammunition")
 	int32 AmmoCount = 6;				//弾の残数.
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Base|Gun|Ammunition")
 	float ReloadDuration = 2.5f;		//リロード時間(秒)
-
 	UPROPERTY(BlueprintReadOnly, Category = "MyProperty|Base|Gun|Ammunition")
 	bool  bIsReloading = false;			//リロードしているか.
-
 	UPROPERTY(BlueprintReadOnly, Category = "MyProperty|Base|Gun|Ammunition")
 	float ReloadTimerElapsed = 0.0f;	//リロード経過時間計測用.
-
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Base|Gun|Ammunition")
 	float shotPosRandom = 0.0f;			//射撃の正確さ(どれだけずらすか)
 #pragma endregion
 
-#pragma region "Bullet"
-	// 弾クラスの参照（Blueprintで設定可能）
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Base|Bullet")
-	TSubclassOf<AActor> BulletClass;
-	// 弾の発射距離（エディタで調整可能）
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Base|Bullet")
-	float BulletTargetDistance = 10000.0f;
-
-	//TODO:kari.
-	FVector BulletTargetPosition;
-
-	AActor* BulletUser;
+#pragma region "死亡"
+	//死亡時のエフェクト.
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Base|Death")
+	class UParticleSystem* DeathEffect;
+	//死亡時のサウンド.
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Base|Death")
+	class USoundBase* DeathSound;
 #pragma endregion
 
-//アニメーション関係.
-#pragma region "Animation"
-
+#pragma region "アニメーション"
 	//腕のボーンインデックスをキャッシュ.
 	UPROPERTY(VisibleAnywhere, Category = "MyProperty|Base|Animation")
 	int32 RightArmBoneIndex = INDEX_NONE;
@@ -161,22 +173,16 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Base|Animation")
 	class UAnimMontage* IdleAnimMontage;
-
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Base|Animation")
 	class UAnimMontage* MoveAnimMontage;
-
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Base|Animation")
 	class UAnimMontage* SprintAnimMontage;
-
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Base|Animation")
 	class UAnimMontage* JumpUpAnimMontage;
-
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Base|Animation")
 	class UAnimMontage* JumpMidAnimMontage;
-
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Base|Animation")
 	class UAnimMontage* JumpDownAnimMontage;
-
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Base|Animation")
 	class UAnimMontage* ShotAnimMontage;
 
@@ -184,83 +190,52 @@ public:
 	float initShotAnimTime; //射撃アニメーション時間.
 #pragma endregion
 
-#pragma region "Movement"
-	//移動パラメーター.
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Base|Movement")
-	float BaseTurnRate = 45.0f;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Base|Movement")
-	float BaseLookUpRate = 45.0f;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Base|Movement")
-	float WalkSpeed = 200.0f; //歩速, 200くらいがちょうどいい.
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Base|Movement")
-	float RunSpeed  = 800.0f; //走速, 800くらい?
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "MyProperty|Base|Movement")
-	bool bIsDash;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "MyProperty|Base|Movement")
-	bool bIsMoving;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "MyProperty|Base|Movement")
-	bool bIsJumping;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "MyProperty|Base|Movement")
-	bool bAWasJumping;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "MyProperty|Base|Movement")
-	double CurrentSpeed;
-#pragma endregion
-
 //▼ ===== 関数 ===== ▼.
-public:
-#pragma region "コンストラクタ"
-	ACharacterBase();
-#pragma endregion
-
 protected:
 #pragma region "基本処理"
-	//召喚した瞬間.
-	virtual void BeginPlay() override;
-	//常に実行.
-	virtual void Tick(float DeltaTime) override;
+	ACharacterBase();								//コンストラクタ.
+	virtual void BeginPlay() override;				//召喚した瞬間.
+	virtual void Tick(float DeltaTime) override;	//常に実行.
 #pragma endregion
 
+public:
 #pragma region "移動"
-	void StartWalk();
-	void StopWalk();
+	//移動処理.
+	void Move(FVector WorldDirection, float ScaleValue, bool bForce = false);
+	//歩行操作.
+	void OnWalkStart();
+	void OnWalkStop();
+#pragma endregion
+
+#pragma region "銃"
+	void OnReload();										//リロード開始処理.
+	void InitBoneIndices();									//ボーンインデックスを初期化する関数.
+	void UpdateReloadTimer(float DeltaTime);				//リロード時間の更新.
+	void EquipGun();										//銃を装備する.
+	void RotateArmBones(const FRotator& TargetRotation);	//腕のボーンを回転させる関数.
 #pragma endregion
 
 #pragma region "射撃"
-	//発射処理.[仮想関数]
-	virtual void ShotBullet(){}
 	//発射チェック.
-	bool ShotBulletCheck();
+	bool IsShotAble();
+	//射撃開始.
+	void ShotStart();
+	//射撃実行[仮想関数]
+	virtual void ShotExe(){};
 	//弾を召喚.
-	bool SpawnBullet(AActor* user, FVector targetPos);
-
-	//ボーンインデックスを初期化する関数.
-	void InitializeBoneIndices();
-
-	//リロード開始.
-	void StartReload();
-
-	//リロード時間の更新.
-	void UpdateReloadTimer(float DeltaTime);
-
-	//銃を装備する..
-	void EquipGun();
-
-	//腕のボーンを回転させる関数.
-	void RotateArmBones(const FRotator& TargetRotation);
+	bool SpawnBullet(TObjectPtr<ACharacterBase> user, FVector targetPos);
 #pragma endregion
 
-#pragma region "ダメージ処理"
+#pragma region "ダメージ・死亡"
 	UFUNCTION()
 	virtual void OnBulletHit(){}	//弾が当たったら実行される.[仮想関数]
-	virtual void Die(){}			//死亡処理.                [仮想関数]
+	virtual void Death(){}			//死亡処理.                [仮想関数]
+
+	void PlayDeathAnimation();		//死亡アニメーション再生.
+	void PlayDeathEffect();			//死亡エフェクト再生.
+	void PlayDeathSound();			//死亡音再生.
+
+	void DisableComponents();		//コンポーネント無効化.
 #pragma endregion
 
 #pragma region "アニメーション"
