@@ -43,7 +43,7 @@ APlayerManager::APlayerManager() {
 /// 召喚した瞬間.
 /// </summary>
 void APlayerManager::BeginPlay() {
-
+	GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, TEXT("aaa"));
 	ACharacterBase::BeginPlay(); //親クラスのBeginPlay()を呼び出す.
 
 	//クロスヘアUIを初期化.
@@ -58,6 +58,8 @@ void APlayerManager::BeginPlay() {
 void APlayerManager::Tick(float DeltaTime) {
 
 	ACharacterBase::Tick(DeltaTime); //親クラスのTick()を呼び出す.
+
+	UpdateJumpAnimation();
 }
 
 #pragma endregion
@@ -161,6 +163,76 @@ void APlayerManager::OnLookUpRate(float Rate)
 {
 	AddControllerPitchInput(Rate * BaseLookUpRate * GetWorld()->GetDeltaSeconds());
 }
+
+#pragma endregion
+
+#pragma region "ジャンプ"
+
+void APlayerManager::Jump()
+{
+	Super::Jump();
+
+	// JumpStart セクションを再生.
+	if (JumpMontage)
+	{
+		PlayAnimMontage(JumpMontage);
+		// モンタージュの先頭セクション(JumpStart)から開始.
+		GetMesh()->GetAnimInstance()->Montage_JumpToSection(
+			FName("JumpStart"), JumpMontage
+		);
+	}
+}
+
+
+
+/// <summary>
+/// ジャンプ終了（ボタンを離したとき）.
+/// </summary>
+void APlayerManager::StopJumping()
+{
+	Super::StopJumping();
+}
+
+/// <summary>
+/// ジャンプアニメーションの3段階更新.
+/// Tick から毎フレーム呼ばれる.
+/// 
+/// [フロー]
+/// 踏み切り(JumpStart)
+///  → 空中に出たら JumpLoop へ切り替え（着地まで繰り返し）
+///  → 着地したら JumpLand を再生して終了
+///// </summary>
+void APlayerManager::UpdateJumpAnimation()
+{
+	if (JumpMontage == nullptr) return;
+
+	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+	if (AnimInstance == nullptr) return;
+
+	const bool bIsInAir = GetCharacterMovement()->IsFalling();
+
+	//①地上→空中:JumpLoop に切り替え.
+	if (bIsInAir && !bWasInAir)
+	{
+		if (AnimInstance->Montage_IsPlaying(JumpMontage))
+		{
+			AnimInstance->Montage_JumpToSection(FName("JumpLoop"), JumpMontage);
+		}
+	}
+
+	// ② 空中 → 着地 : JumpLand を再生.
+	if (!bIsInAir && bWasInAir)
+	{
+		if (AnimInstance->Montage_IsPlaying(JumpMontage))
+		{
+			AnimInstance->Montage_JumpToSection(FName("JumpLand"), JumpMontage);
+		}
+	}
+
+	// 次フレームのために現在の状態を保存.
+	bWasInAir = bIsInAir;
+}
+
 
 #pragma endregion
 
