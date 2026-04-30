@@ -22,7 +22,7 @@ ABulletBase::ABulletBase()
     speed   = 0;
     vec     = FVector::ZeroVector;
     counter = 0.0f;
-    user    = nullptr; //最初はポインタなし.
+    user    = EBulletUser::None; //使用者なし.
     
     //コンポーネント作成.
     cmpSphere = CreateDefaultSubobject<USphereComponent>(TEXT("SphereComponent"));
@@ -56,34 +56,37 @@ void ABulletBase::OnOverlapBegin(
     //FString msg  = FString::Printf(TEXT("Hit: %s"), *name); //変数組み込み.
     //GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, msg); //表示.
 
-    if (!IsValid(user)) return;
     if (!IsValid(OtherActor)) return;
     if (OtherActor == this) return;
 
-    //撃った人がプレイヤー.
-    if (Cast<APlayerManager>(user)) {
-        //敵に当たった.
-        if (auto enm = Cast<AEnemyManager>(OtherActor)) {
-            enm->OnBulletHit(); //被弾処理.
-            Destroy();          //弾消滅.
-        }
-    }
-    //撃った人が敵.
-    if (Cast<AEnemyManager>(user)) {
-        //プレイヤーに当たった.
-        if (auto ply = Cast<APlayerManager>(OtherActor)) {
-            ply->OnBulletHit(); //被弾処理.
-            Destroy();          //弾消滅.
-        }
+    //ユーザー別.
+    switch (user) 
+    {
+        //撃った人がプレイヤー.
+        case EBulletUser::Player:
+            //敵にヒット.
+            if (auto enm = Cast<AEnemyManager>(OtherActor)) {
+                enm->OnBulletHit(); //被弾処理.
+                Destroy();          //弾消滅.
+            }
+            break;
+
+        //撃った人が敵.
+        case EBulletUser::Enemy:
+            //プレイヤーにヒット.
+            if (auto ply = Cast<APlayerManager>(OtherActor)) {
+                ply->OnBulletHit(); //被弾処理.
+                Destroy();          //弾消滅.
+            }
+            break;
     }
 }
 
 /// <summary>
-/// set.
+/// 銃を撃った人を登録.
 /// </summary>
-/// <param name="user">撃った人のクラス</param>
-void ABulletBase::SetUser(TObjectPtr<ACharacterBase> _user) {
-    user = _user; //銃を撃った人を登録.
+void ABulletBase::SetUser(EBulletUser _user) {
+    user = _user;
 }
 
 /// <summary>
@@ -93,8 +96,6 @@ void ABulletBase::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-    if (!IsValid(user)) return;
-
     const FVector befPos = GetActorLocation();              //移動前の座標.
     {   
         SetActorLocation(GetActorLocation() + vec * speed); //前方向に移動.
@@ -103,13 +104,22 @@ void ABulletBase::Tick(float DeltaTime)
      
     FColor color;
 
-    //撃った人がプレイヤー.
-    if (Cast<APlayerManager>(user)) {
-        color = FColor(0, 255, 255);
-    }
-    //撃った人が敵.
-    if (Cast<AEnemyManager>(user)) {
-        color = FColor(255, 0, 0);
+    GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, TEXT("ugoita"));
+
+    //ユーザー別.
+    switch (user)
+    {
+        //撃った人がプレイヤー.
+        case EBulletUser::Player:
+            GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, TEXT("player"));
+            color = FColor(0, 255, 255);
+            break;
+
+        //撃った人が敵.
+        case EBulletUser::Enemy:
+            GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, TEXT("enemy"));
+            color = FColor(255, 0, 0);
+            break;
     }
 
     //弾の軌道.

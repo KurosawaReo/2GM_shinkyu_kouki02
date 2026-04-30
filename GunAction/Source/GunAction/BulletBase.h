@@ -26,7 +26,19 @@
 	3: 何のカテゴリに入れるか(自由名)
 */
 
+//前方宣言.
 class ACharacterBase;
+
+/// <summary>
+/// 弾の使用者.
+/// </summary>
+UENUM(BlueprintType)
+enum class EBulletUser : uint8
+{
+	None   UMETA(DisplayName = "None"),  //誰の弾でもない.
+	Enemy  UMETA(DisplayName = "Enemy"),
+	Player UMETA(DisplayName = "Player")
+};
 
 /// <summary>
 /// 弾の基底クラス.
@@ -47,7 +59,7 @@ private:
 	float   counter; //経過時間.
 
 	UPROPERTY()
-	TObjectPtr<ACharacterBase> user; //誰が撃った弾か.
+	EBulletUser user; //誰が撃った弾か.
 
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = MyProperty)
@@ -73,7 +85,7 @@ protected:
 
 public:	
 	//set.
-	virtual void SetUser(TObjectPtr<ACharacterBase> user);
+	virtual void SetUser(EBulletUser _user);
 	//常に実行.
 	virtual void Tick(float DeltaTime) override;
 };

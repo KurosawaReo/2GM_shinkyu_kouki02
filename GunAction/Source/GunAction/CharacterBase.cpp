@@ -18,6 +18,8 @@
 #include "EngineUtils.h"
 
 //他class.
+#include "PlayerManager.h"
+#include "EnemyManager.h"
 #include "BulletBase.h"
 #include "Steam_Revolver.h"
 
@@ -249,7 +251,14 @@ bool ACharacterBase::SpawnBullet(TObjectPtr<ACharacterBase> user, FVector target
 	//生成に成功したら.
 	if (Bullet != nullptr)
 	{
-		Bullet->SetUser(user); //撃った人を登録.
+		//userがプレイヤーなら.
+		if (Cast<APlayerManager>(user)) {
+			Bullet->SetUser(EBulletUser::Player); //撃ったのはプレイヤー.
+		}
+		//userが敵なら.
+		if (Cast<AEnemyManager>(user)) {
+			Bullet->SetUser(EBulletUser::Enemy); //撃ったのは敵.
+		}
 
 		//弾薬を消費.
 		AmmoCount--;
