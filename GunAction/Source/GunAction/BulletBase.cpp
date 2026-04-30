@@ -60,24 +60,18 @@ void ABulletBase::OnOverlapBegin(
     if (!IsValid(OtherActor)) return;
     if (OtherActor == this) return;
 
-    GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, TEXT("ugoita"));
-
     //撃った人がプレイヤー.
     if (Cast<APlayerManager>(user)) {
-        GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, TEXT("プレイヤーが撃った"));
         //敵に当たった.
         if (auto enm = Cast<AEnemyManager>(OtherActor)) {
-            GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, TEXT("敵にあたった"));
             enm->OnBulletHit(); //被弾処理.
             Destroy();          //弾消滅.
         }
     }
     //撃った人が敵.
     if (Cast<AEnemyManager>(user)) {
-        GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, TEXT("敵が撃った"));
         //プレイヤーに当たった.
         if (auto ply = Cast<APlayerManager>(OtherActor)) {
-            GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, TEXT("プレイヤーにあたった"));
             ply->OnBulletHit(); //被弾処理.
             Destroy();          //弾消滅.
         }
@@ -136,4 +130,6 @@ void ABulletBase::Tick(float DeltaTime)
     if (counter >= deleteTime) {
         Destroy();
     }
+//  FString text = FString::Printf(_T("counter:%f"), counter);
+//  GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, text);
 }
