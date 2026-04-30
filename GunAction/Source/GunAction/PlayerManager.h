@@ -45,6 +45,10 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "MyProperty|Base|UI")
 	UCrosshairWidget* CrosshairWidget;
 #pragma endregion
+#pragma region "ジャンプ"
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Player|Animation")
+	UAnimMontage* JumpMontage;      // ジャンプモンタージュ.
+#pragma endregion
 
 //▼ ===== 関数 ===== ▼.
 protected:
@@ -60,6 +64,16 @@ public:
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 	//入力バインド.
 	void Input(UInputComponent* PlayerInputComponent);
+#pragma endregion
+
+#pragma region"ジャンプ".
+	void Jump() override;//ジャンプ開始.
+
+	void StopJumping() override;//ジャンプ終了.
+
+	void UpdateJumpAnimation();//ジャンプアニメーション更新.
+
+	bool bWasInAir = false; //前フレームの空中フラグ.
 #pragma endregion
 
 #pragma region "移動"
