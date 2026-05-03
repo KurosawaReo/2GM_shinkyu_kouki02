@@ -398,9 +398,11 @@ void ACharacterBase::UpdateReloadTimer(float DeltaTime)
 /// </summary>
 void ACharacterBase::EquipGun()
 {
-	if (RevolverGunClass == nullptr)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("RevolverGunClass is not set! Please set it in Blueprint."));
+	//ƒGƒ‰[‘Îô.
+	if (RevolverGun != nullptr) {
+		return;
+	}
+	if (RevolverGunClass == nullptr) {
 		return;
 	}
 
