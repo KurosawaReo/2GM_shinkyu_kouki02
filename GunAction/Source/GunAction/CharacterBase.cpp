@@ -21,7 +21,7 @@
 #include "PlayerManager.h"
 #include "EnemyManager.h"
 #include "BulletBase.h"
-#include "Steam_Revolver.h"
+#include "WeaponRevolver.h"
 
 #pragma region "基本処理"
 
@@ -411,7 +411,7 @@ void ACharacterBase::EquipGun()
 	SpawnParams.Instigator = GetInstigator();
 
 	//銃をスポーン.
-	RevolverGun = GetWorld()->SpawnActor<ASteam_Revolver>(RevolverGunClass, FVector::ZeroVector, FRotator::ZeroRotator, SpawnParams);
+	RevolverGun = GetWorld()->SpawnActor<AWeaponRevolver>(RevolverGunClass, FVector::ZeroVector, FRotator::ZeroRotator, SpawnParams);
 
 	if (RevolverGun)
 	{

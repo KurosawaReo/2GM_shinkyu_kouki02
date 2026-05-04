@@ -40,12 +40,14 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "Animation/AnimMontage.h"
-#include "Steam_Revolver.h"
+
+//他class.
+#include "WeaponRevolver.h"
+
 #include "CharacterBase.generated.h"
 
 //前方宣言.
 class ABulletBase;
-class ASteam_Revolver;
 
 /// <summary>
 /// キャラクターのstate列挙体.
@@ -127,10 +129,10 @@ public:
 
 	//銃.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Base|Gun")
-	TSubclassOf<ASteam_Revolver> RevolverGunClass;
+	TSubclassOf<AWeaponRevolver> RevolverGunClass;
 	//スポーンした銃を入れる用.
 	UPROPERTY(BlueprintReadOnly, Category = "MyProperty|Base|Gun")
-	ASteam_Revolver* RevolverGun;
+	AWeaponRevolver* RevolverGun;
 
 	//弾関連.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Base|Gun|Ammunition")

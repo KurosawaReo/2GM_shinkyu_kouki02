@@ -160,24 +160,10 @@ void AWeaponRevolver::DisableAllCollisions()
 	UE_LOG(LogTemp, Warning, TEXT("All gun collisions disabled!"));
 }
 
-//test
-void SetMeshActive(TObjectPtr<UStaticMeshComponent> Mesh, bool bActive)
-{
-	/*Mesh->SetVisibility(bActive);
-	Mesh->SetCollisionEnabled(
-		bActive ? ECollisionEnabled::QueryAndPhysics : ECollisionEnabled::NoCollision
-	);
-	Mesh->SetComponentTickEnabled(bActive);*/
-}
-
 //銃のメッシュを無効化.
 //キャラクターが銃を使わずに射撃のみ行いたい時用.
 void AWeaponRevolver::DisableGunMesh() {
 
-	//TODO <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-	//どうしたら銃のメッシュを消去できる?
-
-	//SetMeshActive(Muzzle, false);
 	//GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, TEXT("DisableGunMesh()")); //表示.
 }
 
