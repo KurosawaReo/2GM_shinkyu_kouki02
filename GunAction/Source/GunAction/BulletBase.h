@@ -10,6 +10,8 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 #include "Components/SphereComponent.h"
+#include "NiagaraSystem.h" //エフェクト用.
+
 #include "BulletBase.generated.h"
 
 /*
@@ -55,17 +57,22 @@ private:
 
 //▼ ===== 変数 ===== ▼.
 private:
-	FVector vec;     //進行方向.
-	float   counter; //経過時間.
+	FVector vec;      //進行方向.
+	int     counter;  //経過時間.
 
 	UPROPERTY()
 	EBulletUser user; //誰が撃った弾か.
 
 public:
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = MyProperty)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty")
 	float   speed      = 1;  //速度.
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = MyProperty)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty")
 	float   deleteTime = 50; //消滅までの時間.
+
+	UPROPERTY(EditAnywhere, Category = "MyProperty|Effect")
+	UNiagaraSystem* TrailEffectAsset; //弾道エフェクト.
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Effect")
+	int TrailSpawnStep = 2; //何フレームごとに出すか.
 
 //▼ ===== 関数 ===== ▼.
 public:	
@@ -88,4 +95,6 @@ public:
 	virtual void SetUser(EBulletUser _user);
 	//常に実行.
 	virtual void Tick(float DeltaTime) override;
+	//弾道召喚.
+	void SpawnTrail();
 };

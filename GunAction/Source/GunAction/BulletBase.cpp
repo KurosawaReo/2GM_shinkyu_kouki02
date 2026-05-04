@@ -5,6 +5,8 @@
    弾の元となる基底クラス.
 */
 #include "BulletBase.h"
+#include "NiagaraFunctionLibrary.h"
+#include "NiagaraComponent.h"
 
 //他class.
 #include "PlayerManager.h"
@@ -96,39 +98,10 @@ void ABulletBase::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-    const FVector befPos = GetActorLocation();              //移動前の座標.
-    {   
-        SetActorLocation(GetActorLocation() + vec * speed); //前方向に移動.
-    }
-    const FVector nowPos = GetActorLocation();              //移動後の座標.
-     
-    FColor color;
-
-    //ユーザー別.
-    switch (user)
-    {
-        //撃った人がプレイヤー.
-        case EBulletUser::Player:
-            color = FColor(0, 255, 255);
-            break;
-
-        //撃った人が敵.
-        case EBulletUser::Enemy:
-            color = FColor(255, 0, 0);
-            break;
-    }
-
-    //弾の軌道.
-    DrawDebugLine(
-        GetWorld(),
-        befPos,
-        nowPos,
-        color,  //線の色.
-        false,  //永続かどうか.
-        1.0f,   //表示時間.
-        0,
-        1.0f    //太さ.
-    );
+    //前方向に移動.
+    SetActorLocation(GetActorLocation() + vec * speed);
+    //弾道の生成.
+    SpawnTrail();
 
     //カウンター.
     counter += 1;
@@ -136,6 +109,70 @@ void ABulletBase::Tick(float DeltaTime)
     if (counter >= deleteTime) {
         Destroy();
     }
-//  FString text = FString::Printf(_T("counter:%f"), counter);
-//  GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, text);
+}
+
+/// <summary>
+/// 弾道の生成.
+/// </summary>
+void ABulletBase::SpawnTrail() {
+
+    //ユーザー別.
+    switch (user)
+    {
+        //撃った人がプレイヤー.
+        case EBulletUser::Player:
+        break;
+
+        //撃った人が敵.
+        case EBulletUser::Enemy:
+        break;
+    }
+
+    //弾道.
+    if (TrailEffectAsset) {
+
+        //生成させるか判定.
+        bool isSpawn = false;
+        //0割対策.
+        if (TrailSpawnStep != 0) {
+            isSpawn = (counter % TrailSpawnStep == 0);
+        }
+        else {
+            isSpawn = false;
+        }
+
+        //一定間隔で生成.
+        if (isSpawn)
+        {
+            //生成位置.
+            const FVector spawnPos = GetActorLocation();
+            //生成.
+            UNiagaraComponent* comp =
+                UNiagaraFunctionLibrary::SpawnSystemAtLocation(
+                    GetWorld(),
+                    TrailEffectAsset,
+                    spawnPos
+                );
+
+            if (comp)
+            {
+                comp->SetAutoDestroy(true);
+
+                // タイマーで停止
+                FTimerHandle handle;
+                GetWorld()->GetTimerManager().SetTimer(
+                    handle,
+                    [comp]()
+                    {
+                        if (comp)
+                        {
+                            comp->Deactivate(); // 再生停止
+                        }
+                    },
+                    0.2f, // ←寿命
+                    false
+                );
+            }
+        }
+    }
 }
