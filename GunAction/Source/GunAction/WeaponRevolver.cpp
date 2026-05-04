@@ -21,7 +21,7 @@ AWeaponRevolver::AWeaponRevolver()
 	RootComponent = DefaultSceneRoot;
 
 	// リボルバー本体(メッシュ)
-	RevolverMain = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("Steam_Revolver"));
+	RevolverMain = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("RevolverMain"));
 	RevolverMain->SetupAttachment(DefaultSceneRoot);
 	// マズル
 	Muzzle = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Muzzle"));
@@ -160,13 +160,6 @@ void AWeaponRevolver::DisableAllCollisions()
 	UE_LOG(LogTemp, Warning, TEXT("All gun collisions disabled!"));
 }
 
-//銃のメッシュを無効化.
-//キャラクターが銃を使わずに射撃のみ行いたい時用.
-void AWeaponRevolver::DisableGunMesh() {
-
-	//GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, TEXT("DisableGunMesh()")); //表示.
-}
-
 //射撃アニメーションを再生.
 void AWeaponRevolver::PlayFireAnimation()
 {
@@ -178,7 +171,7 @@ void AWeaponRevolver::PlayFireAnimation()
 
 	if (RevolverMain == nullptr)
 	{
-		UE_LOG(LogTemp, Error, TEXT("Steam_Revolver mesh is invalid!"));
+		UE_LOG(LogTemp, Error, TEXT("Revolver mesh is invalid!"));
 		return;
 	}
 
@@ -203,7 +196,7 @@ void AWeaponRevolver::PlayReloadAnimation()
 
 	if (RevolverMain == nullptr)
 	{
-		UE_LOG(LogTemp, Error, TEXT("Steam_Revolver mesh is invalid!"));
+		UE_LOG(LogTemp, Error, TEXT("Revolver mesh is invalid!"));
 		return;
 	}
 

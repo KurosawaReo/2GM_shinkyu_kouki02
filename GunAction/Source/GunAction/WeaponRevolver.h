@@ -137,9 +137,6 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
-	/* 銃のメッシュを無効化 */
-	void DisableGunMesh();
-
 	/* 射撃アニメーションを再生 */
 	UFUNCTION(BlueprintCallable, Category = "Gun")
 	void PlayFireAnimation();

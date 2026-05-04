@@ -104,20 +104,16 @@ void ABulletBase::Tick(float DeltaTime)
      
     FColor color;
 
-    GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, TEXT("ugoita"));
-
     //ユーザー別.
     switch (user)
     {
         //撃った人がプレイヤー.
         case EBulletUser::Player:
-            GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, TEXT("player"));
             color = FColor(0, 255, 255);
             break;
 
         //撃った人が敵.
         case EBulletUser::Enemy:
-            GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, TEXT("enemy"));
             color = FColor(255, 0, 0);
             break;
     }

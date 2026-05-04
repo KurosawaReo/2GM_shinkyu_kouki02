@@ -392,6 +392,10 @@ void ACharacterBase::UpdateReloadTimer(float DeltaTime)
 	}
 }
 
+/*
+   TODO: IsHaveGunがfalseの時、銃装着(EquipGun)を行わないようにする。
+*/
+
 /// <summary>
 /// EquipGun - 銃を装備する処理.
 /// RevolverGunClassから銃をスポーンしてプレイヤーに装備させる.
@@ -416,13 +420,11 @@ void ACharacterBase::EquipGun()
 	if (RevolverGun)
 	{
 		//銃を装備(ソケットにアタッチする)
-		RevolverGun->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetIncludingScale, GunAttachSocketName);
+		bool ret = RevolverGun->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetIncludingScale, GunAttachSocketName);
 
-		//銃の見た目設定.
-		if (!IsHaveGun) {
-			RevolverGun->DisableGunMesh();
+		if (!ret) {
+			UE_LOG(LogTemp, Error, TEXT("Failed to equip revolver gun!"));
 		}
-
 		//銃のコリジョンは不要なため無効化.
 		if (RevolverGun->BoxCollision)
 		{
@@ -434,7 +436,6 @@ void ACharacterBase::EquipGun()
 			RevolverGun->RevolverMain->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 		}
 
-		UE_LOG(LogTemp, Warning, TEXT("Gun equipped successfully!"));
 		AmmoCount = MaxAmmoCount; //弾の残数を設定.
 	}
 	else
