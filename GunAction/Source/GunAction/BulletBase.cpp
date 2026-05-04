@@ -24,7 +24,7 @@ ABulletBase::ABulletBase()
     speed   = 0;
     vec     = FVector::ZeroVector;
     counter = 0.0f;
-    user    = EBulletUser::None; //使用者なし.
+    team    = ETeam::None; //チームなし.
     
     //コンポーネント作成.
     cmpSphere = CreateDefaultSubobject<USphereComponent>(TEXT("SphereComponent"));
@@ -61,11 +61,11 @@ void ABulletBase::OnOverlapBegin(
     if (!IsValid(OtherActor)) return;
     if (OtherActor == this) return;
 
-    //ユーザー別.
-    switch (user) 
+    //チーム別.
+    switch (team) 
     {
         //撃った人がプレイヤー.
-        case EBulletUser::Player:
+        case ETeam::Player:
             //敵にヒット.
             if (auto enm = Cast<AEnemyManager>(OtherActor)) {
                 enm->OnBulletHit(); //被弾処理.
@@ -74,7 +74,7 @@ void ABulletBase::OnOverlapBegin(
             break;
 
         //撃った人が敵.
-        case EBulletUser::Enemy:
+        case ETeam::Enemy:
             //プレイヤーにヒット.
             if (auto ply = Cast<APlayerManager>(OtherActor)) {
                 ply->OnBulletHit(); //被弾処理.
@@ -85,10 +85,10 @@ void ABulletBase::OnOverlapBegin(
 }
 
 /// <summary>
-/// 銃を撃った人を登録.
+/// チームを登録.
 /// </summary>
-void ABulletBase::SetUser(EBulletUser _user) {
-    user = _user;
+void ABulletBase::SetTeam(ETeam _team) {
+    team = _team;
 }
 
 /// <summary>
@@ -116,63 +116,48 @@ void ABulletBase::Tick(float DeltaTime)
 /// </summary>
 void ABulletBase::SpawnTrail() {
 
-    //ユーザー別.
-    switch (user)
+    UNiagaraSystem* effect = nullptr;
+
+    //チーム別.
+    switch (team)
     {
         //撃った人がプレイヤー.
-        case EBulletUser::Player:
-        break;
+        case ETeam::Player:
+            effect = EffectTrailPlayer;
+            break;
 
         //撃った人が敵.
-        case EBulletUser::Enemy:
-        break;
+        case ETeam::Enemy:
+            effect = EffectTrailEnemy;
+            break;
     }
 
     //弾道.
-    if (TrailEffectAsset) {
+    if (effect) {
 
-        //生成させるか判定.
-        bool isSpawn = false;
-        //0割対策.
-        if (TrailSpawnStep != 0) {
-            isSpawn = (counter % TrailSpawnStep == 0);
-        }
-        else {
-            isSpawn = false;
-        }
+        //生成位置.
+        const FVector spawnPos = GetActorLocation();
+        //生成.
+        UNiagaraComponent* comp = UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), effect, spawnPos);
 
-        //一定間隔で生成.
-        if (isSpawn)
+        if (comp)
         {
-            //生成位置.
-            const FVector spawnPos = GetActorLocation();
-            //生成.
-            UNiagaraComponent* comp =
-                UNiagaraFunctionLibrary::SpawnSystemAtLocation(
-                    GetWorld(),
-                    TrailEffectAsset,
-                    spawnPos
-                );
+            comp->SetAutoDestroy(true);
 
-            if (comp)
-            {
-                comp->SetAutoDestroy(true);
-
-                // タイマーで停止
-                FTimerHandle handle;
-                GetWorld()->GetTimerManager().SetTimer(
-                    handle,
-                    [comp]()
+            //一定時間で消滅.
+            FTimerHandle handle;
+            GetWorld()->GetTimerManager().SetTimer(
+                handle,
+                [comp]()
+                {
+                    if (comp)
                     {
-                        if (comp)
-                        {
-                            comp->Deactivate(); // 再生停止
-                        }
-                    },
-                    0.2f, // ←寿命
-                    false
-                );
-            }
+                        comp->Deactivate(); //再生停止.
+                    }
+                },
+                0.2f, //消えるまでの時間.
+                false
+            );
         }
     }
 }

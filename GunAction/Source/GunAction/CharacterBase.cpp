@@ -251,13 +251,13 @@ bool ACharacterBase::SpawnBullet(TObjectPtr<ACharacterBase> user, FVector target
 	//生成に成功したら.
 	if (Bullet != nullptr)
 	{
-		//userがプレイヤーなら.
+		//プレイヤーが撃ったなら.
 		if (Cast<APlayerManager>(user)) {
-			Bullet->SetUser(EBulletUser::Player); //撃ったのはプレイヤー.
+			Bullet->SetTeam(ETeam::Player); //プレイヤーチームへ.
 		}
-		//userが敵なら.
+		//敵が撃ったなら.
 		if (Cast<AEnemyManager>(user)) {
-			Bullet->SetUser(EBulletUser::Enemy); //撃ったのは敵.
+			Bullet->SetTeam(ETeam::Enemy);  //敵チームへ.
 		}
 
 		//弾薬を消費.
