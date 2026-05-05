@@ -82,6 +82,8 @@ void ACharacterBase::Tick(float DeltaTime)
 	UpdateReloadTimer(DeltaTime);
 	//射撃時の向き補完.
 	Rotating(DeltaTime);
+	//ローリング更新.
+	UpdateRoll(DeltaTime);
 }
 
 #pragma endregion
@@ -119,8 +121,8 @@ void ACharacterBase::OnWalkStop()
 #pragma region "ローリング(回避)"
 
 /// <summary>
-/// ロール入力処理.
-/// キーを押したときに前転ロールを開始する.
+/// ローリング開始.
+/// キーを押したときに前転する.
 /// </summary>
 void ACharacterBase::OnRoll()
 {
@@ -133,12 +135,12 @@ void ACharacterBase::OnRoll()
 
 	float MontageLength = MyPlayAnim(ECharaAnimState::Roll);
 
-	// モンタージュ終了後に RollEnd を呼ぶ.
+	// モンタージュ終了後に EndRoll を呼ぶ.
 	FTimerHandle RollEndTimer;
 	GetWorld()->GetTimerManager().SetTimer(
 		RollEndTimer,
 		this,
-		&APlayerManager::RollEnd,
+		&APlayerManager::EndRoll,
 		MontageLength,
 		false
 	);
@@ -153,10 +155,28 @@ void ACharacterBase::OnRoll()
 }
 
 /// <summary>
-/// ロール終了処理.
+/// ローリング更新.
+/// </summary>
+void ACharacterBase::UpdateRoll(float DeltaTime) {
+
+	if (!bIsRolling) { return; }
+
+	//前方向ベクトル取得.
+	const FVector Forward = GetActorForwardVector();
+	//移動速度.
+	const float Speed = 600.0f;
+	//移動量 = 方向 * 速度 * 時間.
+	const FVector Move = Forward * Speed * DeltaTime;
+
+	//位置更新.
+	SetActorLocation(GetActorLocation() + Move);
+}
+
+/// <summary>
+/// ローリング終了.
 /// モンタージュ再生が終わったら呼ばれる.
 /// </summary>
-void ACharacterBase::RollEnd()
+void ACharacterBase::EndRoll()
 {
 	bIsRolling = false;
 }

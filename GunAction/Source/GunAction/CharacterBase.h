@@ -227,8 +227,9 @@ public:
 #pragma endregion
 
 #pragma region "ローリング(回避)"
-	void OnRoll();                  // ロール入力.
-	void RollEnd();                 // ロール終了処理.
+	void OnRoll();						//ローリング開始.
+	void UpdateRoll(float DeltaTime);	//ローリング更新.
+	void EndRoll();						//ローリング終了.
 #pragma endregion
 
 #pragma region "銃"

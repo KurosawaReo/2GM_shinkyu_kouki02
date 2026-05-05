@@ -6,6 +6,7 @@
 #include "PlayerManager.h"
 #include "EnemyManager.h"
 
+//現在未使用.
 void UAnimNotifyFunc::Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation)
 {
 	////エラー対策.
