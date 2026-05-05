@@ -98,6 +98,9 @@ void APlayerManager::Input(UInputComponent* PlayerInputComponent)
 	PlayerInputComponent->BindAction("Jump", IE_Pressed,    this, &ACharacter::Jump);
 	PlayerInputComponent->BindAction("Jump", IE_Released,   this, &ACharacter::StopJumping);
 
+	// ロール（回避）.
+	PlayerInputComponent->BindAction("Roll", IE_Pressed, this, &APlayerManager::OnRoll);
+
 	//ダッシュ.
 	PlayerInputComponent->BindAction("Sprint", IE_Pressed,  this, &APlayerManager::OnWalkStart);
 	PlayerInputComponent->BindAction("Sprint", IE_Released, this, &APlayerManager::OnWalkStop);
@@ -162,6 +165,62 @@ void APlayerManager::OnTurnRate(float Rate)
 void APlayerManager::OnLookUpRate(float Rate)
 {
 	AddControllerPitchInput(Rate * BaseLookUpRate * GetWorld()->GetDeltaSeconds());
+}
+
+#pragma endregion
+
+#pragma region "ロール（回避）"
+
+/// <summary>
+/// ロール入力処理.
+/// キーを押したときに前転ロールを開始する.
+/// </summary>
+void APlayerManager::OnRoll()
+{
+	// クールダウン中またはロール中は受け付けない.
+	if (!bCanRoll || bIsRolling) return;
+
+	// ロール中フラグを立てる.
+	bIsRolling = true;
+	bCanRoll = false;
+
+	// ロールモンタージュを再生.
+	if (RollMontage)
+	{
+		float MontageLength = PlayAnimMontage(RollMontage);
+
+		// モンタージュ終了後に RollEnd を呼ぶ.
+		FTimerHandle RollEndTimer;
+		GetWorld()->GetTimerManager().SetTimer(
+			RollEndTimer,
+			this,
+			&APlayerManager::RollEnd,
+			MontageLength,
+			false
+		);
+	}
+	else
+	{
+		// モンタージュ未設定時はすぐ終了.
+		RollEnd();
+	}
+
+	// クールダウン開始.
+	GetWorld()->GetTimerManager().SetTimer(
+		RollCooldownTimer,
+		[this]() { bCanRoll = true; },
+		RollCooldown,
+		false
+	);
+}
+
+/// <summary>
+/// ロール終了処理.
+/// モンタージュ再生が終わったら呼ばれる.
+/// </summary>
+void APlayerManager::RollEnd()
+{
+	bIsRolling = false;
 }
 
 #pragma endregion
