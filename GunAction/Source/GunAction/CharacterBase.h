@@ -40,12 +40,14 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "Animation/AnimMontage.h"
-#include "Steam_Revolver.h"
+
+//他class.
+#include "WeaponRevolver.h"
+
 #include "CharacterBase.generated.h"
 
 //前方宣言.
 class ABulletBase;
-class ASteam_Revolver;
 
 /// <summary>
 /// キャラクターのstate列挙体.
@@ -127,24 +129,24 @@ public:
 
 	//銃.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Base|Gun")
-	TSubclassOf<ASteam_Revolver> RevolverGunClass;
+	TSubclassOf<AWeaponRevolver> RevolverGunClass;
 	//スポーンした銃を入れる用.
 	UPROPERTY(BlueprintReadOnly, Category = "MyProperty|Base|Gun")
-	ASteam_Revolver* RevolverGun;
+	AWeaponRevolver* RevolverGun;
 
-	//弾関連.
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Base|Gun|Ammunition")
+	// ===== 射撃性能 =====
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Base|Gun|Status")
 	int32 MaxAmmoCount = 6;				//連続で弾を撃てる数.
-	UPROPERTY(BlueprintReadOnly, Category = "MyProperty|Base|Gun|Ammunition")
+	UPROPERTY(BlueprintReadOnly, Category = "MyProperty|Base|Gun|Status")
 	int32 AmmoCount = 6;				//弾の残数.
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Base|Gun|Ammunition")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Base|Gun|Status")
 	float ReloadDuration = 2.5f;		//リロード時間(秒)
-	UPROPERTY(BlueprintReadOnly, Category = "MyProperty|Base|Gun|Ammunition")
+	UPROPERTY(BlueprintReadOnly, Category = "MyProperty|Base|Gun|Status")
 	bool  bIsReloading = false;			//リロードしているか.
-	UPROPERTY(BlueprintReadOnly, Category = "MyProperty|Base|Gun|Ammunition")
+	UPROPERTY(BlueprintReadOnly, Category = "MyProperty|Base|Gun|Status")
 	float ReloadTimerElapsed = 0.0f;	//リロード経過時間計測用.
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Base|Gun|Ammunition")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Base|Gun|Status")
 	float shotPosRandom = 0.0f;			//射撃の正確さ(どれだけずらすか)
 #pragma endregion
 
