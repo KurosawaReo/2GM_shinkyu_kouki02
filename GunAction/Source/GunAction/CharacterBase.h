@@ -50,26 +50,27 @@
 class ABulletBase;
 
 /// <summary>
-/// キャラクターのstate列挙体.
+/// [enum] キャラクターの状態.
 /// </summary>
 UENUM(BlueprintType)
 enum class ECharaState : uint8
 {
-	Alive    UMETA(DisplayName = "Alive"),
-	Dead     UMETA(DisplayName = "Dead")
+	Alive UMETA(DisplayName = "Alive"),
+	Dead  UMETA(DisplayName = "Dead")
 };
 
-//アニメーション状態の列挙型.
+/// <summary>
+/// [enum] キャラクターのアニメーション状態. 
+/// </summary>
 UENUM(BlueprintType)
-enum class EAnimationState : uint8
+enum class ECharaAnimState : uint8
 {
-	Idle     UMETA(DisplayName = "Idle"),
-	Move     UMETA(DisplayName = "Move"),
-	Run      UMETA(DisplayName = "Run"),
-	JumpUp   UMETA(DisplayName = "JumpUp"),
-	JumpMid  UMETA(DisplayName = "JumpMid"),
-	JumpDown UMETA(DisplayName = "JumpDown"),
-	Shot     UMETA(DisplayName = "Shot")
+	Idle  UMETA(DisplayName = "Idle"), //停止.
+	Move  UMETA(DisplayName = "Move"), //移動.
+	Run   UMETA(DisplayName = "Run"),  //ダッシュ.
+	Jump  UMETA(DisplayName = "Jump"), //ジャンプ.
+	Shot  UMETA(DisplayName = "Shot"), //射撃.
+	Roll  UMETA(DisplayName = "Roll")  //ローリング.
 };
 
 UCLASS()
@@ -93,14 +94,20 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "MyProperty|Base|Movement")
 	bool bIsDash;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "MyProperty|Base|Movement")
-	bool bIsMoving;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "MyProperty|Base|Movement")
-	bool bIsJumping;
+	bool bWasInAir = false; //前フレームの空中フラグ.
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "MyProperty|Base|Movement")
 	double CurrentSpeed;
+#pragma endregion
+
+#pragma region "ロール"
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Base|Roll")
+	float RollCooldown = 1.0f;        // ロールのクールダウン時間（秒）.
+
+	bool bIsRolling = false;          // ロール中フラグ.
+	bool bCanRoll = true;			  // ロール可能フラグ（クールダウン用）.
+
+	FTimerHandle RollCooldownTimer;   // クールダウン用タイマー.
 #pragma endregion
 
 #pragma region "弾"
@@ -150,15 +157,6 @@ public:
 	float shotPosRandom = 0.0f;			//射撃の正確さ(どれだけずらすか)
 #pragma endregion
 
-#pragma region "死亡"
-	//死亡時のエフェクト.
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Base|Death")
-	class UParticleSystem* DeathEffect;
-	//死亡時のサウンド.
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Base|Death")
-	class USoundBase* DeathSound;
-#pragma endregion
-
 #pragma region "アニメーション"
 	//腕のボーンインデックスをキャッシュ.
 	UPROPERTY(VisibleAnywhere, Category = "MyProperty|Base|Animation")
@@ -170,26 +168,33 @@ public:
 	//アニメーション関係.
 	float shotAnimTimer;
 	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Base|Animation")
-	EAnimationState CurrentAnimationState; //現在のアニメーション状態.
+	UPROPERTY(VisibleAnywhere, Category = "MyProperty|Base|Animation")
+	ECharaAnimState CurrentAnimationState; //現在のアニメーション状態.
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Base|Animation")
-	class UAnimMontage* IdleAnimMontage;
+	UAnimMontage* IdleAnimMontage;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Base|Animation")
-	class UAnimMontage* MoveAnimMontage;
+	UAnimMontage* MoveAnimMontage;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Base|Animation")
-	class UAnimMontage* SprintAnimMontage;
+	UAnimMontage* SprintAnimMontage;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Base|Animation")
-	class UAnimMontage* JumpUpAnimMontage;
+	UAnimMontage* JumpAnimMontage;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Base|Animation")
-	class UAnimMontage* JumpMidAnimMontage;
+	UAnimMontage* ShotAnimMontage;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Base|Animation")
-	class UAnimMontage* JumpDownAnimMontage;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Base|Animation")
-	class UAnimMontage* ShotAnimMontage;
+	UAnimMontage* RollAnimMontage; //ローリングアニメーション.
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Base|Animation|Time")
 	float initShotAnimTime; //射撃アニメーション時間.
+#pragma endregion
+
+#pragma region "死亡"
+	//死亡時のエフェクト.
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Base|Death")
+	class UParticleSystem* DeathEffect;
+	//死亡時のサウンド.
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Base|Death")
+	class USoundBase* DeathSound;
 #pragma endregion
 
 //▼ ===== 関数 ===== ▼.
@@ -207,6 +212,11 @@ public:
 	//歩行操作.
 	void OnWalkStart();
 	void OnWalkStop();
+#pragma endregion
+
+#pragma region "ローリング(回避)"
+	void OnRoll();                  // ロール入力.
+	void RollEnd();                 // ロール終了処理.
 #pragma endregion
 
 #pragma region "銃"
@@ -242,8 +252,9 @@ public:
 
 #pragma region "アニメーション"
 	//アニメーション更新.
-	void UpdateAnimState(float DeltaTime);
+	void UpdateAnim(float DeltaTime);
+	void UpdateAnimJump(bool bIsInAir);
 	//アニメーション再生.
-	void PlayAnim(EAnimationState AnimState);
+	float MyPlayAnim(ECharaAnimState AnimState);
 #pragma endregion
 };
