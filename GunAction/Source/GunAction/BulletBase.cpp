@@ -5,6 +5,8 @@
    弾の元となる基底クラス.
 */
 #include "BulletBase.h"
+#include "NiagaraFunctionLibrary.h"
+#include "NiagaraComponent.h"
 
 //他class.
 #include "PlayerManager.h"
@@ -22,7 +24,7 @@ ABulletBase::ABulletBase()
     speed   = 0;
     vec     = FVector::ZeroVector;
     counter = 0.0f;
-    user    = EBulletUser::None; //使用者なし.
+    team    = ETeam::None; //チームなし.
     
     //コンポーネント作成.
     cmpSphere = CreateDefaultSubobject<USphereComponent>(TEXT("SphereComponent"));
@@ -59,11 +61,11 @@ void ABulletBase::OnOverlapBegin(
     if (!IsValid(OtherActor)) return;
     if (OtherActor == this) return;
 
-    //ユーザー別.
-    switch (user) 
+    //チーム別.
+    switch (team) 
     {
         //撃った人がプレイヤー.
-        case EBulletUser::Player:
+        case ETeam::Player:
             //敵にヒット.
             if (auto enm = Cast<AEnemyManager>(OtherActor)) {
                 enm->OnBulletHit(); //被弾処理.
@@ -72,7 +74,7 @@ void ABulletBase::OnOverlapBegin(
             break;
 
         //撃った人が敵.
-        case EBulletUser::Enemy:
+        case ETeam::Enemy:
             //プレイヤーにヒット.
             if (auto ply = Cast<APlayerManager>(OtherActor)) {
                 ply->OnBulletHit(); //被弾処理.
@@ -83,10 +85,10 @@ void ABulletBase::OnOverlapBegin(
 }
 
 /// <summary>
-/// 銃を撃った人を登録.
+/// チームを登録.
 /// </summary>
-void ABulletBase::SetUser(EBulletUser _user) {
-    user = _user;
+void ABulletBase::SetTeam(ETeam _team) {
+    team = _team;
 }
 
 /// <summary>
@@ -96,43 +98,10 @@ void ABulletBase::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-    const FVector befPos = GetActorLocation();              //移動前の座標.
-    {   
-        SetActorLocation(GetActorLocation() + vec * speed); //前方向に移動.
-    }
-    const FVector nowPos = GetActorLocation();              //移動後の座標.
-     
-    FColor color;
-
-    GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, TEXT("ugoita"));
-
-    //ユーザー別.
-    switch (user)
-    {
-        //撃った人がプレイヤー.
-        case EBulletUser::Player:
-            GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, TEXT("player"));
-            color = FColor(0, 255, 255);
-            break;
-
-        //撃った人が敵.
-        case EBulletUser::Enemy:
-            GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, TEXT("enemy"));
-            color = FColor(255, 0, 0);
-            break;
-    }
-
-    //弾の軌道.
-    DrawDebugLine(
-        GetWorld(),
-        befPos,
-        nowPos,
-        color,  //線の色.
-        false,  //永続かどうか.
-        1.0f,   //表示時間.
-        0,
-        1.0f    //太さ.
-    );
+    //前方向に移動.
+    SetActorLocation(GetActorLocation() + vec * speed);
+    //弾道の生成.
+    SpawnTrail();
 
     //カウンター.
     counter += 1;
@@ -140,6 +109,55 @@ void ABulletBase::Tick(float DeltaTime)
     if (counter >= deleteTime) {
         Destroy();
     }
-//  FString text = FString::Printf(_T("counter:%f"), counter);
-//  GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, text);
+}
+
+/// <summary>
+/// 弾道の生成.
+/// </summary>
+void ABulletBase::SpawnTrail() {
+
+    UNiagaraSystem* effect = nullptr;
+
+    //チーム別.
+    switch (team)
+    {
+        //撃った人がプレイヤー.
+        case ETeam::Player:
+            effect = EffectTrailPlayer;
+            break;
+
+        //撃った人が敵.
+        case ETeam::Enemy:
+            effect = EffectTrailEnemy;
+            break;
+    }
+
+    //弾道.
+    if (effect) {
+
+        //生成位置.
+        const FVector spawnPos = GetActorLocation();
+        //生成.
+        UNiagaraComponent* comp = UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), effect, spawnPos);
+
+        if (comp)
+        {
+            comp->SetAutoDestroy(true);
+
+            //一定時間で消滅.
+            FTimerHandle handle;
+            GetWorld()->GetTimerManager().SetTimer(
+                handle,
+                [comp]()
+                {
+                    if (comp)
+                    {
+                        comp->Deactivate(); //再生停止.
+                    }
+                },
+                0.2f, //消えるまでの時間.
+                false
+            );
+        }
+    }
 }

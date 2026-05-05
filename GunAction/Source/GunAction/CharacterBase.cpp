@@ -21,7 +21,7 @@
 #include "PlayerManager.h"
 #include "EnemyManager.h"
 #include "BulletBase.h"
-#include "Steam_Revolver.h"
+#include "WeaponRevolver.h"
 
 #pragma region "基本処理"
 
@@ -251,13 +251,13 @@ bool ACharacterBase::SpawnBullet(TObjectPtr<ACharacterBase> user, FVector target
 	//生成に成功したら.
 	if (Bullet != nullptr)
 	{
-		//userがプレイヤーなら.
+		//プレイヤーが撃ったなら.
 		if (Cast<APlayerManager>(user)) {
-			Bullet->SetUser(EBulletUser::Player); //撃ったのはプレイヤー.
+			Bullet->SetTeam(ETeam::Player); //プレイヤーチームへ.
 		}
-		//userが敵なら.
+		//敵が撃ったなら.
 		if (Cast<AEnemyManager>(user)) {
-			Bullet->SetUser(EBulletUser::Enemy); //撃ったのは敵.
+			Bullet->SetTeam(ETeam::Enemy);  //敵チームへ.
 		}
 
 		//弾薬を消費.
@@ -392,15 +392,21 @@ void ACharacterBase::UpdateReloadTimer(float DeltaTime)
 	}
 }
 
+/*
+   TODO: IsHaveGunがfalseの時、銃装着(EquipGun)を行わないようにする。
+*/
+
 /// <summary>
 /// EquipGun - 銃を装備する処理.
 /// RevolverGunClassから銃をスポーンしてプレイヤーに装備させる.
 /// </summary>
 void ACharacterBase::EquipGun()
 {
-	if (RevolverGunClass == nullptr)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("RevolverGunClass is not set! Please set it in Blueprint."));
+	//エラー対策.
+	if (RevolverGun != nullptr) {
+		return;
+	}
+	if (RevolverGunClass == nullptr) {
 		return;
 	}
 
@@ -409,18 +415,16 @@ void ACharacterBase::EquipGun()
 	SpawnParams.Instigator = GetInstigator();
 
 	//銃をスポーン.
-	RevolverGun = GetWorld()->SpawnActor<ASteam_Revolver>(RevolverGunClass, FVector::ZeroVector, FRotator::ZeroRotator, SpawnParams);
+	RevolverGun = GetWorld()->SpawnActor<AWeaponRevolver>(RevolverGunClass, FVector::ZeroVector, FRotator::ZeroRotator, SpawnParams);
 
 	if (RevolverGun)
 	{
 		//銃を装備(ソケットにアタッチする)
-		RevolverGun->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetIncludingScale, GunAttachSocketName);
+		bool ret = RevolverGun->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetIncludingScale, GunAttachSocketName);
 
-		//銃の見た目設定.
-		if (!IsHaveGun) {
-			RevolverGun->DisableGunMesh();
+		if (!ret) {
+			UE_LOG(LogTemp, Error, TEXT("Failed to equip revolver gun!"));
 		}
-
 		//銃のコリジョンは不要なため無効化.
 		if (RevolverGun->BoxCollision)
 		{
@@ -432,7 +436,6 @@ void ACharacterBase::EquipGun()
 			RevolverGun->RevolverMain->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 		}
 
-		UE_LOG(LogTemp, Warning, TEXT("Gun equipped successfully!"));
 		AmmoCount = MaxAmmoCount; //弾の残数を設定.
 	}
 	else

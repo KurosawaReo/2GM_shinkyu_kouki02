@@ -43,7 +43,7 @@ APlayerManager::APlayerManager() {
 /// 召喚した瞬間.
 /// </summary>
 void APlayerManager::BeginPlay() {
-	GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, TEXT("aaa"));
+
 	ACharacterBase::BeginPlay(); //親クラスのBeginPlay()を呼び出す.
 
 	//クロスヘアUIを初期化.

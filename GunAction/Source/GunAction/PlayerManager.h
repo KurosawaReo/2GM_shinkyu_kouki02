@@ -12,7 +12,7 @@
 
 //‘¼class.
 #include "CharacterBase.h" //eƒNƒ‰ƒX.
-#include "Steam_Revolver.h"
+#include "WeaponRevolver.h"
 
 #include "PlayerManager.generated.h"
 

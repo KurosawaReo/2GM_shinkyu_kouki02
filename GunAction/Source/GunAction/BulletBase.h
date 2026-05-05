@@ -10,6 +10,8 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 #include "Components/SphereComponent.h"
+#include "NiagaraSystem.h" //エフェクト用.
+
 #include "BulletBase.generated.h"
 
 /*
@@ -30,10 +32,10 @@
 class ACharacterBase;
 
 /// <summary>
-/// 弾の使用者.
+/// どのチームか.
 /// </summary>
 UENUM(BlueprintType)
-enum class EBulletUser : uint8
+enum class ETeam : uint8
 {
 	None   UMETA(DisplayName = "None"),  //誰の弾でもない.
 	Enemy  UMETA(DisplayName = "Enemy"),
@@ -55,17 +57,22 @@ private:
 
 //▼ ===== 変数 ===== ▼.
 private:
-	FVector vec;     //進行方向.
-	float   counter; //経過時間.
+	FVector vec;      //進行方向.
+	int     counter;  //経過時間.
 
 	UPROPERTY()
-	EBulletUser user; //誰が撃った弾か.
+	ETeam   team;     //どのチームが撃った弾か.
 
 public:
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = MyProperty)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty")
 	float   speed      = 1;  //速度.
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = MyProperty)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty")
 	float   deleteTime = 50; //消滅までの時間.
+
+	UPROPERTY(EditAnywhere, Category = "MyProperty|Effect")
+	UNiagaraSystem* EffectTrailPlayer; //弾道エフェクト(プレイヤー)
+	UPROPERTY(EditAnywhere, Category = "MyProperty|Effect")
+	UNiagaraSystem* EffectTrailEnemy;  //弾道エフェクト(敵)
 
 //▼ ===== 関数 ===== ▼.
 public:	
@@ -84,8 +91,10 @@ protected:
 	);
 
 public:	
-	//set.
-	virtual void SetUser(EBulletUser _user);
 	//常に実行.
 	virtual void Tick(float DeltaTime) override;
+	//set.
+	virtual void SetTeam(ETeam _team);
+	//弾道召喚.
+	void SpawnTrail();
 };
