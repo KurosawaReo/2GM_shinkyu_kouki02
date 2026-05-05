@@ -50,6 +50,14 @@ public:
 	UAnimMontage* JumpMontage;      // ジャンプモンタージュ.
 #pragma endregion
 
+#pragma region "ロール"
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Player|Animation")
+	UAnimMontage* RollMontage;        // ロールモンタージュ.
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Player|Roll")
+	float RollCooldown = 1.0f;        // ロールのクールダウン時間（秒）.
+#pragma endregion
+
 //▼ ===== 関数 ===== ▼.
 protected:
 
@@ -81,6 +89,16 @@ public:
 	void OnMoveRight(float Value);
 	void OnTurnRate(float Rate);
 	void OnLookUpRate(float Rate);
+#pragma endregion
+
+#pragma region "ロール（回避）"
+
+	void OnRoll();                    // ロール入力.
+	void RollEnd();                   // ロール終了処理.
+	bool bIsRolling = false;          // ロール中フラグ.
+	bool bCanRoll = true;           // ロール可能フラグ（クールダウン用）.
+
+	FTimerHandle RollCooldownTimer;   // クールダウン用タイマー.
 #pragma endregion
 
 #pragma region "射撃"
