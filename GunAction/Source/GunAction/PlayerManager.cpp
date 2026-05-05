@@ -49,7 +49,7 @@ void APlayerManager::BeginPlay() {
 	//クロスヘアUIを初期化.
 	InitUI();
 	//アニメーション状態の初期化.
-	CurrentAnimationState = EAnimationState::Idle;
+	CurrentAnimationState = ECharaAnimState::Idle;
 }
 
 /// <summary>
@@ -58,8 +58,6 @@ void APlayerManager::BeginPlay() {
 void APlayerManager::Tick(float DeltaTime) {
 
 	ACharacterBase::Tick(DeltaTime); //親クラスのTick()を呼び出す.
-
-	UpdateJumpAnimation();
 }
 
 #pragma endregion
@@ -99,7 +97,7 @@ void APlayerManager::Input(UInputComponent* PlayerInputComponent)
 	PlayerInputComponent->BindAction("Jump", IE_Released,   this, &ACharacter::StopJumping);
 
 	// ロール（回避）.
-	PlayerInputComponent->BindAction("Roll", IE_Pressed, this, &APlayerManager::OnRoll);
+	PlayerInputComponent->BindAction("Roll", IE_Pressed, this, &ACharacterBase::OnRoll);
 
 	//ダッシュ.
 	PlayerInputComponent->BindAction("Sprint", IE_Pressed,  this, &APlayerManager::OnWalkStart);
@@ -169,80 +167,19 @@ void APlayerManager::OnLookUpRate(float Rate)
 
 #pragma endregion
 
-#pragma region "ロール（回避）"
-
-/// <summary>
-/// ロール入力処理.
-/// キーを押したときに前転ロールを開始する.
-/// </summary>
-void APlayerManager::OnRoll()
-{
-	// クールダウン中またはロール中は受け付けない.
-	if (!bCanRoll || bIsRolling) return;
-
-	// ロール中フラグを立てる.
-	bIsRolling = true;
-	bCanRoll = false;
-
-	// ロールモンタージュを再生.
-	if (RollMontage)
-	{
-		float MontageLength = PlayAnimMontage(RollMontage);
-
-		// モンタージュ終了後に RollEnd を呼ぶ.
-		FTimerHandle RollEndTimer;
-		GetWorld()->GetTimerManager().SetTimer(
-			RollEndTimer,
-			this,
-			&APlayerManager::RollEnd,
-			MontageLength,
-			false
-		);
-	}
-	else
-	{
-		// モンタージュ未設定時はすぐ終了.
-		RollEnd();
-	}
-
-	// クールダウン開始.
-	GetWorld()->GetTimerManager().SetTimer(
-		RollCooldownTimer,
-		[this]() { bCanRoll = true; },
-		RollCooldown,
-		false
-	);
-}
-
-/// <summary>
-/// ロール終了処理.
-/// モンタージュ再生が終わったら呼ばれる.
-/// </summary>
-void APlayerManager::RollEnd()
-{
-	bIsRolling = false;
-}
-
-#pragma endregion
-
 #pragma region "ジャンプ"
 
 void APlayerManager::Jump()
 {
 	Super::Jump();
 
-	// JumpStart セクションを再生.
-	if (JumpMontage)
-	{
-		PlayAnimMontage(JumpMontage);
-		// モンタージュの先頭セクション(JumpStart)から開始.
-		GetMesh()->GetAnimInstance()->Montage_JumpToSection(
-			FName("JumpStart"), JumpMontage
-		);
-	}
+	//ジャンプアニメーション再生.
+	MyPlayAnim(ECharaAnimState::Jump);
+	//モンタージュの先頭セクション(JumpStart)から開始.
+	GetMesh()->GetAnimInstance()->Montage_JumpToSection(
+		FName("JumpStart"), JumpAnimMontage
+	);
 }
-
-
 
 /// <summary>
 /// ジャンプ終了（ボタンを離したとき）.
@@ -251,47 +188,6 @@ void APlayerManager::StopJumping()
 {
 	Super::StopJumping();
 }
-
-/// <summary>
-/// ジャンプアニメーションの3段階更新.
-/// Tick から毎フレーム呼ばれる.
-/// 
-/// [フロー]
-/// 踏み切り(JumpStart)
-///  → 空中に出たら JumpLoop へ切り替え（着地まで繰り返し）
-///  → 着地したら JumpLand を再生して終了
-///// </summary>
-void APlayerManager::UpdateJumpAnimation()
-{
-	if (JumpMontage == nullptr) return;
-
-	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
-	if (AnimInstance == nullptr) return;
-
-	const bool bIsInAir = GetCharacterMovement()->IsFalling();
-
-	//①地上→空中:JumpLoop に切り替え.
-	if (bIsInAir && !bWasInAir)
-	{
-		if (AnimInstance->Montage_IsPlaying(JumpMontage))
-		{
-			AnimInstance->Montage_JumpToSection(FName("JumpLoop"), JumpMontage);
-		}
-	}
-
-	// ② 空中 → 着地 : JumpLand を再生.
-	if (!bIsInAir && bWasInAir)
-	{
-		if (AnimInstance->Montage_IsPlaying(JumpMontage))
-		{
-			AnimInstance->Montage_JumpToSection(FName("JumpLand"), JumpMontage);
-		}
-	}
-
-	// 次フレームのために現在の状態を保存.
-	bWasInAir = bIsInAir;
-}
-
 
 #pragma endregion
 

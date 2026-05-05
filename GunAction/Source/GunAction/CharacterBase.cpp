@@ -126,7 +126,7 @@ void ACharacterBase::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 
 	//アニメーション状態を更新.
-	UpdateAnimState(DeltaTime);
+	UpdateAnim(DeltaTime);
 	//リロード時間の更新.
 	UpdateReloadTimer(DeltaTime);
 }
@@ -159,6 +159,53 @@ void ACharacterBase::OnWalkStop()
 {
 	bIsDash = true;
 	GetCharacterMovement()->MaxWalkSpeed = RunSpeed;  //RunSpeedに変更.
+}
+
+#pragma endregion
+
+#pragma region "ローリング(回避)"
+
+/// <summary>
+/// ロール入力処理.
+/// キーを押したときに前転ロールを開始する.
+/// </summary>
+void ACharacterBase::OnRoll()
+{
+	// クールダウン中またはロール中は受け付けない.
+	if (!bCanRoll || bIsRolling) return;
+
+	// ロール中フラグを立てる.
+	bIsRolling = true;
+	bCanRoll = false;
+
+	float MontageLength = MyPlayAnim(ECharaAnimState::Roll);
+
+	// モンタージュ終了後に RollEnd を呼ぶ.
+	FTimerHandle RollEndTimer;
+	GetWorld()->GetTimerManager().SetTimer(
+		RollEndTimer,
+		this,
+		&APlayerManager::RollEnd,
+		MontageLength,
+		false
+	);
+
+	// クールダウン開始.
+	GetWorld()->GetTimerManager().SetTimer(
+		RollCooldownTimer,
+		[this]() { bCanRoll = true; },
+		RollCooldown,
+		false
+	);
+}
+
+/// <summary>
+/// ロール終了処理.
+/// モンタージュ再生が終わったら呼ばれる.
+/// </summary>
+void ACharacterBase::RollEnd()
+{
+	bIsRolling = false;
 }
 
 #pragma endregion
@@ -198,7 +245,7 @@ void ACharacterBase::ShotStart() {
 	if (IsShotAble()) {
 		//アニメーション再生.
 		//アニメーション内でNotifyを使って次の処理を行う.
-		PlayAnim(EAnimationState::Shot);
+		MyPlayAnim(ECharaAnimState::Shot);
 	}
 }
 
@@ -523,83 +570,92 @@ void ACharacterBase::DisableComponents()
 /// アニメーション状態を更新.
 /// 操作に応じてIdleやMoveなどのアニメーションを再生.
 /// </summary>
-void ACharacterBase::UpdateAnimState(float DeltaTime)
+void ACharacterBase::UpdateAnim(float DeltaTime)
 {
-	//射撃中.
+	//射撃中の時.
 	if (shotAnimTimer > 0) {
 		shotAnimTimer -= DeltaTime;
 	}
-	//射撃してない.
+	//射撃してない時.
 	else {
-		//次の状態に変える.
-		EAnimationState NewAnimationState;
-		{
-			//現在の速度を取得.
-			CurrentSpeed = GetCharacterMovement()->Velocity.Length();
-			//ジャンプ状態の判定.
-			bool bIsAirborne = !GetCharacterMovement()->IsMovingOnGround() && GetCharacterMovement()->Velocity.Z != 0.0f;
+		//現在の速度を取得.
+		CurrentSpeed = GetCharacterMovement()->Velocity.Length();
+		//空中にいるか判定.
+		const bool bIsInAir = GetCharacterMovement()->IsFalling();
 
-			if (bIsAirborne)
-			{
-				//空中にいる場合,垂直速度でジャンプ状態を判定.
-				float VerticalVelocity = GetCharacterMovement()->Velocity.Z;
+		//ジャンプの更新.
+		UpdateAnimJump(bIsInAir);
 
-				if (VerticalVelocity > 100.0f)
-				{
-					//ジャンプアップ状態.
-					NewAnimationState = EAnimationState::JumpUp;
+		//次のアニメーションを決める.
+		ECharaAnimState NewAnimationState;
+		//地面にいる & ローリング中ではない.
+		if (!bIsInAir && !bIsRolling) {
+			//移動している.
+			if (CurrentSpeed > 0.1f) {
+				//ダッシュしている.
+				if (bIsDash) {
+					NewAnimationState = ECharaAnimState::Run;
 				}
-				else if (VerticalVelocity < -100.0f)
-				{
-					//ジャンプダウン状態.
-					NewAnimationState = EAnimationState::JumpDown;
-				}
-				else
-				{
-					//ジャンプ中状態.
-					NewAnimationState = EAnimationState::JumpMid;
-				}
-				bIsJumping = true;
-			}
-			else
-			{
-				//地面にいる場合.
-				bIsJumping = false;
-
-				if (CurrentSpeed > 0.1f)
-				{
-					bIsMoving = true;
-
-					//スプリント中か判定.
-					if (bIsDash)
-					{
-						NewAnimationState = EAnimationState::Run;
-					}
-					else
-					{
-						NewAnimationState = EAnimationState::Move;
-					}
-				}
-				else
-				{
-					bIsMoving = false;
-					NewAnimationState = EAnimationState::Idle;
+				else {
+					NewAnimationState = ECharaAnimState::Move;
 				}
 			}
+			else {
+				NewAnimationState = ECharaAnimState::Idle;
+			}
+			MyPlayAnim(NewAnimationState);
 		}
-		//射撃以外のアニメーション.
-		PlayAnim(NewAnimationState);
 	}
+}
+
+/// <summary>
+/// アニメーション状態(ジャンプ関係)を更新.
+/// </summary>
+/// <param name="bIsInAir">空中にいるか</param>
+void ACharacterBase::UpdateAnimJump(bool bIsInAir) {
+
+	/*
+	   [フロー]
+	   踏み切り(JumpStart)
+        → 空中に出たら JumpLoop へ切り替え（着地まで繰り返し）
+        → 着地したら JumpLand を再生して終了
+	*/
+	
+	if (JumpAnimMontage == nullptr) return;
+
+	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+	if (AnimInstance == nullptr) return;
+
+	//①地上→空中:JumpLoop に切り替え.
+	if (bIsInAir && !bWasInAir)
+	{
+		if (AnimInstance->Montage_IsPlaying(JumpAnimMontage))
+		{
+			AnimInstance->Montage_JumpToSection(FName("JumpLoop"), JumpAnimMontage);
+		}
+	}
+
+	// ② 空中 → 着地 : JumpLand を再生.
+	if (!bIsInAir && bWasInAir)
+	{
+		if (AnimInstance->Montage_IsPlaying(JumpAnimMontage))
+		{
+			AnimInstance->Montage_JumpToSection(FName("JumpLand"), JumpAnimMontage);
+		}
+	}
+
+	// 次フレームのために現在の状態を保存.
+	bWasInAir = bIsInAir;
 }
 
 /// <summary>
 /// 移動, ジャンプ, 射撃などのアニメーション切り替え.
 /// </summary>
-void ACharacterBase::PlayAnim(EAnimationState AnimState)
+float ACharacterBase::MyPlayAnim(ECharaAnimState AnimState)
 {
 	//アニメーションが同じなら.
 	if (CurrentAnimationState == AnimState) {
-		return; //処理しない.
+		return 0; //処理しない.
 	}
 	CurrentAnimationState = AnimState; //状態更新.
 
@@ -607,54 +663,44 @@ void ACharacterBase::PlayAnim(EAnimationState AnimState)
 	UAnimMontage* MontageToPlay = nullptr;
 	switch (AnimState)
 	{
-	case EAnimationState::Idle:
-		MontageToPlay = IdleAnimMontage;
-		break;
-	case EAnimationState::Move:
-		MontageToPlay = MoveAnimMontage;
-		break;
-	case EAnimationState::Run:
-		MontageToPlay = SprintAnimMontage;
-		break;
-	case EAnimationState::JumpUp:
-		MontageToPlay = JumpUpAnimMontage;
-		break;
-	case EAnimationState::JumpMid:
-		MontageToPlay = JumpMidAnimMontage;
-		break;
-	case EAnimationState::JumpDown:
-		MontageToPlay = JumpDownAnimMontage;
-		break;
-	case EAnimationState::Shot:
-		MontageToPlay = ShotAnimMontage;
-		//しばらくは射撃アニメーションを再生.
-		shotAnimTimer = initShotAnimTime;
-		break;
+		case ECharaAnimState::Idle:
+			MontageToPlay = IdleAnimMontage;
+			break;
+		case ECharaAnimState::Move:
+			MontageToPlay = MoveAnimMontage;
+			break;
+		case ECharaAnimState::Run:
+			MontageToPlay = SprintAnimMontage;
+			break;
+		case ECharaAnimState::Jump:
+			MontageToPlay = JumpAnimMontage;
+			break;
+		case ECharaAnimState::Shot:
+			MontageToPlay = ShotAnimMontage;
+			shotAnimTimer = initShotAnimTime; //しばらくは射撃アニメーションを再生.
+			break;
+		case ECharaAnimState::Roll:
+			MontageToPlay = RollAnimMontage;
+			break;
 
-	default: break;
+		default: break;
 	}
 
 	//nullチェック.
 	if (MontageToPlay == nullptr)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("MontageToPlay is null for animation state: %d"), (int32)AnimState);
-		return;
+		return 0;
 	}
 	if (GetMesh() == nullptr)
 	{
 		UE_LOG(LogTemp, Error, TEXT("Mesh is invalid!"));
-		return;
+		return 0;
 	}
 
-	//アニメーションインスタンス取得.
-	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
-	if (AnimInstance == nullptr)
-	{
-		UE_LOG(LogTemp, Error, TEXT("AnimInstance is null! Mesh: %s"), GetMesh() ? TEXT("Valid") : TEXT("Invalid"));
-		return;
-	}
 	//アニメーション再生.
-	UE_LOG(LogTemp, Warning, TEXT("Playing montage: %s for state: %d"), *MontageToPlay->GetName(), (int32)AnimState);
-	AnimInstance->Montage_Play(MontageToPlay, 1.0f);
+	float duration = PlayAnimMontage(MontageToPlay, 1.0f);
+	//再生時間を返す.
+	return duration;
 }
 #pragma endregion

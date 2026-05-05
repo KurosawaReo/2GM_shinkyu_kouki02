@@ -40,22 +40,10 @@ public:
 
 #pragma region "UI"
 	//クロスヘア.
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "MyProperty|Base|UI")
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "MyProperty|Player|UI")
 	TSubclassOf<UCrosshairWidget> CrosshairWidgetClass;
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "MyProperty|Base|UI")
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "MyProperty|Player|UI")
 	UCrosshairWidget* CrosshairWidget;
-#pragma endregion
-#pragma region "ジャンプ"
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Player|Animation")
-	UAnimMontage* JumpMontage;      // ジャンプモンタージュ.
-#pragma endregion
-
-#pragma region "ロール"
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Player|Animation")
-	UAnimMontage* RollMontage;        // ロールモンタージュ.
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Player|Roll")
-	float RollCooldown = 1.0f;        // ロールのクールダウン時間（秒）.
 #pragma endregion
 
 //▼ ===== 関数 ===== ▼.
@@ -74,14 +62,9 @@ public:
 	void Input(UInputComponent* PlayerInputComponent);
 #pragma endregion
 
-#pragma region"ジャンプ".
-	void Jump() override;//ジャンプ開始.
-
-	void StopJumping() override;//ジャンプ終了.
-
-	void UpdateJumpAnimation();//ジャンプアニメーション更新.
-
-	bool bWasInAir = false; //前フレームの空中フラグ.
+#pragma region "ジャンプ"
+	void Jump()        override; //ジャンプ開始.
+	void StopJumping() override; //ジャンプ終了.
 #pragma endregion
 
 #pragma region "移動"
@@ -89,16 +72,6 @@ public:
 	void OnMoveRight(float Value);
 	void OnTurnRate(float Rate);
 	void OnLookUpRate(float Rate);
-#pragma endregion
-
-#pragma region "ロール（回避）"
-
-	void OnRoll();                    // ロール入力.
-	void RollEnd();                   // ロール終了処理.
-	bool bIsRolling = false;          // ロール中フラグ.
-	bool bCanRoll = true;           // ロール可能フラグ（クールダウン用）.
-
-	FTimerHandle RollCooldownTimer;   // クールダウン用タイマー.
 #pragma endregion
 
 #pragma region "射撃"
