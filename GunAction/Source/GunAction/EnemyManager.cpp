@@ -108,20 +108,12 @@ bool AEnemyManager::IsDead() const
 /// </summary>
 void AEnemyManager::OnFire()
 {
-	ShotStart(); //射撃開始.
-}
-
-/// <summary>
-/// 射撃実行.
-/// </summary>
-void AEnemyManager::ShotExe()
-{
 	//プレイヤー取得.
 	ACharacter* player = UGameplayStatics::GetPlayerCharacter(GetWorld(), 0);
-	//目標地点を計算.
-	const FVector TargetPosition = player->GetActorLocation();
-	//弾を発射.
-	SpawnBullet(this, TargetPosition);
+	//目標地点.
+	FVector Target = player->GetActorLocation();
+	//射撃開始.
+	ShotStart(Target);
 }
 
 #pragma endregion

@@ -76,7 +76,6 @@ public:
 
 #pragma region "射撃"
 	void OnFire();							//射撃開始.
-	void ShotExe() override;				//射撃実行.
 #pragma endregion
 
 #pragma region "ダメージ・死亡"

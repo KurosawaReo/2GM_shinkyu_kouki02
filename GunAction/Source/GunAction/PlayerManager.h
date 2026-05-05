@@ -75,8 +75,8 @@ public:
 #pragma endregion
 
 #pragma region "射撃"
-	void OnFire();					//射撃処理.
-	void ShotExe() override;		//射撃実行.
+	void OnFire();				    	//射撃処理.
+	void CrosshairWidgetExe() override;	//クロスヘアエフェクト実行.
 #pragma endregion
 
 #pragma region "ダメージ・死亡"

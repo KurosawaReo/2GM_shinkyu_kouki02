@@ -96,7 +96,7 @@ void APlayerManager::Input(UInputComponent* PlayerInputComponent)
 	PlayerInputComponent->BindAction("Jump", IE_Pressed,    this, &ACharacter::Jump);
 	PlayerInputComponent->BindAction("Jump", IE_Released,   this, &ACharacter::StopJumping);
 
-	// ロール（回避）.
+	//ロール(回避)
 	PlayerInputComponent->BindAction("Roll", IE_Pressed, this, &ACharacterBase::OnRoll);
 
 	//ダッシュ.
@@ -141,7 +141,7 @@ void APlayerManager::OnMoveRight(float Value)
 		//カメラの右方向を取得.
 		const FRotator Rotation = Controller->GetControlRotation();
 		const FRotator YawRotation(0, Rotation.Yaw, 0);
-		const FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
+		const FVector  Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
 		//左右に移動.
 		Move(Direction, Value);
 	}
@@ -202,15 +202,7 @@ void APlayerManager::OnFire()
 	if (FollowCamera == nullptr) {
 		return;
 	}
-	//射撃開始.
-	ShotStart();
-}
 
-/// <summary>
-/// 射撃実行.
-/// </summary>
-void APlayerManager::ShotExe()
-{
 	//クロスヘアの中心座標を画面座標で計算.
 	const FVector2D ViewportSize = FVector2D(GEngine->GameViewport->Viewport->GetSizeXY());
 	const FVector2D CrosshairScreenLocation = ViewportSize / 2.0f; //画面中央.
@@ -231,29 +223,18 @@ void APlayerManager::ShotExe()
 	}
 
 	//目標地点を計算.
-	const FVector TargetPosition = CrosshairWorldLocation + (CrosshairWorldDirection * BulletTargetDistance);
+	FVector Target = CrosshairWorldLocation + (CrosshairWorldDirection * BulletTargetDistance);
+	//射撃開始.
+	ShotStart(Target);
+}
 
-	//弾を召喚.
-	bool ret = SpawnBullet(this, TargetPosition);
-	if (ret) {
-		//ショット時にクロスヘアのエフェクトを実行.
-		if (CrosshairWidget)
-		{
-			CrosshairWidget->OnShotEffect();
-		}
-	}
+/// <summary>
+/// クロスヘアエフェクト実行.
+/// </summary>
+void APlayerManager::CrosshairWidgetExe() {
 
-	//プレイヤーをクロスヘアの方へ向かせる.
-	{
-		FVector DirectionToTarget = TargetPosition - GetActorLocation();
-		DirectionToTarget.Normalize();
-		FRotator TargetRotation = DirectionToTarget.Rotation();
-
-		// Y軸（Yaw）とPitch軸を回転させる
-		FRotator NewRotation = GetActorRotation();
-		NewRotation.Yaw = TargetRotation.Yaw;
-		NewRotation.Pitch = TargetRotation.Pitch;
-		SetActorRotation(NewRotation);
+	if (CrosshairWidget) {
+		CrosshairWidget->OnShotEffect();
 	}
 }
 
