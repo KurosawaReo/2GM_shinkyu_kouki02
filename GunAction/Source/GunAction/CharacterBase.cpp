@@ -60,61 +60,12 @@ void ACharacterBase::BeginPlay()
 {
 	Super::BeginPlay();
 
-	UE_LOG(LogTemp, Warning, TEXT("===== BeginPlay Start ====="));
-
 	//銃を装備.
 	EquipGun();
 	//デフォルトはダッシュ状態.
 	OnWalkStop();
-
 	//ボーンインデックスを初期化.
 	InitBoneIndices();
-
-	// メッシュの確認
-	if (GetMesh())
-	{
-		UE_LOG(LogTemp, Warning, TEXT("Mesh found: %s"), *GetMesh()->GetName());
-
-		// スケルタルメッシュアセットの確認
-		USkeletalMesh* SkeletalMesh = GetMesh()->GetSkeletalMeshAsset();
-		if (SkeletalMesh)
-		{
-			UE_LOG(LogTemp, Warning, TEXT("Skeletal Mesh Asset: %s"), *SkeletalMesh->GetName());
-		}
-
-		// アニメーションBlueprintの確認
-		if (GetMesh()->GetAnimClass())
-		{
-			UE_LOG(LogTemp, Warning, TEXT("Animation Class Set: %s"), *GetMesh()->GetAnimClass()->GetName());
-		}
-		else
-		{
-			UE_LOG(LogTemp, Error, TEXT("ERROR: Animation Class is NOT set in Mesh!"));
-		}
-
-		// AnimInstanceの確認
-		UAnimInstance* AnimInst = GetMesh()->GetAnimInstance();
-		if (AnimInst)
-		{
-			UE_LOG(LogTemp, Warning, TEXT("AnimInstance found: %s"), *AnimInst->GetClass()->GetName());
-		}
-		else
-		{
-			UE_LOG(LogTemp, Error, TEXT("ERROR: AnimInstance is NULL! Check Animation Blueprint assignment!"));
-		}
-	}
-	else
-	{
-		UE_LOG(LogTemp, Error, TEXT("Mesh is NULL!"));
-	}
-
-	// モンタージュの確認
-	UE_LOG(LogTemp, Warning, TEXT("IdleAnimMontage: %s"), IdleAnimMontage ? TEXT("Set") : TEXT("NULL"));
-	UE_LOG(LogTemp, Warning, TEXT("MoveAnimMontage: %s"), MoveAnimMontage ? TEXT("Set") : TEXT("NULL"));
-	UE_LOG(LogTemp, Warning, TEXT("SprintAnimMontage: %s"), SprintAnimMontage ? TEXT("Set") : TEXT("NULL"));
-	UE_LOG(LogTemp, Warning, TEXT("ShotAnimMontage: %s"), ShotAnimMontage ? TEXT("Set") : TEXT("NULL"));
-
-	UE_LOG(LogTemp, Warning, TEXT("===== BeginPlay End ====="));
 }
 
 /// <summary>
@@ -129,6 +80,10 @@ void ACharacterBase::Tick(float DeltaTime)
 	UpdateAnim(DeltaTime);
 	//リロード時間の更新.
 	UpdateReloadTimer(DeltaTime);
+	//射撃時の向き補完.
+	Rotating(DeltaTime);
+	//ローリング更新.
+	UpdateRoll(DeltaTime);
 }
 
 #pragma endregion
@@ -166,8 +121,8 @@ void ACharacterBase::OnWalkStop()
 #pragma region "ローリング(回避)"
 
 /// <summary>
-/// ロール入力処理.
-/// キーを押したときに前転ロールを開始する.
+/// ローリング開始.
+/// キーを押したときに前転する.
 /// </summary>
 void ACharacterBase::OnRoll()
 {
@@ -180,12 +135,12 @@ void ACharacterBase::OnRoll()
 
 	float MontageLength = MyPlayAnim(ECharaAnimState::Roll);
 
-	// モンタージュ終了後に RollEnd を呼ぶ.
+	// モンタージュ終了後に EndRoll を呼ぶ.
 	FTimerHandle RollEndTimer;
 	GetWorld()->GetTimerManager().SetTimer(
 		RollEndTimer,
 		this,
-		&APlayerManager::RollEnd,
+		&APlayerManager::EndRoll,
 		MontageLength,
 		false
 	);
@@ -200,10 +155,26 @@ void ACharacterBase::OnRoll()
 }
 
 /// <summary>
-/// ロール終了処理.
+/// ローリング更新.
+/// </summary>
+void ACharacterBase::UpdateRoll(float DeltaTime) {
+
+	if (!bIsRolling) { return; }
+
+	//前方向ベクトル取得.
+	const FVector Forward = GetActorForwardVector();
+	//移動量 = 方向 * 速度 * 時間.
+	const FVector Move = Forward * RollSpeed * DeltaTime;
+
+	//位置更新.
+	SetActorLocation(GetActorLocation() + Move);
+}
+
+/// <summary>
+/// ローリング終了.
 /// モンタージュ再生が終わったら呼ばれる.
 /// </summary>
-void ACharacterBase::RollEnd()
+void ACharacterBase::EndRoll()
 {
 	bIsRolling = false;
 }
@@ -219,10 +190,9 @@ void ACharacterBase::RollEnd()
 bool ACharacterBase::IsShotAble() {
 
 	//nullチェック.
-	if (GetWorld() == nullptr) {
-		return false;
-	}
-	if (BulletClass == nullptr) {
+	if (GetWorld()  == nullptr ||
+		BulletClass == nullptr
+	){
 		return false;
 	}
 	//弾薬がないならリロード開始.
@@ -230,22 +200,37 @@ bool ACharacterBase::IsShotAble() {
 		OnReload();
 		return false;
 	}
-	//リロード中は射撃不可.
-	if (bIsReloading) {
+	//リロード中や射撃中は射撃不可.
+	if (bIsReloading || bIsRotating) {
 		return false;
 	}
 
 	return true; //問題なし.
 }
 
-//射撃開始.
-void ACharacterBase::ShotStart() {
+/// <summary>
+/// 射撃開始
+/// </summary>
+/// <param name="ParamPos">射撃目標地点</param>
+void ACharacterBase::ShotStart(FVector ParamPos) {
 
 	//射撃可能なら.
 	if (IsShotAble()) {
+
 		//アニメーション再生.
-		//アニメーション内でNotifyを使って次の処理を行う.
 		MyPlayAnim(ECharaAnimState::Shot);
+
+		TargetPosition = ParamPos;
+		//開始角度を保存.
+		StartRotation = GetActorRotation();
+		//目標角度を保存.
+		FVector DirectionToTarget = TargetPosition - GetActorLocation();
+		DirectionToTarget.Normalize();
+		TargetRotation = DirectionToTarget.Rotation();
+
+		//向き補間開始.
+		RotateElapsed = 0.0f;
+		bIsRotating = true;
 	}
 }
 
@@ -335,6 +320,40 @@ bool ACharacterBase::SpawnBullet(TObjectPtr<ACharacterBase> user, FVector target
 		return true; //発射成功.
 	}
 	return false; //発射失敗.
+}
+
+/// <summary>
+/// 射撃時の向き補完.
+/// </summary>
+void ACharacterBase::Rotating(float DeltaTime) {
+
+	if (!bIsRotating) return;
+
+	//時間経過.
+	RotateElapsed += DeltaTime;
+	//0→1に正規化.
+	const float time = FMath::Clamp(RotateElapsed / RotateDuration, 0.0f, 1.0f);
+	//角度補間.
+	FQuat newQuat = FQuat::Slerp(
+		StartRotation.Quaternion(),
+		TargetRotation.Quaternion(),
+		time
+	);
+
+	SetActorRotation(newQuat);
+
+	//100%を超えたら終了.
+	if (time >= 1.0f)
+	{
+		bIsRotating = false;
+
+		//弾を召喚.
+		bool ret = SpawnBullet(this, TargetPosition);
+		if (ret) {
+			//ショット時にクロスヘアのエフェクトを実行.
+			CrosshairWidgetExe();
+		}
+	}
 }
 
 #pragma endregion
@@ -494,11 +513,11 @@ void ACharacterBase::EquipGun()
 /// <summary>
 /// 腕のボーンを回転させる関数
 /// </summary>
-void ACharacterBase::RotateArmBones(const FRotator& TargetRotation)
+void ACharacterBase::RotateArmBones(const FRotator& Rotation)
 {
 	// キャラクター全体の回転で対応
 	// 腕のボーン操作はアニメーションBP側で自動的に追従します
-	UE_LOG(LogTemp, Warning, TEXT("Character rotation - Pitch: %f, Yaw: %f"), TargetRotation.Pitch, TargetRotation.Yaw);
+	UE_LOG(LogTemp, Warning, TEXT("Character rotation - Pitch: %f, Yaw: %f"), Rotation.Pitch, Rotation.Yaw);
 }
 
 #pragma endregion

@@ -100,14 +100,16 @@ public:
 	double CurrentSpeed;
 #pragma endregion
 
-#pragma region "ロール"
+#pragma region "ローリング"
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Base|Roll")
-	float RollCooldown = 1.0f;        // ロールのクールダウン時間（秒）.
+	float RollCooldown = 1.0f;        //ローリングのクールダウン(秒)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Base|Roll")
+	float RollSpeed = 600.0f;        //ローリングの移動速度.
 
-	bool bIsRolling = false;          // ロール中フラグ.
-	bool bCanRoll = true;			  // ロール可能フラグ（クールダウン用）.
+	bool bIsRolling = false;          //ローリング中かどうか.
+	bool bCanRoll = true;			  //ローリング可能かどうか.
 
-	FTimerHandle RollCooldownTimer;   // クールダウン用タイマー.
+	FTimerHandle RollCooldownTimer;   //クールダウン用タイマー.
 #pragma endregion
 
 #pragma region "弾"
@@ -155,6 +157,18 @@ public:
 	float ReloadTimerElapsed = 0.0f;	//リロード経過時間計測用.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Base|Gun|Status")
 	float shotPosRandom = 0.0f;			//射撃の正確さ(どれだけずらすか)
+#pragma endregion
+
+#pragma region "射撃"
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Base|Shot")
+	float RotateDuration = 0.25f; //向く秒数.
+
+	FRotator StartRotation;  //開始時の向き.
+	FRotator TargetRotation; //目標の向き.
+	FVector  TargetPosition; //目標の射撃座標.
+
+	float RotateElapsed = 0.0f;  //経過時間.
+	bool  bIsRotating   = false; //向いてる最中か.
 #pragma endregion
 
 #pragma region "アニメーション"
@@ -215,8 +229,9 @@ public:
 #pragma endregion
 
 #pragma region "ローリング(回避)"
-	void OnRoll();                  // ロール入力.
-	void RollEnd();                 // ロール終了処理.
+	void OnRoll();						//ローリング開始.
+	void UpdateRoll(float DeltaTime);	//ローリング更新.
+	void EndRoll();						//ローリング終了.
 #pragma endregion
 
 #pragma region "銃"
@@ -231,11 +246,13 @@ public:
 	//発射チェック.
 	bool IsShotAble();
 	//射撃開始.
-	void ShotStart();
-	//射撃実行[仮想関数]
-	virtual void ShotExe(){};
+	void ShotStart(FVector ParamPos);
 	//弾を召喚.
 	bool SpawnBullet(TObjectPtr<ACharacterBase> user, FVector targetPos);
+	//射撃時の向き補完.
+	void Rotating(float DeltaTime);
+	//クロスヘアエフェクト実行.[仮想関数]
+	virtual void CrosshairWidgetExe() {}
 #pragma endregion
 
 #pragma region "ダメージ・死亡"
