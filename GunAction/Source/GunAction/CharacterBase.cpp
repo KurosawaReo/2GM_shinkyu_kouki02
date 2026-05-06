@@ -163,10 +163,8 @@ void ACharacterBase::UpdateRoll(float DeltaTime) {
 
 	//前方向ベクトル取得.
 	const FVector Forward = GetActorForwardVector();
-	//移動速度.
-	const float Speed = 600.0f;
 	//移動量 = 方向 * 速度 * 時間.
-	const FVector Move = Forward * Speed * DeltaTime;
+	const FVector Move = Forward * RollSpeed * DeltaTime;
 
 	//位置更新.
 	SetActorLocation(GetActorLocation() + Move);
@@ -243,8 +241,6 @@ void ACharacterBase::ShotStart(FVector ParamPos) {
 /// <returns>召喚に成功したか</returns>
 bool ACharacterBase::SpawnBullet(TObjectPtr<ACharacterBase> user, FVector targetPos)
 {
-	GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, TEXT("ugoita"));
-
 	//弾の設定 - ①スポーン位置.
 	FVector SpawnLocation;
 	{

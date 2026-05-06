@@ -102,12 +102,14 @@ public:
 
 #pragma region "ローリング"
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Base|Roll")
-	float RollCooldown = 1.0f;        // ロールのクールダウン時間（秒）.
+	float RollCooldown = 1.0f;        //ローリングのクールダウン(秒)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Base|Roll")
+	float RollSpeed = 600.0f;        //ローリングの移動速度.
 
-	bool bIsRolling = false;          // ロール中フラグ.
-	bool bCanRoll = true;			  // ロール可能フラグ（クールダウン用）.
+	bool bIsRolling = false;          //ローリング中かどうか.
+	bool bCanRoll = true;			  //ローリング可能かどうか.
 
-	FTimerHandle RollCooldownTimer;   // クールダウン用タイマー.
+	FTimerHandle RollCooldownTimer;   //クールダウン用タイマー.
 #pragma endregion
 
 #pragma region "弾"
