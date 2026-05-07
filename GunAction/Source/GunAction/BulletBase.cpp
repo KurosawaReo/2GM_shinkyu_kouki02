@@ -9,8 +9,8 @@
 #include "NiagaraComponent.h"
 
 //他class.
-#include "PlayerManager.h"
-#include "EnemyManager.h"
+#include "PlayerCharacter.h"
+#include "EnemyCharacter.h"
 #include "CharacterBase.h"
 
 /// <summary>
@@ -67,7 +67,7 @@ void ABulletBase::OnOverlapBegin(
         //撃った人がプレイヤー.
         case ETeam::Player:
             //敵にヒット.
-            if (auto enm = Cast<AEnemyManager>(OtherActor)) {
+            if (auto enm = Cast<AEnemyCharacter>(OtherActor)) {
                 enm->OnBulletHit(); //被弾処理.
                 Destroy();          //弾消滅.
             }
@@ -76,7 +76,7 @@ void ABulletBase::OnOverlapBegin(
         //撃った人が敵.
         case ETeam::Enemy:
             //プレイヤーにヒット.
-            if (auto ply = Cast<APlayerManager>(OtherActor)) {
+            if (auto ply = Cast<APlayerCharacter>(OtherActor)) {
                 ply->OnBulletHit(); //被弾処理.
                 Destroy();          //弾消滅.
             }

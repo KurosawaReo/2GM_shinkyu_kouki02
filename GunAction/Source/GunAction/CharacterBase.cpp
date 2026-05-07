@@ -18,8 +18,8 @@
 #include "EngineUtils.h"
 
 //他class.
-#include "PlayerManager.h"
-#include "EnemyManager.h"
+#include "PlayerCharacter.h"
+#include "EnemyCharacter.h"
 #include "BulletBase.h"
 #include "WeaponRevolver.h"
 
@@ -140,7 +140,7 @@ void ACharacterBase::OnRoll()
 	GetWorld()->GetTimerManager().SetTimer(
 		RollEndTimer,
 		this,
-		&APlayerManager::EndRoll,
+		&APlayerCharacter::EndRoll,
 		MontageLength,
 		false
 	);
@@ -284,11 +284,11 @@ bool ACharacterBase::SpawnBullet(TObjectPtr<ACharacterBase> user, FVector target
 	if (Bullet != nullptr)
 	{
 		//プレイヤーが撃ったなら.
-		if (Cast<APlayerManager>(user)) {
+		if (Cast<APlayerCharacter>(user)) {
 			Bullet->SetTeam(ETeam::Player); //プレイヤーチームへ.
 		}
 		//敵が撃ったなら.
-		if (Cast<AEnemyManager>(user)) {
+		if (Cast<AEnemyCharacter>(user)) {
 			Bullet->SetTeam(ETeam::Enemy);  //敵チームへ.
 		}
 
