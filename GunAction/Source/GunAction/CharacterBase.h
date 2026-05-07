@@ -4,12 +4,12 @@
 
    [クラス構成]
    CharacterBase   ←今ここ
-   └PlayerManager
-   └EnemyManager
+   └PlayerCharacter
+   └EnemyCharacter
 
-   CharacterBase: プレイヤーと敵 に使うものを入れる
-   PlayerManager: プレイヤー     に使うものを入れる
-   EnemyManager : 敵             に使うものを入れる
+   CharacterBase  : プレイヤーと敵 に使うものを入れる
+   PlayerCharacter: プレイヤー     に使うものを入れる
+   EnemyCharacter : 敵             に使うものを入れる
 /-----------------------------------------------------/
    [仮想関数]
    ざっくり解説。(※あくまでも使い方の一例)
@@ -26,13 +26,13 @@
    }
 
    //子のクラス.
-   class PlayerManager : public CharacterBase 
+   class PlayerCharacter : public CharacterBase 
    {
        void Test() override; //③子で中身を作りますよ(→override)
    }
 
    //④その中身はこれですよ.
-   void PlayerManager::Test(){
+   void PlayerCharacter::Test(){
        ...
    }
 /----------------------------------------------------*/
@@ -199,7 +199,7 @@ public:
 	UAnimMontage* RollAnimMontage; //ローリングアニメーション.
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Base|Animation|Time")
-	float initShotAnimTime; //射撃アニメーション時間.
+	float initShotAnimTime = 1.0f; //射撃アニメーション時間.
 #pragma endregion
 
 #pragma region "死亡"
