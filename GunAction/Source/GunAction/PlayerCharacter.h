@@ -40,9 +40,9 @@ public:
 
 #pragma region "UI"
 	//ÉNÉçÉXÉwÉA.
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "MyProperty|Player|UI")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Player|UI")
 	TSubclassOf<UCrosshairWidget> CrosshairWidgetClass;
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "MyProperty|Player|UI")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Player|UI")
 	UCrosshairWidget* CrosshairWidget;
 #pragma endregion
 
