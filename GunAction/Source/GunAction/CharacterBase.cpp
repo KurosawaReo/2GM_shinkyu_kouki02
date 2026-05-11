@@ -167,7 +167,7 @@ void ACharacterBase::UpdateRoll(float DeltaTime) {
 	const FVector Move = Forward * RollSpeed * DeltaTime;
 
 	//à íuçXêV.
-	SetActorLocation(GetActorLocation() + Move);
+	SetActorLocation(GetActorLocation() + Move,true);
 }
 
 /// <summary>

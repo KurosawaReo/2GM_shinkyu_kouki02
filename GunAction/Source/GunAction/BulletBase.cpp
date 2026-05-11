@@ -99,7 +99,7 @@ void ABulletBase::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 
     //‘O•ûŒü‚ÉˆÚ“®.
-    SetActorLocation(GetActorLocation() + vec * speed);
+    SetActorLocation(GetActorLocation() + vec * speed,true);
     //’e“¹‚Ì¶¬.
     SpawnTrail();
 
