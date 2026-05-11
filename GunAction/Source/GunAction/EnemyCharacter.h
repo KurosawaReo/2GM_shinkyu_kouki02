@@ -64,7 +64,7 @@ public:
 protected:
 #pragma region "基本処理"
 	AEnemyCharacter();						//コンストラクタ.
-	void BeginPlay()           override;	//召喚した瞬間.
+	void BeginPlay()           override;	//召喚した瞬間に実行.
 	void Tick(float DeltaTime) override;	//常に実行.
 #pragma endregion
 

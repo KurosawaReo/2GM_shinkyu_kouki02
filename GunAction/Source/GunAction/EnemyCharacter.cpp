@@ -35,7 +35,7 @@ AEnemyCharacter::AEnemyCharacter()
 	GetCharacterMovement()->MaxWalkSpeed = 600.0f;
 }
 
-//召喚した瞬間.
+//召喚した瞬間に実行.
 void AEnemyCharacter::BeginPlay() {
 
 	ACharacterBase::BeginPlay(); //親クラスのBeginPlay()を呼び出す.

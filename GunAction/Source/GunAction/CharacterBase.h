@@ -215,7 +215,7 @@ public:
 protected:
 #pragma region "基本処理"
 	ACharacterBase();								//コンストラクタ.
-	virtual void BeginPlay() override;				//召喚した瞬間.
+	virtual void BeginPlay() override;				//召喚した瞬間に実行.
 	virtual void Tick(float DeltaTime) override;	//常に実行.
 #pragma endregion
 

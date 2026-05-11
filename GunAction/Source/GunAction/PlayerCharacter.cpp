@@ -40,7 +40,7 @@ APlayerCharacter::APlayerCharacter() {
 }
 
 /// <summary>
-/// è¢ä´ÇµÇΩèuä‘.
+/// è¢ä´ÇµÇΩèuä‘Ç…é¿çs.
 /// </summary>
 void APlayerCharacter::BeginPlay() {
 
@@ -268,6 +268,11 @@ void APlayerCharacter::Death() {
 /// </summary>
 void APlayerCharacter::InitUI()
 {
+	//îÒï\é¶Ç»ÇÁï\é¶ÇµÇ»Ç¢.
+	if (!IsShowCrosshair) {
+		return;
+	}
+
 	if (CrosshairWidgetClass == nullptr)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("CrosshairWidgetClass is not set!"));

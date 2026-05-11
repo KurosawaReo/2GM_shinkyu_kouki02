@@ -36,7 +36,7 @@ ABulletBase::ABulletBase()
 }
 
 /// <summary>
-/// 召喚時に呼ばれる.
+/// 召喚した瞬間に実行.
 /// </summary>
 void ABulletBase::BeginPlay()
 {
@@ -47,7 +47,7 @@ void ABulletBase::BeginPlay()
 }
 
 /// <summary>
-/// 当たった時に呼ばれる.
+/// 何かに当たった時に実行.
 /// </summary>
 void ABulletBase::OnOverlapBegin(
     UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
@@ -85,18 +85,11 @@ void ABulletBase::OnOverlapBegin(
 }
 
 /// <summary>
-/// チームを登録.
-/// </summary>
-void ABulletBase::SetTeam(ETeam _team) {
-    team = _team;
-}
-
-/// <summary>
 /// 常に実行.
 /// </summary>
 void ABulletBase::Tick(float DeltaTime)
 {
-	Super::Tick(DeltaTime);
+    Super::Tick(DeltaTime);
 
     //前方向に移動.
     SetActorLocation(GetActorLocation() + vec * speed);
@@ -109,6 +102,13 @@ void ABulletBase::Tick(float DeltaTime)
     if (counter >= deleteTime) {
         Destroy();
     }
+}
+
+/// <summary>
+/// チームを登録.
+/// </summary>
+void ABulletBase::SetTeam(ETeam _team) {
+    team = _team;
 }
 
 /// <summary>
