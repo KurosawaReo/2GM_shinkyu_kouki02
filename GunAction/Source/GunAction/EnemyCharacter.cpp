@@ -195,7 +195,6 @@ void AEnemyCharacter::AIAction() {
 		case EAIState::Shot:
 		{
 			moveVec = FVector::Zero(); //ベクトルリセット.
-//			moveRot = FRotator(0, rad * 180 / PI, 0); //プレイヤーの方へ向く.
 
 			OnShot();
 		}

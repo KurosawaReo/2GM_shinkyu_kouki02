@@ -169,6 +169,9 @@ void ACharacterBase::OnWalkStop()
 
 void ACharacterBase::OnJump()
 {
+	//ジャンプ中、ローリング中はジャンプ不可.
+	if (bIsInAir || bIsRolling) { return; }
+
 	Super::Jump();
 
 	//ジャンプアニメーション再生.
@@ -197,10 +200,10 @@ void ACharacterBase::OnJumpStop()
 /// </summary>
 void ACharacterBase::OnRoll()
 {
-	// クールダウン中またはロール中は受け付けない.
-	if (!bCanRoll || bIsRolling) return;
+	//ローリング中、クールダウン中は再ローリング不可.
+	if (!bCanRoll || bIsRolling) { return; }
 
-	// ロール中フラグを立てる.
+	//ローリング中フラグを立てる.
 	bIsRolling = true;
 	bCanRoll = false;
 
@@ -212,7 +215,7 @@ void ACharacterBase::OnRoll()
 		RollEndTimer,
 		this,
 		&APlayerCharacter::EndRoll,
-		MontageLength,
+		MontageLength * 0.8f, //ローリングが80%終わったら終了とする.
 		false
 	);
 
@@ -271,8 +274,8 @@ bool ACharacterBase::IsShotAble() {
 		OnReload();
 		return false;
 	}
-	//リロード中は射撃不可.
-	if (bIsReloading) {
+	//リロード中、ローリング中は射撃不可.
+	if (bIsReloading || bIsRolling) {
 		return false;
 	}
 
@@ -641,15 +644,15 @@ void ACharacterBase::UpdateAnim(float DeltaTime)
 		//現在の速度を取得.
 		CurrentSpeed = GetCharacterMovement()->Velocity.Length();
 		//空中にいるか判定.
-		const bool bIsInAir = GetCharacterMovement()->IsFalling();
+		const bool isInAir = GetCharacterMovement()->IsFalling();
 
 		//ジャンプの更新.
-		UpdateAnimJump(bIsInAir);
+		UpdateAnimJump(isInAir);
 
 		//次のアニメーションを決める.
 		ECharaActionState NewActionState;
 		//地面にいる & ローリング中ではない.
-		if (!bIsInAir && !bIsRolling) {
+		if (!isInAir && !bIsRolling) {
 			//移動している.
 			if (CurrentSpeed > 0.1f) {
 				//ダッシュしている.
@@ -672,7 +675,7 @@ void ACharacterBase::UpdateAnim(float DeltaTime)
 /// アニメーション状態(ジャンプ関係)を更新.
 /// </summary>
 /// <param name="bIsInAir">空中にいるか</param>
-void ACharacterBase::UpdateAnimJump(bool bIsInAir) {
+void ACharacterBase::UpdateAnimJump(bool bIsInAirNow) {
 
 	/*
 	   [フロー]
@@ -687,7 +690,7 @@ void ACharacterBase::UpdateAnimJump(bool bIsInAir) {
 	if (AnimInstance == nullptr) return;
 
 	//①地上→空中:JumpLoop に切り替え.
-	if (bIsInAir && !bWasInAir)
+	if (bIsInAirNow && !bIsInAir)
 	{
 		if (AnimInstance->Montage_IsPlaying(JumpAnimMontage))
 		{
@@ -696,7 +699,7 @@ void ACharacterBase::UpdateAnimJump(bool bIsInAir) {
 	}
 
 	// ② 空中 → 着地 : JumpLand を再生.
-	if (!bIsInAir && bWasInAir)
+	if (!bIsInAirNow && bIsInAir)
 	{
 		if (AnimInstance->Montage_IsPlaying(JumpAnimMontage))
 		{
@@ -705,7 +708,7 @@ void ACharacterBase::UpdateAnimJump(bool bIsInAir) {
 	}
 
 	// 次フレームのために現在の状態を保存.
-	bWasInAir = bIsInAir;
+	bIsInAir = bIsInAirNow;
 }
 
 /// <summary>

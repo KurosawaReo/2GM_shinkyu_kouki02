@@ -91,26 +91,32 @@ public:
 	float RunSpeed = 800.0f; //走速, 800くらい?
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "MyProperty|Base|Movement")
-	bool bIsDash;
-
-	bool bWasInAir = false; //前フレームの空中フラグ.
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "MyProperty|Base|Movement")
 	double CurrentSpeed;
 #pragma endregion
 
-#pragma region "アクション"
+#pragma region "行動"
 	UPROPERTY(VisibleAnywhere, Category = "MyProperty|Base|Action")
 	ECharaActionState CurrentActionState; //現在の行動状態.
+
+	UPROPERTY(VisibleAnywhere, Category = "MyProperty|Base|Action")
+	bool bIsDash      = false;            //ダッシュ中か.
+	UPROPERTY(VisibleAnywhere, Category = "MyProperty|Base|Action")
+	bool bIsInAir     = false;            //空中にいるか.
+	UPROPERTY(VisibleAnywhere, Category = "MyProperty|Base|Action")
+	bool bIsRotating  = false;            //向いてる最中か.
+	UPROPERTY(VisibleAnywhere, Category = "MyProperty|Base|Action")
+	bool bIsReloading = false;			  //リロードしているか.
+	UPROPERTY(VisibleAnywhere, Category = "MyProperty|Base|Action")
+	bool bIsRolling   = false;            //ローリング中か.
+
 #pragma endregion
 
 #pragma region "ローリング"
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Base|Roll")
 	float RollCooldown = 1.0f;        //ローリングのクールダウン(秒)
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Base|Roll")
-	float RollSpeed = 600.0f;        //ローリングの移動速度.
+	float RollSpeed = 600.0f;         //ローリングの移動速度.
 
-	bool bIsRolling = false;          //ローリング中かどうか.
 	bool bCanRoll = true;			  //ローリング可能かどうか.
 
 	FTimerHandle RollCooldownTimer;   //クールダウン用タイマー.
@@ -160,8 +166,6 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Base|Gun|Status")
 	float ReloadDuration = 2.5f;		//リロード時間(秒)
 	UPROPERTY(BlueprintReadOnly, Category = "MyProperty|Base|Gun|Status")
-	bool  bIsReloading = false;			//リロードしているか.
-	UPROPERTY(BlueprintReadOnly, Category = "MyProperty|Base|Gun|Status")
 	float ReloadTimerElapsed = 0.0f;	//リロード経過時間計測用.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Base|Gun|Status")
 	float shotPosRandom = 0.0f;			//射撃の正確さ(どれだけずらすか)
@@ -175,8 +179,7 @@ public:
 	FRotator TargetRotation; //目標の向き.
 	FVector  TargetPosition; //目標の射撃座標.
 
-	float RotateElapsed = 0.0f;  //経過時間.
-	bool  bIsRotating   = false; //向いてる最中か.
+	float    RotateElapsed = 0.0f;  //経過時間.
 #pragma endregion
 
 #pragma region "アニメーション"
@@ -279,9 +282,9 @@ public:
 
 #pragma region "アニメーション"
 	//アニメーション更新.
-	void UpdateAnim(float DeltaTime);
-	void UpdateAnimJump(bool bIsInAir);
+	void  UpdateAnim    (float DeltaTime);
+	void  UpdateAnimJump(bool bIsInAirNow);
 	//アニメーション再生.
-	float MyPlayAnim(ECharaActionState ActionState);
+	float MyPlayAnim    (ECharaActionState ActionState);
 #pragma endregion
 };
