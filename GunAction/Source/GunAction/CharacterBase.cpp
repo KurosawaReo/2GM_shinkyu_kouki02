@@ -60,6 +60,9 @@ void ACharacterBase::BeginPlay()
 {
 	Super::BeginPlay();
 
+	//行動状態の初期化.
+	CurrentActionState = ECharaActionState::Idle;
+
 	//銃を装備.
 	EquipGun();
 	//デフォルトはダッシュ状態.
@@ -76,14 +79,14 @@ void ACharacterBase::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	//アニメーション状態を更新.
-	UpdateAnim(DeltaTime);
+	//向き補完.
+	MoveRotating(DeltaTime);
 	//リロード時間の更新.
 	UpdateReloadTimer(DeltaTime);
-	//射撃時の向き補完.
-	Rotating(DeltaTime);
 	//ローリング更新.
 	UpdateRoll(DeltaTime);
+	//アニメーション状態を更新.
+	UpdateAnim(DeltaTime);
 }
 
 #pragma endregion
@@ -100,6 +103,50 @@ void ACharacterBase::Move(FVector WorldDirection, float ScaleValue, bool bForce)
 	AddMovementInput(WorldDirection, ScaleValue, bForce);
 }
 
+/// <summary>
+/// 向き補完.
+/// </summary>
+void ACharacterBase::MoveRotating(float DeltaTime) {
+
+	if (!bIsRotating) return;
+
+	//時間経過.
+	RotateElapsed += DeltaTime;
+	//0→1に正規化.
+	const float time = FMath::Clamp(RotateElapsed / RotateDuration, 0.0f, 1.0f);
+	//角度補間.
+	FQuat newQuat = FQuat::Slerp(
+		StartRotation.Quaternion(),
+		TargetRotation.Quaternion(),
+		time
+	);
+
+	SetActorRotation(newQuat);
+
+	//100%を超えたら終了.
+	if (time >= 1.0f)
+	{
+		bIsRotating = false;
+	}
+}
+
+/// <summary>
+/// 向き補完の設定.
+/// </summary>
+/// <param name="Start">開始角度</param>
+/// <param name="End">目標角度</param>
+void ACharacterBase::MoveRotateSetting(FRotator Start, FRotator Target) {
+
+	//開始角度を保存.
+	StartRotation = Start;
+	//目標角度を保存.
+	TargetRotation = Target;
+	//向き補間開始.
+	RotateElapsed = 0.0f;
+	bIsRotating = true;
+}
+
+/// <summary>
 /// 歩く.
 /// </summary>
 void ACharacterBase::OnWalkStart()
@@ -118,6 +165,33 @@ void ACharacterBase::OnWalkStop()
 
 #pragma endregion
 
+#pragma region "ジャンプ"
+
+void ACharacterBase::OnJump()
+{
+	//ジャンプ中、ローリング中はジャンプ不可.
+	if (bIsInAir || bIsRolling) { return; }
+
+	Super::Jump();
+
+	//ジャンプアニメーション再生.
+	MyPlayAnim(ECharaActionState::Jump);
+	//モンタージュの先頭セクション(JumpStart)から開始.
+	GetMesh()->GetAnimInstance()->Montage_JumpToSection(
+		FName("JumpStart"), JumpAnimMontage
+	);
+}
+
+/// <summary>
+/// ジャンプ終了（ボタンを離したとき）.
+/// </summary>
+void ACharacterBase::OnJumpStop()
+{
+	Super::StopJumping();
+}
+
+#pragma endregion
+
 #pragma region "ローリング(回避)"
 
 /// <summary>
@@ -126,14 +200,14 @@ void ACharacterBase::OnWalkStop()
 /// </summary>
 void ACharacterBase::OnRoll()
 {
-	// クールダウン中またはロール中は受け付けない.
-	if (!bCanRoll || bIsRolling) return;
+	//ローリング中、クールダウン中は再ローリング不可.
+	if (!bCanRoll || bIsRolling) { return; }
 
-	// ロール中フラグを立てる.
+	//ローリング中フラグを立てる.
 	bIsRolling = true;
 	bCanRoll = false;
 
-	float MontageLength = MyPlayAnim(ECharaAnimState::Roll);
+	float MontageLength = MyPlayAnim(ECharaActionState::Roll);
 
 	// モンタージュ終了後に EndRoll を呼ぶ.
 	FTimerHandle RollEndTimer;
@@ -141,7 +215,7 @@ void ACharacterBase::OnRoll()
 		RollEndTimer,
 		this,
 		&APlayerCharacter::EndRoll,
-		MontageLength,
+		MontageLength * 0.8f, //ローリングが80%終わったら終了とする.
 		false
 	);
 
@@ -167,7 +241,7 @@ void ACharacterBase::UpdateRoll(float DeltaTime) {
 	const FVector Move = Forward * RollSpeed * DeltaTime;
 
 	//位置更新.
-	SetActorLocation(GetActorLocation() + Move,true);
+	SetActorLocation(GetActorLocation() + Move, true);
 }
 
 /// <summary>
@@ -200,8 +274,8 @@ bool ACharacterBase::IsShotAble() {
 		OnReload();
 		return false;
 	}
-	//リロード中や射撃中は射撃不可.
-	if (bIsReloading || bIsRotating) {
+	//リロード中、ローリング中は射撃不可.
+	if (bIsReloading || bIsRolling) {
 		return false;
 	}
 
@@ -217,20 +291,36 @@ void ACharacterBase::ShotStart(FVector ParamPos) {
 	//射撃可能なら.
 	if (IsShotAble()) {
 
-		//アニメーション再生.
-		MyPlayAnim(ECharaAnimState::Shot);
-
 		TargetPosition = ParamPos;
-		//開始角度を保存.
-		StartRotation = GetActorRotation();
-		//目標角度を保存.
-		FVector DirectionToTarget = TargetPosition - GetActorLocation();
-		DirectionToTarget.Normalize();
-		TargetRotation = DirectionToTarget.Rotation();
 
-		//向き補間開始.
-		RotateElapsed = 0.0f;
-		bIsRotating = true;
+		//目標角度を計算.
+		FVector DirectionToTarget = ParamPos - GetActorLocation();
+		DirectionToTarget.Normalize();
+		//向き補完設定.
+		MoveRotateSetting(
+			GetActorRotation(),
+			DirectionToTarget.Rotation()
+		);
+
+		//アニメーション再生.
+		MyPlayAnim(ECharaActionState::Shot);
+
+		//遅延実行.
+		FTimerHandle handle;
+		GetWorld()->GetTimerManager().SetTimer(
+			handle,
+			[this]()
+			{
+				//弾を召喚.
+				bool ret = SpawnBullet(this, TargetPosition);
+				if (ret) {
+					//ショット時にクロスヘアのエフェクトを実行.
+					CrosshairWidgetExe();
+				}
+			},
+			RotateDuration, //向き終わる頃に実行.
+			false
+		);
 	}
 }
 
@@ -314,46 +404,12 @@ bool ACharacterBase::SpawnBullet(TObjectPtr<ACharacterBase> user, FVector target
 		//銃の射撃アニメーションを再生
 		if (RevolverGun)
 		{
-			RevolverGun->PlayFireAnimation();
+			RevolverGun->PlayShotAnimation();
 		}
 
 		return true; //発射成功.
 	}
 	return false; //発射失敗.
-}
-
-/// <summary>
-/// 射撃時の向き補完.
-/// </summary>
-void ACharacterBase::Rotating(float DeltaTime) {
-
-	if (!bIsRotating) return;
-
-	//時間経過.
-	RotateElapsed += DeltaTime;
-	//0→1に正規化.
-	const float time = FMath::Clamp(RotateElapsed / RotateDuration, 0.0f, 1.0f);
-	//角度補間.
-	FQuat newQuat = FQuat::Slerp(
-		StartRotation.Quaternion(),
-		TargetRotation.Quaternion(),
-		time
-	);
-
-	SetActorRotation(newQuat);
-
-	//100%を超えたら終了.
-	if (time >= 1.0f)
-	{
-		bIsRotating = false;
-
-		//弾を召喚.
-		bool ret = SpawnBullet(this, TargetPosition);
-		if (ret) {
-			//ショット時にクロスヘアのエフェクトを実行.
-			CrosshairWidgetExe();
-		}
-	}
 }
 
 #pragma endregion
@@ -458,10 +514,6 @@ void ACharacterBase::UpdateReloadTimer(float DeltaTime)
 	}
 }
 
-/*
-   TODO: IsHaveGunがfalseの時、銃装着(EquipGun)を行わないようにする。
-*/
-
 /// <summary>
 /// EquipGun - 銃を装備する処理.
 /// RevolverGunClassから銃をスポーンしてプレイヤーに装備させる.
@@ -523,14 +575,6 @@ void ACharacterBase::RotateArmBones(const FRotator& Rotation)
 #pragma endregion
 
 #pragma region "ダメージ・死亡"
-
-/// <summary>
-/// 死亡アニメーション再生.
-/// </summary>
-void ACharacterBase::PlayDeathAnimation()
-{
-
-}
 
 /// <summary>
 /// 死亡エフェクト再生.
@@ -600,29 +644,29 @@ void ACharacterBase::UpdateAnim(float DeltaTime)
 		//現在の速度を取得.
 		CurrentSpeed = GetCharacterMovement()->Velocity.Length();
 		//空中にいるか判定.
-		const bool bIsInAir = GetCharacterMovement()->IsFalling();
+		const bool isInAir = GetCharacterMovement()->IsFalling();
 
 		//ジャンプの更新.
-		UpdateAnimJump(bIsInAir);
+		UpdateAnimJump(isInAir);
 
 		//次のアニメーションを決める.
-		ECharaAnimState NewAnimationState;
+		ECharaActionState NewActionState;
 		//地面にいる & ローリング中ではない.
-		if (!bIsInAir && !bIsRolling) {
+		if (!isInAir && !bIsRolling) {
 			//移動している.
 			if (CurrentSpeed > 0.1f) {
 				//ダッシュしている.
 				if (bIsDash) {
-					NewAnimationState = ECharaAnimState::Run;
+					NewActionState = ECharaActionState::Run;
 				}
 				else {
-					NewAnimationState = ECharaAnimState::Move;
+					NewActionState = ECharaActionState::Move;
 				}
 			}
 			else {
-				NewAnimationState = ECharaAnimState::Idle;
+				NewActionState = ECharaActionState::Idle;
 			}
-			MyPlayAnim(NewAnimationState);
+			MyPlayAnim(NewActionState);
 		}
 	}
 }
@@ -631,7 +675,7 @@ void ACharacterBase::UpdateAnim(float DeltaTime)
 /// アニメーション状態(ジャンプ関係)を更新.
 /// </summary>
 /// <param name="bIsInAir">空中にいるか</param>
-void ACharacterBase::UpdateAnimJump(bool bIsInAir) {
+void ACharacterBase::UpdateAnimJump(bool bIsInAirNow) {
 
 	/*
 	   [フロー]
@@ -646,7 +690,7 @@ void ACharacterBase::UpdateAnimJump(bool bIsInAir) {
 	if (AnimInstance == nullptr) return;
 
 	//①地上→空中:JumpLoop に切り替え.
-	if (bIsInAir && !bWasInAir)
+	if (bIsInAirNow && !bIsInAir)
 	{
 		if (AnimInstance->Montage_IsPlaying(JumpAnimMontage))
 		{
@@ -655,7 +699,7 @@ void ACharacterBase::UpdateAnimJump(bool bIsInAir) {
 	}
 
 	// ② 空中 → 着地 : JumpLand を再生.
-	if (!bIsInAir && bWasInAir)
+	if (!bIsInAirNow && bIsInAir)
 	{
 		if (AnimInstance->Montage_IsPlaying(JumpAnimMontage))
 		{
@@ -664,41 +708,41 @@ void ACharacterBase::UpdateAnimJump(bool bIsInAir) {
 	}
 
 	// 次フレームのために現在の状態を保存.
-	bWasInAir = bIsInAir;
+	bIsInAir = bIsInAirNow;
 }
 
 /// <summary>
 /// 移動, ジャンプ, 射撃などのアニメーション切り替え.
 /// </summary>
-float ACharacterBase::MyPlayAnim(ECharaAnimState AnimState)
+float ACharacterBase::MyPlayAnim(ECharaActionState ActionState)
 {
 	//アニメーションが同じなら.
-	if (CurrentAnimationState == AnimState) {
+	if (CurrentActionState == ActionState) {
 		return 0; //処理しない.
 	}
-	CurrentAnimationState = AnimState; //状態更新.
+	CurrentActionState = ActionState; //状態更新.
 
 	//状態別の処理.
 	UAnimMontage* MontageToPlay = nullptr;
-	switch (AnimState)
+	switch (ActionState)
 	{
-		case ECharaAnimState::Idle:
+		case ECharaActionState::Idle:
 			MontageToPlay = IdleAnimMontage;
 			break;
-		case ECharaAnimState::Move:
+		case ECharaActionState::Move:
 			MontageToPlay = MoveAnimMontage;
 			break;
-		case ECharaAnimState::Run:
+		case ECharaActionState::Run:
 			MontageToPlay = SprintAnimMontage;
 			break;
-		case ECharaAnimState::Jump:
+		case ECharaActionState::Jump:
 			MontageToPlay = JumpAnimMontage;
 			break;
-		case ECharaAnimState::Shot:
+		case ECharaActionState::Shot:
 			MontageToPlay = ShotAnimMontage;
 			shotAnimTimer = initShotAnimTime; //しばらくは射撃アニメーションを再生.
 			break;
-		case ECharaAnimState::Roll:
+		case ECharaActionState::Roll:
 			MontageToPlay = RollAnimMontage;
 			break;
 
@@ -708,7 +752,7 @@ float ACharacterBase::MyPlayAnim(ECharaAnimState AnimState)
 	//nullチェック.
 	if (MontageToPlay == nullptr)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("MontageToPlay is null for animation state: %d"), (int32)AnimState);
+		UE_LOG(LogTemp, Warning, TEXT("MontageToPlay is null for animation state: %d"), (int32)ActionState);
 		return 0;
 	}
 	if (GetMesh() == nullptr)

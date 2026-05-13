@@ -35,7 +35,7 @@ AEnemyCharacter::AEnemyCharacter()
 	GetCharacterMovement()->MaxWalkSpeed = 600.0f;
 }
 
-//召喚した瞬間.
+//召喚した瞬間に実行.
 void AEnemyCharacter::BeginPlay() {
 
 	ACharacterBase::BeginPlay(); //親クラスのBeginPlay()を呼び出す.
@@ -48,7 +48,6 @@ void AEnemyCharacter::BeginPlay() {
 	//初期state.
 	CurrentState = ECharaState::Alive;
 	//一定時間ごとに実行.
-	GetWorldTimerManager().SetTimer(tmShot,     this, &AEnemyCharacter::OnFire, spanShot, true);
 	GetWorldTimerManager().SetTimer(tmChangeAI, this, &AEnemyCharacter::ChangeAIState, spanChangeAI, true);
 }
 
@@ -57,36 +56,10 @@ void AEnemyCharacter::Tick(float DeltaTime) {
 
 	ACharacterBase::Tick(DeltaTime); //親クラスのTick()を呼び出す.
 
-	//プレイヤー取得.
-	ACharacter* player = UGameplayStatics::GetPlayerCharacter(GetWorld(), 0);
-	//座標取得.
-	FVector myPos = GetActorLocation();
-	FVector plyPos = player->GetActorLocation();
-	//座標差の計算.
-	FVector dis = plyPos - myPos;
-
-	//向きを設定.
-	double rad = atan2(dis.Y, dis.X);
-	double deg = rad * 180 / PI;
-	FRotator rot(0, deg, 0);
-	SetActorRotation(rot, ETeleportType::None);
-
-	FVector forward = FVector(); //方向設定用.
-	//AI行動別.
-	switch (AIState)
-	{
-	case EAIState::Goto:
-		forward = { cos(deg * PI / 180), sin(rad * PI / 180), 0 };
-		break;
-	case EAIState::StepL:
-		forward = { cos((deg + 90) * PI / 180), sin((deg + 90) * PI / 180), 0 };
-		break;
-	case EAIState::StepR:
-		forward = { cos((deg - 90) * PI / 180), sin((deg - 90) * PI / 180), 0 };
-		break;
-	}
-	//進む.
-	Move(forward, 1.0f);
+	//移動.
+	Move(moveVec, 1.0f);
+	//向き補完.
+	MoveRotateSetting(GetActorRotation(), moveRot);
 }
 
 #pragma endregion
@@ -97,23 +70,6 @@ void AEnemyCharacter::Tick(float DeltaTime) {
 bool AEnemyCharacter::IsDead() const
 {
 	return CurrentState == ECharaState::Dead;
-}
-
-#pragma endregion
-
-#pragma region "射撃"
-
-/// <summary>
-/// 射撃処理.
-/// </summary>
-void AEnemyCharacter::OnFire()
-{
-	//プレイヤー取得.
-	ACharacter* player = UGameplayStatics::GetPlayerCharacter(GetWorld(), 0);
-	//目標地点.
-	FVector Target = player->GetActorLocation();
-	//射撃開始.
-	ShotStart(Target);
 }
 
 #pragma endregion
@@ -148,16 +104,121 @@ void AEnemyCharacter::Death()
 #pragma region "AI"
 
 /// <summary>
+/// 射撃処理.
+/// </summary>
+void AEnemyCharacter::OnShot()
+{
+	//プレイヤー取得.
+	ACharacter* player = UGameplayStatics::GetPlayerCharacter(GetWorld(), 0);
+	//目標地点.
+	FVector Target = player->GetActorLocation();
+	//射撃開始.
+	ShotStart(Target);
+}
+
+/// <summary>
+/// ローリング.
+/// </summary>
+void AEnemyCharacter::OnRoll()
+{
+	ACharacterBase::OnRoll();
+}
+
+/// <summary>
+/// ジャンプ.
+/// </summary>
+void AEnemyCharacter::OnJump()
+{
+	ACharacterBase::OnJump();
+}
+
+/// <summary>
 /// AI行動選択.
 /// </summary>
 void AEnemyCharacter::ChangeAIState() {
 
 	//列挙の数.
-	const int max = StaticEnum<EAIState>()->NumEnums();
+	const int max = static_cast<int>(EAIState::Count);
 	//抽選.
 	const int rnd = FMath::RandRange(0, max - 1);
 	//行動変更.
 	AIState = static_cast<EAIState>(rnd);
+
+	AIAction();
+}
+
+/// <summary>
+/// AI行動.
+/// </summary>
+void AEnemyCharacter::AIAction() {
+
+	//プレイヤー取得.
+	ACharacter* player = UGameplayStatics::GetPlayerCharacter(GetWorld(), 0);
+	//座標取得.
+	FVector myPos = GetActorLocation();
+	FVector plyPos = player->GetActorLocation();
+	//座標差の計算.
+	FVector dis = plyPos - myPos;
+	//向きを計算.
+	const double rad = atan2(dis.Y, dis.X);
+
+	//AI行動別.
+	switch (AIState)
+	{
+		case EAIState::Goto:
+		{
+			moveVec.X = cos(rad);
+			moveVec.Y = sin(rad);
+		}
+		break;
+
+		case EAIState::StepL:
+		{
+			moveVec.X = cos(rad + PI / 2);
+			moveVec.Y = sin(rad + PI / 2);
+		}
+		break;
+
+		case EAIState::StepR:
+		{
+			moveVec.X = cos(rad - PI / 2);
+			moveVec.Y = sin(rad - PI / 2);
+		}
+		break;
+
+		case EAIState::Jump:
+		{
+			OnJump();
+		}
+		break;
+
+		case EAIState::Shot:
+		{
+			moveVec = FVector::Zero(); //ベクトルリセット.
+
+			OnShot();
+		}
+		break;
+
+		case EAIState::Roll:
+		{
+			moveVec = FVector::Zero(); //ベクトルリセット.
+
+			OnRoll();
+		}
+		break;
+
+		default:
+			FString text = FString::Printf(TEXT("Invalid Enum(%d): AEnemyCharacter 'AIState'"), static_cast<int>(AIState));
+			GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, text);
+			break;
+	}
+
+	//移動方向へ向く.
+	if (!moveVec.IsNearlyZero())
+	{
+		moveRot = moveVec.Rotation();
+	}
 }
 
 #pragma endregion

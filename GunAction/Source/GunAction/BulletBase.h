@@ -80,10 +80,10 @@ public:
 	ABulletBase();
 
 protected:
-	//¢Š«‚ÉŒÄ‚Î‚ê‚é.
+	//¢Š«‚µ‚½uŠÔ‚ÉÀs.
 	virtual void BeginPlay() override;
 
-	//“–‚½‚Á‚½‚ÉŒÄ‚Î‚ê‚é.
+	//‰½‚©‚É“–‚½‚Á‚½‚ÉÀs.
 	UFUNCTION()
 	virtual void OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
 		UPrimitiveComponent* OtherComp, int32 OtherBodyIndex,

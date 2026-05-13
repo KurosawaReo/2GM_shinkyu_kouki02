@@ -38,12 +38,13 @@ public:
 	class UCameraComponent* FollowCamera;
 #pragma endregion
 
-#pragma region "UI"
-	//クロスヘア.
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Player|UI")
+#pragma region "クロスヘア"
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Player|Crosshair")
 	TSubclassOf<UCrosshairWidget> CrosshairWidgetClass;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Player|UI")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Player|Crosshair")
 	UCrosshairWidget* CrosshairWidget;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Player|Crosshair")
+	bool IsShowCrosshair = true; //クロスヘア表示,非表示切り替え用.
 #pragma endregion
 
 //▼ ===== 関数 ===== ▼.
@@ -51,7 +52,7 @@ protected:
 
 #pragma region "基本処理"
 	APlayerCharacter();						//コンストラクタ.
-	void BeginPlay() override;				//召喚した瞬間.
+	void BeginPlay() override;				//召喚した瞬間に実行.
 	void Tick(float DeltaTime) override;	//常に実行.
 #pragma endregion
 
@@ -62,11 +63,6 @@ public:
 	void Input(UInputComponent* PlayerInputComponent);
 #pragma endregion
 
-#pragma region "ジャンプ"
-	void Jump()        override; //ジャンプ開始.
-	void StopJumping() override; //ジャンプ終了.
-#pragma endregion
-
 #pragma region "移動"
 	void OnMoveForward(float Value);
 	void OnMoveRight(float Value);
@@ -75,7 +71,7 @@ public:
 #pragma endregion
 
 #pragma region "射撃"
-	void OnFire();				    	//射撃処理.
+	void OnShot();				    	//射撃処理.
 	void CrosshairWidgetExe() override;	//クロスヘアエフェクト実行.
 #pragma endregion
 

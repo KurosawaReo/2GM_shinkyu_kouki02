@@ -13,6 +13,13 @@
 #include "CharacterBase.h" //親クラス.
 #include "EnemyCharacter.generated.h"
 
+/*
+   UEの列挙体は、最後に"MAX"という値が自動で追加される.
+
+   StaticEnum<EAIState>()->NumEnums()
+   で取得すると、値が6つでも"7"と返ってくるため注意.
+*/
+
 /// <summary>
 /// AI行動のstate.
 /// </summary>
@@ -20,8 +27,15 @@ UENUM(BlueprintType)
 enum class EAIState : uint8
 {
 	Goto  UMETA(DisplayName = "Goto"),  //突っ込む.
-	StepL UMETA(DisplayName = "StepL"), //左に避ける.
-	StepR UMETA(DisplayName = "StepR"), //右に避ける.
+	StepL UMETA(DisplayName = "StepL"), //左に移動.
+	StepR UMETA(DisplayName = "StepR"), //右に移動.
+	Jump  UMETA(DisplayName = "Jump"),  //ジャンプ.
+	Shot  UMETA(DisplayName = "Shot"),  //撃つ.
+	Roll  UMETA(DisplayName = "Roll"),  //ローリング.
+
+	Count UMETA(Hidden)                 //state総数.
+
+//  EAIState_MAX                        //[注意]自動追加される.
 };
 
 /// <summary>
@@ -44,27 +58,23 @@ public:
 	EAIState AIState;
 #pragma region
 
-#pragma region "射撃"
-	//射撃間隔.
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Enemy|Shot")
-	float spanShot = 0.2f;
-#pragma region
-
 #pragma region "AI"
 	//AI行動選択間隔.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Enemy|AI")
 	float spanChangeAI = 1.0f;
 #pragma region
 
+	FVector  moveVec; //進行方向.
+	FRotator moveRot; //進行角度.
+
 	//タイマー.
-	FTimerHandle tmShot;	 //射撃間隔.
 	FTimerHandle tmChangeAI; //AI行動選択間隔.
 
 //▼ ===== 関数 ===== ▼.
 protected:
 #pragma region "基本処理"
 	AEnemyCharacter();						//コンストラクタ.
-	void BeginPlay()           override;	//召喚した瞬間.
+	void BeginPlay()           override;	//召喚した瞬間に実行.
 	void Tick(float DeltaTime) override;	//常に実行.
 #pragma endregion
 
@@ -74,16 +84,16 @@ public:
 	bool IsDead() const;					//死亡状態の取得.
 #pragma endregion
 
-#pragma region "射撃"
-	void OnFire();							//射撃開始.
-#pragma endregion
-
 #pragma region "ダメージ・死亡"
 	void OnBulletHit() override;			//弾が当たったら実行される.
 	void Death()       override;			//死亡処理.
 #pragma endregion
 
-#pragma region "AI"
-	void ChangeAIState();
+#pragma region "AI・行動"
+	void OnJump();							//ジャンプ.
+	void OnShot();							//射撃開始.
+	void OnRoll();							//ローリング.
+	void ChangeAIState();					//AI行動選択.
+	void AIAction();						//AI行動.
 #pragma endregion
 };

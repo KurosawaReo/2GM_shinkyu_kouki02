@@ -161,11 +161,11 @@ void AWeaponRevolver::DisableAllCollisions()
 }
 
 //射撃アニメーションを再生.
-void AWeaponRevolver::PlayFireAnimation()
+void AWeaponRevolver::PlayShotAnimation()
 {
-	if (FireAnimMontage == nullptr)
+	if (ShotAnimMontage == nullptr)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("FireAnimMontage is not set!"));
+		UE_LOG(LogTemp, Warning, TEXT("ShotAnimMontage is not set!"));
 		return;
 	}
 
@@ -182,8 +182,7 @@ void AWeaponRevolver::PlayFireAnimation()
 		return;
 	}
 
-	UE_LOG(LogTemp, Warning, TEXT("Playing gun fire animation: %s"), *FireAnimMontage->GetName());
-	AnimInstance->Montage_Play(FireAnimMontage, 1.0f);
+	AnimInstance->Montage_Play(ShotAnimMontage, 1.0f);
 }
 //リロードアニメーションを再生.
 void AWeaponRevolver::PlayReloadAnimation()

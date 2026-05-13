@@ -40,7 +40,7 @@ APlayerCharacter::APlayerCharacter() {
 }
 
 /// <summary>
-/// 召喚した瞬間.
+/// 召喚した瞬間に実行.
 /// </summary>
 void APlayerCharacter::BeginPlay() {
 
@@ -48,8 +48,6 @@ void APlayerCharacter::BeginPlay() {
 
 	//クロスヘアUIを初期化.
 	InitUI();
-	//アニメーション状態の初期化.
-	CurrentAnimationState = ECharaAnimState::Idle;
 }
 
 /// <summary>
@@ -93,8 +91,8 @@ void APlayerCharacter::Input(UInputComponent* PlayerInputComponent)
 	PlayerInputComponent->BindAxis("LookUpRate", this, &APlayerCharacter::OnLookUpRate);
 
 	//ジャンプ.
-	PlayerInputComponent->BindAction("Jump", IE_Pressed,    this, &ACharacter::Jump);
-	PlayerInputComponent->BindAction("Jump", IE_Released,   this, &ACharacter::StopJumping);
+	PlayerInputComponent->BindAction("Jump", IE_Pressed,    this, &ACharacterBase::OnJump);
+	PlayerInputComponent->BindAction("Jump", IE_Released,   this, &ACharacterBase::OnJumpStop);
 
 	//ロール(回避)
 	PlayerInputComponent->BindAction("Roll", IE_Pressed, this, &ACharacterBase::OnRoll);
@@ -104,7 +102,7 @@ void APlayerCharacter::Input(UInputComponent* PlayerInputComponent)
 	PlayerInputComponent->BindAction("Sprint", IE_Released, this, &APlayerCharacter::OnWalkStop);
 
 	//射撃.
-	PlayerInputComponent->BindAction("Fire",   IE_Pressed,  this, &APlayerCharacter::OnFire);
+	PlayerInputComponent->BindAction("Shot",   IE_Pressed,  this, &APlayerCharacter::OnShot);
 
 	//リロード.
 	PlayerInputComponent->BindAction("Reload", IE_Pressed,  this, &APlayerCharacter::OnReload);
@@ -167,36 +165,12 @@ void APlayerCharacter::OnLookUpRate(float Rate)
 
 #pragma endregion
 
-#pragma region "ジャンプ"
-
-void APlayerCharacter::Jump()
-{
-	Super::Jump();
-
-	//ジャンプアニメーション再生.
-	MyPlayAnim(ECharaAnimState::Jump);
-	//モンタージュの先頭セクション(JumpStart)から開始.
-	GetMesh()->GetAnimInstance()->Montage_JumpToSection(
-		FName("JumpStart"), JumpAnimMontage
-	);
-}
-
-/// <summary>
-/// ジャンプ終了（ボタンを離したとき）.
-/// </summary>
-void APlayerCharacter::StopJumping()
-{
-	Super::StopJumping();
-}
-
-#pragma endregion
-
 #pragma region "射撃"
 
 /// <summary>
 /// 射撃処理.
 /// </summary>
-void APlayerCharacter::OnFire()
+void APlayerCharacter::OnShot()
 {
 	//nullチェック.
 	if (FollowCamera == nullptr) {
@@ -268,6 +242,11 @@ void APlayerCharacter::Death() {
 /// </summary>
 void APlayerCharacter::InitUI()
 {
+	//非表示なら表示しない.
+	if (!IsShowCrosshair) {
+		return;
+	}
+
 	if (CrosshairWidgetClass == nullptr)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("CrosshairWidgetClass is not set!"));
