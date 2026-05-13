@@ -43,7 +43,6 @@
 
 //他class.
 #include "WeaponRevolver.h"
-
 #include "CharacterBase.generated.h"
 
 //前方宣言.
@@ -60,10 +59,10 @@ enum class ECharaState : uint8
 };
 
 /// <summary>
-/// [enum] キャラクターのアニメーション状態. 
+/// [enum] キャラクターの行動状態. 
 /// </summary>
 UENUM(BlueprintType)
-enum class ECharaAnimState : uint8
+enum class ECharaActionState : uint8
 {
 	Idle  UMETA(DisplayName = "Idle"), //停止.
 	Move  UMETA(DisplayName = "Move"), //移動.
@@ -100,6 +99,11 @@ public:
 	double CurrentSpeed;
 #pragma endregion
 
+#pragma region "アクション"
+	UPROPERTY(VisibleAnywhere, Category = "MyProperty|Base|Action")
+	ECharaActionState CurrentActionState; //現在の行動状態.
+#pragma endregion
+
 #pragma region "ローリング"
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Base|Roll")
 	float RollCooldown = 1.0f;        //ローリングのクールダウン(秒)
@@ -124,6 +128,10 @@ public:
 #pragma endregion
 
 #pragma region "銃"
+	/*
+	   TODO: IsHaveGunがfalseの時、銃装着(EquipGun)を行わないようにする。
+	*/
+
 	//銃を持つか.
 	//trueなら銃を召喚して持たせる, falseなら射撃のみ行う.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Base|Gun")
@@ -182,9 +190,6 @@ public:
 	//アニメーション関係.
 	float shotAnimTimer;
 	
-	UPROPERTY(VisibleAnywhere, Category = "MyProperty|Base|Animation")
-	ECharaAnimState CurrentAnimationState; //現在のアニメーション状態.
-
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Base|Animation")
 	UAnimMontage* IdleAnimMontage;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Base|Animation")
@@ -223,9 +228,17 @@ public:
 #pragma region "移動"
 	//移動処理.
 	void Move(FVector WorldDirection, float ScaleValue, bool bForce = false);
+	//向き補完.
+	void MoveRotating(float DeltaTime);
+	void MoveRotateSetting(FRotator Start, FRotator Target);
 	//歩行操作.
 	void OnWalkStart();
 	void OnWalkStop();
+#pragma endregion
+
+#pragma region "ジャンプ"
+	void OnJump();						//ジャンプ開始.
+	void OnJumpStop();					//ジャンプ終了.
 #pragma endregion
 
 #pragma region "ローリング(回避)"
@@ -249,8 +262,6 @@ public:
 	void ShotStart(FVector ParamPos);
 	//弾を召喚.
 	bool SpawnBullet(TObjectPtr<ACharacterBase> user, FVector targetPos);
-	//射撃時の向き補完.
-	void Rotating(float DeltaTime);
 	//クロスヘアエフェクト実行.[仮想関数]
 	virtual void CrosshairWidgetExe() {}
 #pragma endregion
@@ -260,7 +271,6 @@ public:
 	virtual void OnBulletHit(){}	//弾が当たったら実行される.[仮想関数]
 	virtual void Death(){}			//死亡処理.                [仮想関数]
 
-	void PlayDeathAnimation();		//死亡アニメーション再生.
 	void PlayDeathEffect();			//死亡エフェクト再生.
 	void PlayDeathSound();			//死亡音再生.
 
@@ -272,6 +282,6 @@ public:
 	void UpdateAnim(float DeltaTime);
 	void UpdateAnimJump(bool bIsInAir);
 	//アニメーション再生.
-	float MyPlayAnim(ECharaAnimState AnimState);
+	float MyPlayAnim(ECharaActionState ActionState);
 #pragma endregion
 };

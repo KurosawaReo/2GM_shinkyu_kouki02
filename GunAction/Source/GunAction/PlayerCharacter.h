@@ -63,11 +63,6 @@ public:
 	void Input(UInputComponent* PlayerInputComponent);
 #pragma endregion
 
-#pragma region "ジャンプ"
-	void Jump()        override; //ジャンプ開始.
-	void StopJumping() override; //ジャンプ終了.
-#pragma endregion
-
 #pragma region "移動"
 	void OnMoveForward(float Value);
 	void OnMoveRight(float Value);
@@ -76,7 +71,7 @@ public:
 #pragma endregion
 
 #pragma region "射撃"
-	void OnFire();				    	//射撃処理.
+	void OnShot();				    	//射撃処理.
 	void CrosshairWidgetExe() override;	//クロスヘアエフェクト実行.
 #pragma endregion
 

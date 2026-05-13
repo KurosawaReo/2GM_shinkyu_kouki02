@@ -114,11 +114,10 @@ public:
 	TObjectPtr<UParticleSystemComponent> PS_Muzzleflash_Revolver;
 	
 	/** 銃の射撃アニメーション */
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "MyProperty|Animation")
-	class UAnimMontage* FireAnimMontage;
-
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Animation")
+	class UAnimMontage* ShotAnimMontage;
 	/** 銃のリロードアニメーション */
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "MyProperty|Animation")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Animation")
 	class UAnimMontage* ReloadAnimMontage;
 
 //▼ ===== 関数 ===== ▼.
@@ -139,7 +138,7 @@ public:
 
 	/* 射撃アニメーションを再生 */
 	UFUNCTION(BlueprintCallable, Category = "Gun")
-	void PlayFireAnimation();
+	void PlayShotAnimation();
 
 	/* リロードアニメーションを再生 */
 	UFUNCTION(BlueprintCallable, Category = "Gun")
