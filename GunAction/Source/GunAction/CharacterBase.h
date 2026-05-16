@@ -113,20 +113,20 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Base|Movement")
 	float  BaseLookUpRate = 45.0f;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Base|Movement")
-	float  WalkSpeed = 200.0f; //歩速, 200くらいがちょうどいい.
+	float  WalkSpeed = 200.0f; //歩く時の移動速度.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Base|Movement")
-	float  RunSpeed = 800.0f; //走速, 800くらい?
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "MyProperty|Base|Movement")
+	float  RunSpeed = 700.0f;  //走る時の移動速度.
+	UPROPERTY(VisibleAnywhere, Category = "MyProperty|Base|Movement")
 	double CurrentSpeed;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Base|Movement")
-	float  RotateDuration = 0.25f;    //向く秒数.
+	float  RotateDuration = 0.25f; //向く秒数.
 #pragma endregion
 
 #pragma region "ローリング"
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Base|Roll")
 	float RollCooldown = 1.0f;        //ローリングのクールダウン(秒)
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Base|Roll")
-	float RollSpeed = 600.0f;         //ローリングの移動速度.
+	float RollSpeed = 900.0f;         //ローリングの移動速度.
 
 	bool bCanRoll = true;			  //ローリング可能かどうか.
 
