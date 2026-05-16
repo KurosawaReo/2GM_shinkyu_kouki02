@@ -42,9 +42,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Player|Crosshair")
 	TSubclassOf<UCrosshairWidget> CrosshairWidgetClass;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Player|Crosshair")
-	UCrosshairWidget* CrosshairWidget;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Player|Crosshair")
 	bool IsShowCrosshair = true; //クロスヘア表示,非表示切り替え用.
+
+	UCrosshairWidget* CrosshairWidget;
 #pragma endregion
 
 //▼ ===== 関数 ===== ▼.
