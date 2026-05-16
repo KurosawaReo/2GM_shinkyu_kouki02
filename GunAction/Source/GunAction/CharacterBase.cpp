@@ -48,8 +48,9 @@ ACharacterBase::ACharacterBase()
 	GetCharacterMovement()->MaxWalkSpeed = WalkSpeed;
 
 	//初期状態.
-	bIsReloading = false;
 	RevolverGun = nullptr;
+	//ステータス初期値.
+	Hp = MaxHp;
 	AmmoCount = MaxAmmoCount;
 }
 
@@ -91,7 +92,17 @@ void ACharacterBase::Tick(float DeltaTime)
 
 #pragma endregion
 
-#pragma region "移動"
+#pragma region "Get"
+
+//死亡状態かどうか.
+bool ACharacterBase::IsDead() const
+{
+	return CurrentState == ECharaState::Dead;
+}
+
+#pragma endregion
+
+#pragma region "動き"
 
 /// <summary>
 /// 移動処理.
@@ -100,6 +111,10 @@ void ACharacterBase::Tick(float DeltaTime)
 /// <param name="ScaleValue">移動量</param>
 /// <param name="bForce">?</param>
 void ACharacterBase::Move(FVector WorldDirection, float ScaleValue, bool bForce) {
+	
+	//ローリング中は移動不可.
+	if (bIsRolling) { return; }
+
 	AddMovementInput(WorldDirection, ScaleValue, bForce);
 }
 
@@ -192,7 +207,7 @@ void ACharacterBase::OnJumpStop()
 
 #pragma endregion
 
-#pragma region "ローリング(回避)"
+#pragma region "ローリング"
 
 /// <summary>
 /// ローリング開始.
@@ -233,15 +248,17 @@ void ACharacterBase::OnRoll()
 /// </summary>
 void ACharacterBase::UpdateRoll(float DeltaTime) {
 
-	if (!bIsRolling) { return; }
+	//ローリング中 & 着地してるなら.
+	if (bIsRolling && !bIsInAir) { 
+	
+		//前方向ベクトル取得.
+		const FVector Forward = GetActorForwardVector();
+		//移動量 = 方向 * 速度 * 時間.
+		const FVector Move = Forward * RollSpeed * DeltaTime;
 
-	//前方向ベクトル取得.
-	const FVector Forward = GetActorForwardVector();
-	//移動量 = 方向 * 速度 * 時間.
-	const FVector Move = Forward * RollSpeed * DeltaTime;
-
-	//位置更新.
-	SetActorLocation(GetActorLocation() + Move, true);
+		//位置更新.
+		SetActorLocation(GetActorLocation() + Move, true);
+	}
 }
 
 /// <summary>
@@ -291,6 +308,9 @@ void ACharacterBase::ShotStart(FVector ParamPos) {
 	//射撃可能なら.
 	if (IsShotAble()) {
 
+		//先に弾薬を消費.
+		AmmoCount--;
+		//弾の目標位置.
 		TargetPosition = ParamPos;
 
 		//目標角度を計算.
@@ -381,11 +401,6 @@ bool ACharacterBase::SpawnBullet(TObjectPtr<ACharacterBase> user, FVector target
 		if (Cast<AEnemyCharacter>(user)) {
 			Bullet->SetTeam(ETeam::Enemy);  //敵チームへ.
 		}
-
-		//弾薬を消費.
-		AmmoCount--;
-
-		UE_LOG(LogTemp, Warning, TEXT("Shot! Remaining Ammo: %d"), AmmoCount);
 
 		// マズルフラッシュエフェクトを再生
 		if (RevolverGun && RevolverGun->PS_Muzzleflash_Revolver)
@@ -574,59 +589,6 @@ void ACharacterBase::RotateArmBones(const FRotator& Rotation)
 
 #pragma endregion
 
-#pragma region "ダメージ・死亡"
-
-/// <summary>
-/// 死亡エフェクト再生.
-/// </summary>
-void ACharacterBase::PlayDeathEffect()
-{
-	if (DeathEffect)
-	{
-		UGameplayStatics::SpawnEmitterAtLocation(
-			GetWorld(),
-			DeathEffect,
-			GetActorLocation(),
-			GetActorRotation()
-		);
-	}
-}
-
-/// <summary>
-/// 死亡音再生.
-/// </summary>
-void ACharacterBase::PlayDeathSound()
-{
-	if (DeathSound)
-	{
-		UGameplayStatics::PlaySoundAtLocation(
-			GetWorld(),
-			DeathSound,
-			GetActorLocation()
-		);
-	}
-}
-
-/// <summary>
-/// コンポーネント無効化.
-/// </summary>
-void ACharacterBase::DisableComponents()
-{
-	//移動を停止.
-	if (auto cmp = GetCharacterMovement()) {
-		cmp->StopMovementImmediately();
-		cmp->DisableMovement();
-	}
-	//銃を消滅.
-	if (RevolverGun) {
-		RevolverGun->Destroy();
-	}
-	//Tickを停止.
-	SetActorTickEnabled(false);
-}
-
-#pragma endregion
-
 #pragma region "アニメーション"
 
 /// <summary>
@@ -766,4 +728,72 @@ float ACharacterBase::MyPlayAnim(ECharaActionState ActionState)
 	//再生時間を返す.
 	return duration;
 }
+#pragma endregion
+
+#pragma region "ダメージ"
+
+/// <summary>
+/// ダメージ処理.
+/// </summary>
+void ACharacterBase::Damage(int32 Value) 
+{
+	Hp -= Value; //体力減少.
+	if (Hp <= 0) {
+		Death(); //死亡処理.
+	}
+}
+
+#pragma endregion
+
+#pragma region "死亡"
+
+/// <summary>
+/// 死亡エフェクト再生.
+/// </summary>
+void ACharacterBase::PlayDeathEffect()
+{
+	if (DeathEffect)
+	{
+		UGameplayStatics::SpawnEmitterAtLocation(
+			GetWorld(),
+			DeathEffect,
+			GetActorLocation(),
+			GetActorRotation()
+		);
+	}
+}
+
+/// <summary>
+/// 死亡音再生.
+/// </summary>
+void ACharacterBase::PlayDeathSound()
+{
+	if (DeathSound)
+	{
+		UGameplayStatics::PlaySoundAtLocation(
+			GetWorld(),
+			DeathSound,
+			GetActorLocation()
+		);
+	}
+}
+
+/// <summary>
+/// コンポーネント無効化.
+/// </summary>
+void ACharacterBase::DisableComponents()
+{
+	//移動を停止.
+	if (auto cmp = GetCharacterMovement()) {
+		cmp->StopMovementImmediately();
+		cmp->DisableMovement();
+	}
+	//銃を消滅.
+	if (RevolverGun) {
+		RevolverGun->Destroy();
+	}
+	//Tickを停止.
+	SetActorTickEnabled(false);
+}
+
 #pragma endregion

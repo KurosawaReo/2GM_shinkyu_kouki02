@@ -13,10 +13,10 @@
 //他class.
 #include "CharacterBase.h" //親クラス.
 #include "WeaponRevolver.h"
+#include "WidgetCrosshair.h"
 
 #include "PlayerCharacter.generated.h"
 
-class UCrosshairWidget;
 class USpringArmComponent;
 class UCameraComponent;
 
@@ -40,11 +40,11 @@ public:
 
 #pragma region "クロスヘア"
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Player|Crosshair")
-	TSubclassOf<UCrosshairWidget> CrosshairWidgetClass;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Player|Crosshair")
-	UCrosshairWidget* CrosshairWidget;
+	TSubclassOf<UWidgetCrosshair> CrosshairClass;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Player|Crosshair")
 	bool IsShowCrosshair = true; //クロスヘア表示,非表示切り替え用.
+
+	UWidgetCrosshair* Crosshair;
 #pragma endregion
 
 //▼ ===== 関数 ===== ▼.
@@ -75,9 +75,8 @@ public:
 	void CrosshairWidgetExe() override;	//クロスヘアエフェクト実行.
 #pragma endregion
 
-#pragma region "ダメージ・死亡"
-	void OnBulletHit() override;	//弾が当たったら実行される.
-	void Death()       override;	//死亡処理.
+#pragma region "死亡"
+	void Death() override;	//死亡処理.
 #pragma endregion
 
 #pragma region "UI"
