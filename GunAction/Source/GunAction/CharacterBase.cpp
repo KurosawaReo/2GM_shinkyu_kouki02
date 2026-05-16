@@ -111,6 +111,10 @@ bool ACharacterBase::IsDead() const
 /// <param name="ScaleValue">移動量</param>
 /// <param name="bForce">?</param>
 void ACharacterBase::Move(FVector WorldDirection, float ScaleValue, bool bForce) {
+	
+	//ローリング中は移動不可.
+	if (bIsRolling) { return; }
+
 	AddMovementInput(WorldDirection, ScaleValue, bForce);
 }
 
@@ -203,7 +207,7 @@ void ACharacterBase::OnJumpStop()
 
 #pragma endregion
 
-#pragma region "ローリング(回避)"
+#pragma region "ローリング"
 
 /// <summary>
 /// ローリング開始.
@@ -244,15 +248,17 @@ void ACharacterBase::OnRoll()
 /// </summary>
 void ACharacterBase::UpdateRoll(float DeltaTime) {
 
-	if (!bIsRolling) { return; }
+	//ローリング中 & 着地してるなら.
+	if (bIsRolling && !bIsInAir) { 
+	
+		//前方向ベクトル取得.
+		const FVector Forward = GetActorForwardVector();
+		//移動量 = 方向 * 速度 * 時間.
+		const FVector Move = Forward * RollSpeed * DeltaTime;
 
-	//前方向ベクトル取得.
-	const FVector Forward = GetActorForwardVector();
-	//移動量 = 方向 * 速度 * 時間.
-	const FVector Move = Forward * RollSpeed * DeltaTime;
-
-	//位置更新.
-	SetActorLocation(GetActorLocation() + Move, true);
+		//位置更新.
+		SetActorLocation(GetActorLocation() + Move, true);
+	}
 }
 
 /// <summary>
