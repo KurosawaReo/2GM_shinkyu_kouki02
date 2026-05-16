@@ -48,8 +48,9 @@ ACharacterBase::ACharacterBase()
 	GetCharacterMovement()->MaxWalkSpeed = WalkSpeed;
 
 	//初期状態.
-	bIsReloading = false;
 	RevolverGun = nullptr;
+	//ステータス初期値.
+	Hp = MaxHp;
 	AmmoCount = MaxAmmoCount;
 }
 
@@ -91,7 +92,17 @@ void ACharacterBase::Tick(float DeltaTime)
 
 #pragma endregion
 
-#pragma region "移動"
+#pragma region "Get"
+
+//死亡状態かどうか.
+bool ACharacterBase::IsDead() const
+{
+	return CurrentState == ECharaState::Dead;
+}
+
+#pragma endregion
+
+#pragma region "動き"
 
 /// <summary>
 /// 移動処理.
@@ -574,59 +585,6 @@ void ACharacterBase::RotateArmBones(const FRotator& Rotation)
 
 #pragma endregion
 
-#pragma region "ダメージ・死亡"
-
-/// <summary>
-/// 死亡エフェクト再生.
-/// </summary>
-void ACharacterBase::PlayDeathEffect()
-{
-	if (DeathEffect)
-	{
-		UGameplayStatics::SpawnEmitterAtLocation(
-			GetWorld(),
-			DeathEffect,
-			GetActorLocation(),
-			GetActorRotation()
-		);
-	}
-}
-
-/// <summary>
-/// 死亡音再生.
-/// </summary>
-void ACharacterBase::PlayDeathSound()
-{
-	if (DeathSound)
-	{
-		UGameplayStatics::PlaySoundAtLocation(
-			GetWorld(),
-			DeathSound,
-			GetActorLocation()
-		);
-	}
-}
-
-/// <summary>
-/// コンポーネント無効化.
-/// </summary>
-void ACharacterBase::DisableComponents()
-{
-	//移動を停止.
-	if (auto cmp = GetCharacterMovement()) {
-		cmp->StopMovementImmediately();
-		cmp->DisableMovement();
-	}
-	//銃を消滅.
-	if (RevolverGun) {
-		RevolverGun->Destroy();
-	}
-	//Tickを停止.
-	SetActorTickEnabled(false);
-}
-
-#pragma endregion
-
 #pragma region "アニメーション"
 
 /// <summary>
@@ -766,4 +724,72 @@ float ACharacterBase::MyPlayAnim(ECharaActionState ActionState)
 	//再生時間を返す.
 	return duration;
 }
+#pragma endregion
+
+#pragma region "ダメージ"
+
+/// <summary>
+/// ダメージ処理.
+/// </summary>
+void ACharacterBase::Damage(int32 Value) 
+{
+	Hp -= Value; //体力減少.
+	if (Hp <= 0) {
+		Death(); //死亡処理.
+	}
+}
+
+#pragma endregion
+
+#pragma region "死亡"
+
+/// <summary>
+/// 死亡エフェクト再生.
+/// </summary>
+void ACharacterBase::PlayDeathEffect()
+{
+	if (DeathEffect)
+	{
+		UGameplayStatics::SpawnEmitterAtLocation(
+			GetWorld(),
+			DeathEffect,
+			GetActorLocation(),
+			GetActorRotation()
+		);
+	}
+}
+
+/// <summary>
+/// 死亡音再生.
+/// </summary>
+void ACharacterBase::PlayDeathSound()
+{
+	if (DeathSound)
+	{
+		UGameplayStatics::PlaySoundAtLocation(
+			GetWorld(),
+			DeathSound,
+			GetActorLocation()
+		);
+	}
+}
+
+/// <summary>
+/// コンポーネント無効化.
+/// </summary>
+void ACharacterBase::DisableComponents()
+{
+	//移動を停止.
+	if (auto cmp = GetCharacterMovement()) {
+		cmp->StopMovementImmediately();
+		cmp->DisableMovement();
+	}
+	//銃を消滅.
+	if (RevolverGun) {
+		RevolverGun->Destroy();
+	}
+	//Tickを停止.
+	SetActorTickEnabled(false);
+}
+
 #pragma endregion

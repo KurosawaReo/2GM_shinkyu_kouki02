@@ -64,27 +64,11 @@ void AEnemyCharacter::Tick(float DeltaTime) {
 
 #pragma endregion
 
-#pragma region "Get"
+#pragma region "€–S"
 
-//€–Só‘Ô‚©‚Ç‚¤‚©.
-bool AEnemyCharacter::IsDead() const
-{
-	return CurrentState == ECharaState::Dead;
-}
-
-#pragma endregion
-
-#pragma region "ƒ_ƒ[ƒWˆ—"
-
-//’e‚ª“–‚½‚Á‚½‚çÀs‚³‚ê‚é.
-void AEnemyCharacter::OnBulletHit() 
-{
-//	GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, TEXT("hit enemy"));
-
-	Death(); //€–Sˆ—.
-}
-
-//€–Sˆ—.
+/// <summary>
+/// €–Sˆ—.
+/// </summary>
 void AEnemyCharacter::Death()
 {
 	//Šù‚É€–S‚µ‚Ä‚¢‚éê‡‚Íˆ—‚µ‚È‚¢.

@@ -75,9 +75,8 @@ public:
 	void CrosshairWidgetExe() override;	//クロスヘアエフェクト実行.
 #pragma endregion
 
-#pragma region "ダメージ・死亡"
-	void OnBulletHit() override;	//弾が当たったら実行される.
-	void Death()       override;	//死亡処理.
+#pragma region "死亡"
+	void Death() override;	//死亡処理.
 #pragma endregion
 
 #pragma region "UI"

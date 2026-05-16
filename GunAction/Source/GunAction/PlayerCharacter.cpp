@@ -214,17 +214,7 @@ void APlayerCharacter::CrosshairWidgetExe() {
 
 #pragma endregion
 
-#pragma region "ƒ_ƒ[ƒWˆ—"
-
-/// <summary>
-/// ’e‚ª“–‚½‚Á‚½‚çÀs‚³‚ê‚é.
-/// </summary>
-void APlayerCharacter::OnBulletHit() {
-
-//	GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, TEXT("hit player"));
-
-	Death(); //€–Sˆ—.
-}
+#pragma region "€–S"
 
 /// <summary>
 /// €–Sˆ—.
