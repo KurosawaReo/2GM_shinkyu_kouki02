@@ -49,16 +49,10 @@ class GUNACTION_API AEnemyCharacter : public ACharacterBase
 //▼ ===== 変数 ===== ▼.
 public:
 
-#pragma region "基本"
-	//キャラクター状態.
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "MyProperty|Enemy")
-	ECharaState CurrentState;
-	//AI行動状態.
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "MyProperty|Enemy")
-	EAIState AIState;
-#pragma region
-
 #pragma region "AI"
+	//AI行動状態.
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "MyProperty|Enemy|AI")
+	EAIState AIState;
 	//AI行動選択間隔.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Enemy|AI")
 	float spanChangeAI = 1.0f;
@@ -79,14 +73,8 @@ protected:
 #pragma endregion
 
 public:
-#pragma region "Get"
-	UFUNCTION(BlueprintCallable, Category = "Enemy")
-	bool IsDead() const;					//死亡状態の取得.
-#pragma endregion
-
 #pragma region "ダメージ・死亡"
-	void OnBulletHit() override;			//弾が当たったら実行される.
-	void Death()       override;			//死亡処理.
+	void Death() override;	//死亡処理.
 #pragma endregion
 
 #pragma region "AI・行動"

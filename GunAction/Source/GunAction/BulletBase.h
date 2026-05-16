@@ -65,14 +65,16 @@ private:
 
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty")
+	float   damage     = 1;  //与えるダメージ.
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty")
 	float   speed      = 1;  //速度.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty")
 	float   deleteTime = 50; //消滅までの時間.
 
 	UPROPERTY(EditAnywhere, Category = "MyProperty|Effect")
-	UNiagaraSystem* EffectTrailPlayer; //弾道エフェクト(プレイヤー)
+	UNiagaraSystem* effectTrailPlayer; //弾道エフェクト(プレイヤー)
 	UPROPERTY(EditAnywhere, Category = "MyProperty|Effect")
-	UNiagaraSystem* EffectTrailEnemy;  //弾道エフェクト(敵)
+	UNiagaraSystem* effectTrailEnemy;  //弾道エフェクト(敵)
 
 //▼ ===== 関数 ===== ▼.
 public:	

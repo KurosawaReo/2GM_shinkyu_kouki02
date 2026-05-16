@@ -1,20 +1,15 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
-
-#include "CrosshairWidget.h"
+/*
+   - WidgetCrosshair -
+   クロスヘアUI
+*/
+#include "WidgetCrosshair.h"
 #include "Components/Image.h"
 #include "TimerManager.h"
 #include "Engine/World.h"
 
-void UCrosshairWidget::NativeConstruct()
+void UWidgetCrosshair::NativeConstruct()
 {
 	Super::NativeConstruct();
-
-	// デフォルト値を設定.
-	if (DefaultColor == FColor::Black)
-	{
-		DefaultColor = FColor::White;
-	}
 
 	if (CrosshairSize == FVector2D::ZeroVector)
 	{
@@ -30,7 +25,7 @@ void UCrosshairWidget::NativeConstruct()
 	}
 }
 
-void UCrosshairWidget::SetCrosshairColor(FColor NewColor)
+void UWidgetCrosshair::SetCrosshairColor(FColor NewColor)
 {
 	if (CrosshairImage)
 	{
@@ -38,27 +33,7 @@ void UCrosshairWidget::SetCrosshairColor(FColor NewColor)
 	}
 }
 
-void UCrosshairWidget::OnShotEffect()
-{
-	if (CrosshairImage == nullptr || GetWorld() == nullptr)
-	{
-		return;
-	}
-
-	//ショット時に赤色に変更.
-	CrosshairImage->SetColorAndOpacity(FColor::Red);
-	
-	// 0.1秒後に元の色に戻す
-	GetWorld()->GetTimerManager().SetTimer(
-		ShotEffectTimerHandle,
-		this,
-		&UCrosshairWidget::ResetCrosshairColor,
-		0.1f,
-		false
-	);
-}
-
-void UCrosshairWidget::SetCrosshairOpacity(float Opacity)
+void UWidgetCrosshair::SetCrosshairOpacity(float Opacity)
 {
 	if (CrosshairImage)
 	{
@@ -67,7 +42,7 @@ void UCrosshairWidget::SetCrosshairOpacity(float Opacity)
 		CrosshairImage->SetColorAndOpacity(Color);
 	}
 }
-void UCrosshairWidget::ResetCrosshairColor()
+void UWidgetCrosshair::ResetCrosshairColor()
 {
 	if (CrosshairImage)
 	{
@@ -75,4 +50,25 @@ void UCrosshairWidget::ResetCrosshairColor()
 	}
 }
 
+/// <summary>
+/// 射撃時に呼び出す.
+/// </summary>
+void UWidgetCrosshair::OnShotEffect()
+{
+	if (CrosshairImage == nullptr || GetWorld() == nullptr)
+	{
+		return;
+	}
 
+	//ショット時に赤色に変更.
+	CrosshairImage->SetColorAndOpacity(FColor::Red);
+
+	// 0.1秒後に元の色に戻す
+	GetWorld()->GetTimerManager().SetTimer(
+		ShotEffectTimerHandle,
+		this,
+		&UWidgetCrosshair::ResetCrosshairColor,
+		0.1f,
+		false
+	);
+}

@@ -68,8 +68,8 @@ void ABulletBase::OnOverlapBegin(
         case ETeam::Player:
             //“G‚Éƒqƒbƒg.
             if (auto enm = Cast<AEnemyCharacter>(OtherActor)) {
-                enm->OnBulletHit(); //”í’eˆ—.
-                Destroy();          //’eÁ–Å.
+                enm->Damage(damage); //ƒ_ƒ[ƒWˆ—.
+                Destroy();           //’eÁ–Å.
             }
             break;
 
@@ -77,8 +77,8 @@ void ABulletBase::OnOverlapBegin(
         case ETeam::Enemy:
             //ƒvƒŒƒCƒ„[‚Éƒqƒbƒg.
             if (auto ply = Cast<APlayerCharacter>(OtherActor)) {
-                ply->OnBulletHit(); //”í’eˆ—.
-                Destroy();          //’eÁ–Å.
+                ply->Damage(damage); //”í’eˆ—.
+                Destroy();           //’eÁ–Å.
             }
             break;
     }
@@ -123,12 +123,12 @@ void ABulletBase::SpawnTrail() {
     {
         //Œ‚‚Á‚½l‚ªƒvƒŒƒCƒ„[.
         case ETeam::Player:
-            effect = EffectTrailPlayer;
+            effect = effectTrailPlayer;
             break;
 
         //Œ‚‚Á‚½l‚ª“G.
         case ETeam::Enemy:
-            effect = EffectTrailEnemy;
+            effect = effectTrailEnemy;
             break;
     }
 
