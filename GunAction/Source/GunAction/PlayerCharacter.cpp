@@ -9,7 +9,7 @@
 */
 #include "PlayerCharacter.h"
 
-#include "CrosshairWidget.h" 
+#include "WidgetCrosshair.h" 
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "GameFramework/SpringArmComponent.h"
@@ -207,8 +207,8 @@ void APlayerCharacter::OnShot()
 /// </summary>
 void APlayerCharacter::CrosshairWidgetExe() {
 
-	if (CrosshairWidget) {
-		CrosshairWidget->OnShotEffect();
+	if (Crosshair) {
+		Crosshair->OnShotEffect();
 	}
 }
 
@@ -237,9 +237,9 @@ void APlayerCharacter::InitUI()
 		return;
 	}
 
-	if (CrosshairWidgetClass == nullptr)
+	if (CrosshairClass == nullptr)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("CrosshairWidgetClass is not set!"));
+		UE_LOG(LogTemp, Warning, TEXT("CrosshairClass is not set!"));
 		return;
 	}
 
@@ -251,15 +251,15 @@ void APlayerCharacter::InitUI()
 	}
 
 	//クロスヘアウィジェットをビューポートに追加して表示する.
-	CrosshairWidget = CreateWidget<UCrosshairWidget>(PlayerController, CrosshairWidgetClass);
-	if (CrosshairWidget != nullptr)
+	Crosshair = CreateWidget<UWidgetCrosshair>(PlayerController, CrosshairClass);
+	if (Crosshair != nullptr)
 	{
-		CrosshairWidget->AddToViewport(0);
-		UE_LOG(LogTemp, Warning, TEXT("CrosshairWidget created and added to viewport"));
+		Crosshair->AddToViewport(0);
+		UE_LOG(LogTemp, Warning, TEXT("Crosshair created and added to viewport"));
 	}
 	else
 	{
-		UE_LOG(LogTemp, Error, TEXT("Failed to create CrosshairWidget!"));
+		UE_LOG(LogTemp, Error, TEXT("Failed to create Crosshair!"));
 	}
 }
 

@@ -1,5 +1,5 @@
 /*
-   - CrosshairWidget -
+   - WidgetCrosshair -
    クロスヘアUI
 */
 #pragma once
@@ -7,10 +7,10 @@
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
 #include "Components/Image.h"
-#include "CrosshairWidget.generated.h"
+#include "WidgetCrosshair.generated.h"
 
 UCLASS()
-class GUNACTION_API UCrosshairWidget : public UUserWidget
+class GUNACTION_API UWidgetCrosshair : public UUserWidget
 {
 	GENERATED_BODY()
 	
@@ -23,7 +23,7 @@ protected:
 	class UTexture2D* CrosshairTexture;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty")
-	FColor DefaultColor = FColor::White;
+	FLinearColor DefaultColor = FLinearColor::White;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty")
 	FVector2D CrosshairSize = FVector2D(64.0f, 64.0f);
@@ -37,15 +37,10 @@ private:
 public:
 	virtual void NativeConstruct() override;
 
-	// クロスヘアの色を変更する関数.
 	UFUNCTION(BlueprintCallable, Category = "Crosshair")
 	void SetCrosshairColor(FColor NewColor);
-
-	// ショット時の視覚効果.
-	UFUNCTION(BlueprintCallable, Category = "Crosshair")
-	void OnShotEffect();
-
-	// クロスヘアの透明度を設定.
 	UFUNCTION(BlueprintCallable, Category = "Crosshair")
 	void SetCrosshairOpacity(float Opacity);
+
+	void OnShotEffect();
 };

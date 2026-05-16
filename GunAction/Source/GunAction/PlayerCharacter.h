@@ -13,10 +13,10 @@
 //他class.
 #include "CharacterBase.h" //親クラス.
 #include "WeaponRevolver.h"
+#include "WidgetCrosshair.h"
 
 #include "PlayerCharacter.generated.h"
 
-class UCrosshairWidget;
 class USpringArmComponent;
 class UCameraComponent;
 
@@ -40,11 +40,11 @@ public:
 
 #pragma region "クロスヘア"
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Player|Crosshair")
-	TSubclassOf<UCrosshairWidget> CrosshairWidgetClass;
+	TSubclassOf<UWidgetCrosshair> CrosshairClass;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MyProperty|Player|Crosshair")
 	bool IsShowCrosshair = true; //クロスヘア表示,非表示切り替え用.
 
-	UCrosshairWidget* CrosshairWidget;
+	UWidgetCrosshair* Crosshair;
 #pragma endregion
 
 //▼ ===== 関数 ===== ▼.

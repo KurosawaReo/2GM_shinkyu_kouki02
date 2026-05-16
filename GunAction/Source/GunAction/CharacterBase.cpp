@@ -308,6 +308,9 @@ void ACharacterBase::ShotStart(FVector ParamPos) {
 	//射撃可能なら.
 	if (IsShotAble()) {
 
+		//先に弾薬を消費.
+		AmmoCount--;
+		//弾の目標位置.
 		TargetPosition = ParamPos;
 
 		//目標角度を計算.
@@ -398,11 +401,6 @@ bool ACharacterBase::SpawnBullet(TObjectPtr<ACharacterBase> user, FVector target
 		if (Cast<AEnemyCharacter>(user)) {
 			Bullet->SetTeam(ETeam::Enemy);  //敵チームへ.
 		}
-
-		//弾薬を消費.
-		AmmoCount--;
-
-		UE_LOG(LogTemp, Warning, TEXT("Shot! Remaining Ammo: %d"), AmmoCount);
 
 		// マズルフラッシュエフェクトを再生
 		if (RevolverGun && RevolverGun->PS_Muzzleflash_Revolver)
